@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 func hello(w http.ResponseWriter, req *http.Request) {
@@ -12,8 +13,8 @@ func hello(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-
+	port := os.Getenv("PORT")
 	http.HandleFunc("/", hello)
 
-	log.Fatal(http.ListenAndServe(":80", nil))
+	log.Fatal(http.ListenAndServe(port, nil))
 }
