@@ -14,7 +14,11 @@ func hello(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
 	http.HandleFunc("/", hello)
 
-	log.Fatal(http.ListenAndServe(port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
