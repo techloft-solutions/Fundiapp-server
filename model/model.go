@@ -20,8 +20,9 @@ type User struct {
 }
 
 type Provider struct {
-	Model
-	User
+	Profile
+	Bio        *string
+	Profession *string
 }
 
 type Client struct {
@@ -177,9 +178,7 @@ type Profile struct {
 	Email      string
 	Phone      string
 	PhotoUrl   *string
-	Bio        *string
 	LocationID *string
-	Profession *string
 	Status     *string
 	Type       string `valid:"required"`
 	Verified   bool

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS reviews(
     service_id VARCHAR(255) NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME
+    deleted_at DATETIME DEFAULT NULL
     -- FOREIGN KEY (provider_id) REFERENCES providers(provider_id) ON DELETE CASCADE,
     -- FOREIGN KEY (service_id) REFERENCES services(service_id) ON DELETE CASCADE,
     -- UNIQUE (provider_id, service_id),

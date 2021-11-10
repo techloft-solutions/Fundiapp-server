@@ -4,5 +4,5 @@ CREATE TABLE portfolios(
     booking_id VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME
+    deleted_at DATETIME DEFAULT NULL
 );

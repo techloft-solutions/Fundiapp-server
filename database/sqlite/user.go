@@ -20,18 +20,16 @@ func NewUserService(db *DB) *UserService {
 
 //func (s *UserService) CreateClient(ctx context.Context, booking *model.Client) error {}
 
-//func (s *UserService) FindProviderByID(ctx context.Context, booking *model.Provider) error {}
-
 //func (s *UserService) FindClientByID(ctx context.Context, booking *model.Client) error {}
 
-func (s *UserService) FindProviderByID(ctx context.Context, userId string) (*app.Provider, error) {
+func (s *UserService) FindProviderByID(ctx context.Context, id string) (*app.Provider, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	profile, err := getProviderProfileByID(ctx, tx, userId)
+	profile, err := getProviderProfileByID(ctx, tx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -133,13 +131,16 @@ func (s *UserService) UpdateProfile(ctx context.Context, profile *model.Profile)
 func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 	_, err := tx.ExecContext(ctx, `
 		UPDATE profiles
-		SET
-			first_name = ?,
+		SET first_name = ?,
 			last_name = ?,
-			bio = ?,
-			profession = ?
+			location_id = ?
 		WHERE user_id = ?
-	`, profile.FirstName, profile.LastName, profile.Bio, profile.Profession, profile.UserID)
+	`,
+		profile.FirstName,
+		profile.LastName,
+		profile.LocationID,
+		profile.UserID,
+	)
 	if err != nil {
 		return err
 	}
@@ -166,17 +167,13 @@ func createProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 			user_id, 
 			first_name, 
 			last_name, 
-			bio,
-			profession,
 			location_id,
 			account_type
-		) VALUES (?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?)
 	`,
 		profile.UserID,
 		profile.FirstName,
 		profile.LastName,
-		profile.Bio,
-		profile.Profession,
 		profile.LocationID,
 		profile.Type,
 	)
@@ -233,14 +230,18 @@ func createProvider(ctx context.Context, tx *Tx, provider *model.Provider) error
 	query := `
 	INSERT INTO providers (
 		provider_id,
-		user_id
-	) VALUES (?, ?)
+		user_id,
+		bio,
+		profession
+	) VALUES (?, ?, ?, ?)
 	`
 
 	// Insert row into database.
 	_, err := tx.ExecContext(ctx, query,
 		provider.ID,
 		provider.UserID,
+		provider.Bio,
+		provider.Profession,
 	)
 	if err != nil {
 		return err
@@ -256,8 +257,8 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 			providers.user_id,
 			profiles.first_name,
 			profiles.last_name,
-			profiles.bio,
-			profiles.profession,
+			providers.bio,
+			providers.profession,
 			providers.ratings_average,
 			providers.reviews_count,
 			providers.services_count,
@@ -265,7 +266,7 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 			locations.name
 		FROM providers
 		LEFT JOIN profiles ON profiles.user_id = providers.user_id
-		INNER JOIN locations ON profiles.location_id = locations.location_id
+		LEFT JOIN locations ON profiles.location_id = locations.location_id
 		WHERE providers.provider_id = ?
 	`, id).Scan(
 		&profile.UserID,

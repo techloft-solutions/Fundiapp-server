@@ -1,12 +1,12 @@
 package server
 
 import (
-	"errors"
 	"log"
 	"net/http"
 
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -23,7 +23,7 @@ func (s *Server) handleProfileGet(w http.ResponseWriter, r *http.Request) {
 	profile, err := s.UsrSvc.GetProfile(ctx, userID.String())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 	saveFirebaseUserToProfile(ctx, profile)
@@ -42,7 +42,7 @@ func (s *Server) handleProfileByUserID(w http.ResponseWriter, r *http.Request) {
 	user, err := s.UsrSvc.FindProfileByUserID(r.Context(), userID.String())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -61,17 +61,17 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	profile.UserID = userID.String()
 	profile.FirstName = strOrNil(r.PostFormValue("first_name"))
 	profile.LastName = strOrNil(r.PostFormValue("last_name"))
-	profile.Bio = strOrNil(r.PostFormValue("bio"))
 	profile.Phone = r.PostFormValue("phone")
 	profile.Email = r.PostFormValue("email")
 
 	err = s.UsrSvc.UpdateProfile(r.Context(), &profile)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	handleSuccess(w, profile)
+	//handleSuccess(w, profile)
 }
 
 func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
@@ -93,16 +93,14 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 	//profile.Email = r.PostFormValue("email")
 	//profile.Phone = r.PostFormValue("phone")
 	//profile.PhotoUrl = strOrNil(r.PostFormValue("photo_url"))
-	profile.Bio = strOrNil(r.PostFormValue("bio"))
 	profile.LocationID = strOrNil(r.PostFormValue("location_id"))
 	//profile.Status = strOrNil(r.PostFormValue("status"))
-	profile.Profession = strOrNil(r.PostFormValue("profession"))
-	profile.Type = r.PostFormValue("account_type")
+	profile.Type = "client"
 
 	err = s.UsrSvc.CreateProfile(r.Context(), &profile)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -122,12 +120,12 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleProviderByID(w http.ResponseWriter, r *http.Request) {
-	userId := mux.Vars(r)["id"]
+	providerId := mux.Vars(r)["id"]
 
-	resp, err := s.UsrSvc.FindProviderByID(r.Context(), userId)
+	resp, err := s.UsrSvc.FindProviderByID(r.Context(), providerId)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -145,22 +143,50 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	provider.UserID = userID.String()
+	provider.FirstName = strOrNil(r.PostFormValue("first_name"))
+	provider.LastName = strOrNil(r.PostFormValue("last_name"))
+	//profile.Email = r.PostFormValue("email")
+	//profile.Phone = r.PostFormValue("phone")
+	//profile.PhotoUrl = strOrNil(r.PostFormValue("photo_url"))
+	provider.Bio = strOrNil(r.PostFormValue("bio"))
+	provider.LocationID = strOrNil(r.PostFormValue("location_id"))
+	provider.Profession = strOrNil(r.PostFormValue("profession"))
+	//profile.Status = strOrNil(r.PostFormValue("status"))
+	provider.Type = "provider"
+
+	err = s.UsrSvc.CreateProfile(r.Context(), &provider.Profile)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleDuplicateEntry(w, err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
 
 	err = s.UsrSvc.CreateProvider(r.Context(), &provider)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	handleSuccess(w, provider)
+	handleSuccess(w, provider.ID)
+}
+
+func handleDuplicateEntry(w http.ResponseWriter, err error) {
+	me, ok := err.(*mysql.MySQLError)
+	if !ok {
+		panic(err)
+	}
+	if me.Number == 1062 {
+		http.Error(w, "mysql: duplicate entry", http.StatusConflict)
+	}
 }
 
 func (s *Server) handleProviderList(w http.ResponseWriter, r *http.Request) {
 	providers, err := s.UsrSvc.ListProviders(r.Context())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
