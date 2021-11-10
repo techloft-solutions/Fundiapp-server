@@ -3,7 +3,6 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 
 	app "github.com/andrwkng/hudumaapp"
@@ -606,11 +605,8 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 		`,
 		id,
 	).Scan(&booking.ID, &booking.Title, &booking.Description, &booking.Status, &booking.StartAt, &booking.Client.UserID, &booking.Provider.UserID, &booking.BookedAt); err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			err = fmt.Errorf("no rows returned: %w", err)
-		default:
-			err = fmt.Errorf("booking select: %w", err)
+		if err == sql.ErrNoRows {
+			return booking, nil
 		}
 		return nil, err
 	}

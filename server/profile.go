@@ -96,13 +96,6 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 	profile.Profession = r.PostFormValue("profession")
 	profile.Type = r.PostFormValue("account_type")
 
-	err = profile.Validate()
-	if err != nil {
-		//handleError(w, err, http.StatusBadRequest)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	err = s.UsrSvc.CreateProfile(r.Context(), &profile)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)

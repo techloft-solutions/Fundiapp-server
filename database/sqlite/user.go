@@ -3,7 +3,6 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
@@ -98,21 +97,20 @@ func (s *UserService) FindProfileByUserID(ctx context.Context, userId string) (*
 
 func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profile, error) {
 	profile := &app.Profile{}
+	profile.UserID = userId
 	err := tx.QueryRowContext(ctx, `
 		SELECT
-			user_id,
 			first_name,
 			last_name
 		FROM profiles
 		WHERE user_id = ?
 	`, userId).Scan(
-		&profile.UserID,
 		&profile.FirstName,
 		&profile.LastName,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no rows returned: %w", err)
+			return profile, nil
 		}
 		return nil, err
 	}

@@ -147,7 +147,7 @@ func RetrieveFirebaseUserData(ctx context.Context, uid string) *auth.UserRecord 
 
 	user, err := client.GetUser(ctx, uid)
 	if err != nil {
-		log.Fatalf("error getting user %s: %v\n", uid, err)
+		log.Printf("error getting firebase user %s: %v\n", uid, err)
 	}
 	return user
 }
