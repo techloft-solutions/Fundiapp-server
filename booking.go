@@ -14,8 +14,8 @@ type Appointment struct {
 
 type Rate struct {
 	Price    *string `json:"price"`
-	Currency *string  `json:"currency"`
-	Unit     *string  `json:"unit"`
+	Currency *string `json:"currency"`
+	Unit     *string `json:"unit"`
 }
 
 type Category struct {
@@ -24,15 +24,16 @@ type Category struct {
 }
 
 type Provider struct {
-	ID   int    `json:"id"`
+	ID int `json:"id"`
 	User
 	Bio        *string `json:"bio"`
 	Profession *string `json:"profession"`
 	//Professions []string `json:"professons"`
 	AvgRating float32 `json:"rating"`
-	Stats
+	Stats     Stats   `json:"stats"`
 	//distanceKM int `json:"distance`
-	Rate
+	Rate     `json:"rate"`
+	Services []Service `json:"services"`
 }
 
 type ProviderBrief struct {

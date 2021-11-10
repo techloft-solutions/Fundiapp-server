@@ -33,8 +33,8 @@ func (s *Server) handleBookingByID(w http.ResponseWriter, r *http.Request) {
 		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
@@ -279,13 +279,12 @@ func handleSuccess(w http.ResponseWriter, resource interface{}) {
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResp)
 }
 
 func handleError(w http.ResponseWriter, err error, code int) {
-	w.WriteHeader(code)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
 	resp := make(map[string]app.Error)
 	resp["error"] = app.Error{
 		Code:    strconv.Itoa(code),
@@ -295,5 +294,7 @@ func handleError(w http.ResponseWriter, err error, code int) {
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(code)
 	w.Write(jsonResp)
 }

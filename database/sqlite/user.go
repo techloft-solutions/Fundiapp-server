@@ -130,7 +130,7 @@ func (s *UserService) UpdateProfile(ctx context.Context, profile *model.Profile)
 
 func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 	_, err := tx.ExecContext(ctx, `
-		UPDATE profiles
+		UPDATE profiles as p
 		SET first_name = ?,
 			last_name = ?,
 			location_id = ?
@@ -275,9 +275,9 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 		&profile.Bio,
 		&profile.Profession,
 		&profile.AvgRating,
-		&profile.Reviews,
-		&profile.Services,
-		&profile.Portfolios,
+		&profile.Stats.Reviews,
+		&profile.Stats.Services,
+		&profile.Stats.Portfolios,
 		&profile.Location,
 	)
 	if err != nil {

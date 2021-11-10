@@ -61,8 +61,10 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	profile.UserID = userID.String()
 	profile.FirstName = strOrNil(r.PostFormValue("first_name"))
 	profile.LastName = strOrNil(r.PostFormValue("last_name"))
-	profile.Phone = r.PostFormValue("phone")
+	//profile.Phone = r.PostFormValue("phone")
 	profile.Email = r.PostFormValue("email")
+	profile.PhotoUrl = strOrNil(r.PostFormValue("photo_url"))
+	profile.LocationID = strOrNil(r.PostFormValue("location_id"))
 
 	err = s.UsrSvc.UpdateProfile(r.Context(), &profile)
 	if err != nil {
@@ -116,7 +118,7 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 			//Bio:       profile.Bio,
 		}*/
 
-	//handleSuccess(w)
+	handleSuccess(w, profile.ID)
 }
 
 func (s *Server) handleProviderByID(w http.ResponseWriter, r *http.Request) {
@@ -145,7 +147,7 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 	provider.UserID = userID.String()
 	provider.FirstName = strOrNil(r.PostFormValue("first_name"))
 	provider.LastName = strOrNil(r.PostFormValue("last_name"))
-	//profile.Email = r.PostFormValue("email")
+	provider.Email = r.PostFormValue("email")
 	//profile.Phone = r.PostFormValue("phone")
 	//profile.PhotoUrl = strOrNil(r.PostFormValue("photo_url"))
 	provider.Bio = strOrNil(r.PostFormValue("bio"))
@@ -165,6 +167,7 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 	err = s.UsrSvc.CreateProvider(r.Context(), &provider)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleDuplicateEntry(w, err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
