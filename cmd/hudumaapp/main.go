@@ -38,6 +38,7 @@ func main() {
 		}
 		fmt.Println(cfg.FormatDSN())
 		db = sqlite.NewDB(cfg.FormatDSN())
+		db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
 		port := os.Getenv("PORT")
 		server.Addr = ":" + port
 	default:
