@@ -13,7 +13,6 @@ DROP TABLE
     `rates`,
     `reviews`,
     `services`,
-    `statistics`,
     `profiles`,
     `bids`,
     `transactions`,

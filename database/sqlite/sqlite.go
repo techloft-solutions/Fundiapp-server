@@ -6,6 +6,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
 	"sort"
 	"time"
 
@@ -101,6 +102,42 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	}, nil
 }
 
+// drop drops the database tables and resets the migrations table. This is used to drop the database and start over.
+//
+// This is a destructive operation and should only be used for testing.
+func (db *DB) drop() error {
+	// Read drop files from our embedded file system.
+	names, err := fs.Glob(migrationFS, "migrations/*_down.sql")
+	if err != nil {
+		return err
+	}
+	sort.Strings(names)
+
+	// Loop over all migration files and execute them in order.
+	for _, name := range names {
+		if err := db.dropFile(name); err != nil {
+			return fmt.Errorf("migration error: name=%q err=%w", name, err)
+		}
+	}
+	return nil
+}
+
+func (db *DB) dropFile(name string) error {
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Read and execute drop file.
+	if buf, err := fs.ReadFile(migrationFS, name); err != nil {
+		return err
+	} else if _, err := tx.Exec(string(buf)); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 // migrate sets up migration tracking and executes pending migration files.
 //
 // Migration files are embedded in the sqlite/migration folder and are executed
@@ -110,6 +147,12 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 // is not re-executed. Migrations run in a transaction to prevent partial
 // migrations.
 func (db *DB) migrate() error {
+	if os.Getenv("APP_ENV") != "production" {
+		if err := db.drop(); err != nil {
+			fmt.Errorf("drop: %w", err)
+		}
+	}
+
 	// Ensure the 'migrations' table exists so we don't duplicate migrations.
 	if _, err := db.db.Exec(`CREATE TABLE IF NOT EXISTS migrations (name varchar(255) PRIMARY KEY);`); err != nil {
 		return fmt.Errorf("cannot create migrations table: %w", err)
