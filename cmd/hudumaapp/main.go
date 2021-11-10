@@ -34,6 +34,7 @@ func main() {
 			Net:    "tcp",
 			Addr:   "dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306",
 			DBName: "wtej3mys487jlnyv",
+			Params: nil,
 		}
 		fmt.Println(cfg.FormatDSN())
 		db = sqlite.NewDB(cfg.FormatDSN())
