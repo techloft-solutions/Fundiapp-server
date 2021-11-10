@@ -1,0 +1,63 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/andrwkng/hudumaapp/database/sqlite"
+	"github.com/andrwkng/hudumaapp/server"
+	"github.com/go-sql-driver/mysql"
+)
+
+func main() {
+	//port := os.Getenv("PORT")
+	//if port == "" {
+	//	log.Fatal("$PORT must be set")
+	//}
+
+	//app := NewApp()
+
+	//db := sqlite.NewDB("file:test.db?cache=shared&mode=memory")
+	//db := sqlite.NewDB("/hudumaapp.db")
+	/*if err := db.Open(); err != nil {
+		log.Fatal("cannot open db: %w", err)
+	}*/
+	var db *sqlite.DB
+	server := server.New()
+
+	switch os.Getenv("APP_ENV") {
+	case "testing":
+		cfg := mysql.Config{
+			User:   "xdshcqjkkzdjs55v",
+			Passwd: "whsydeehry48wxsz",
+			Net:    "tcp",
+			Addr:   "dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306",
+			DBName: "wtej3mys487jlnyv",
+		}
+		fmt.Println(cfg.FormatDSN())
+		db = sqlite.NewDB(cfg.FormatDSN())
+		server.Addr = ":80"
+	default:
+		db = sqlite.NewDB("root@tcp(127.0.0.1:3306)/hudumaapp")
+		server.Addr = ":8080"
+	}
+
+	err := db.Open()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server.BkSvc = sqlite.NewBookingService(db)
+	server.LcSvc = sqlite.NewLocationService(db)
+	//server.BidSvc = sqlite.NewBidService(db)
+	server.CatSvc = sqlite.NewCategoryService(db)
+	server.PfoSvc = sqlite.NewPortfolioService(db)
+	server.ReqSvc = sqlite.NewRequestService(db)
+	server.UsrSvc = sqlite.NewUserService(db)
+
+	log.Fatal(server.Start())
+
+	//_, err := sql.Open("sqlite3", "./hudumaapp.db")*/
+
+}

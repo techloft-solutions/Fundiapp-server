@@ -1,0 +1,5 @@
+CREATE TABLE booking_photos(
+    id BIGINT(20) UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    photo_id VARCHAR(255),
+    booking_id VARCHAR(255)
+);  
