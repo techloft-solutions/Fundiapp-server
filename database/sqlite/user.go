@@ -166,9 +166,20 @@ func createProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 			user_id, 
 			first_name, 
 			last_name, 
-			bio
-		) VALUES (?, ?, ?, ?)
-	`, profile.UserID, profile.FirstName, profile.LastName, profile.Bio)
+			bio,
+			profession,
+			location_id,
+			account_type
+		) VALUES (?, ?, ?, ?, ?, ?, ?)
+	`,
+		profile.UserID,
+		profile.FirstName,
+		profile.LastName,
+		profile.Bio,
+		profile.Profession,
+		profile.LocationID,
+		profile.Type,
+	)
 	if err != nil {
 		return err
 	}

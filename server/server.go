@@ -48,15 +48,15 @@ func handleHello(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) registerRoutes(r *mux.Router) {
-	// Request
-	r.HandleFunc("/requests", s.handleRequestList).Methods("GET")
-	r.HandleFunc("/requests", s.handleRequestCreate).Methods("POST")
-	r.HandleFunc("/requests/{id}", s.handleRequest).Methods("GET")
 	// Profile
 	r.HandleFunc("/profile", s.handleProfileCreate).Methods("POST")
 	r.HandleFunc("/profile", s.handleProfileGet).Methods("GET")
 	r.HandleFunc("/profile", s.handleProfileUpdate).Methods("PUT")
 	//r.HandleFunc("/profile/{id}", s.handleProfileDelete).Methods("DELETE")
+	// Request
+	r.HandleFunc("/requests", s.handleRequestList).Methods("GET")
+	r.HandleFunc("/requests", s.handleRequestCreate).Methods("POST")
+	r.HandleFunc("/requests/{id}", s.handleRequest).Methods("GET")
 	// Bookings
 	r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")

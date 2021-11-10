@@ -176,11 +176,11 @@ type Profile struct {
 	LastName   *string
 	Email      string
 	Phone      string
-	PhotoUrl   string
-	Bio        string
-	LocationID string
-	Profession string
-	Status     string
+	PhotoUrl   *string
+	Bio        *string
+	LocationID *string
+	Profession *string
+	Status     *string
 	Type       string `valid:"required"`
 	Verified   bool
 }
