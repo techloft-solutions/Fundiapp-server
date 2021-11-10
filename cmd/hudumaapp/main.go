@@ -37,7 +37,8 @@ func main() {
 		}
 		fmt.Println(cfg.FormatDSN())
 		db = sqlite.NewDB(cfg.FormatDSN())
-		server.Addr = os.Getenv("PORT")
+		port := os.Getenv("PORT")
+		server.Addr = ":" + port
 	default:
 		db = sqlite.NewDB("root@tcp(127.0.0.1:3306)/hudumaapp")
 		server.Addr = ":8080"
