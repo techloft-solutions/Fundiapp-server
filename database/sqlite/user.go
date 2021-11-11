@@ -98,11 +98,13 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 	profile.UserID = userId
 	err := tx.QueryRowContext(ctx, `
 		SELECT
+			profile_id,
 			first_name,
 			last_name
 		FROM profiles
 		WHERE user_id = ?
 	`, userId).Scan(
+		&profile.ID,
 		&profile.FirstName,
 		&profile.LastName,
 	)
@@ -164,13 +166,15 @@ func (s *UserService) CreateProfile(ctx context.Context, profile *model.Profile)
 func createProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 	_, err := tx.ExecContext(ctx, `
 		INSERT INTO profiles (
+			profile_id,
 			user_id, 
 			first_name, 
 			last_name, 
 			location_id,
 			account_type
-		) VALUES (?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?)
 	`,
+		profile.ID,
 		profile.UserID,
 		profile.FirstName,
 		profile.LastName,
@@ -278,7 +282,7 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 		&profile.Stats.Reviews,
 		&profile.Stats.Services,
 		&profile.Stats.Portfolios,
-		&profile.Location,
+		&profile.Location.Name,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

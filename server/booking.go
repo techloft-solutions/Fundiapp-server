@@ -113,11 +113,7 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 		StartAt:     booking.StartDate,
 		Description: booking.Description,
 		Photos:      booking.Photos,
-		Client: app.Client{
-			User: app.User{
-				UserID: booking.ClientID,
-			},
-		},
+		Client:      app.Client{},
 		Location: app.Location{
 			ID: booking.LocationID,
 		},
@@ -126,19 +122,12 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, res)
 }
 
-func saveFirebaseUserToProfile(ctx context.Context, profile *app.Profile) {
-	firebaseUser := RetrieveFirebaseUserData(ctx, profile.UserID)
-	if firebaseUser != nil {
-		profile.Email = strOrNil(firebaseUser.Email)
-		profile.Phone = strOrNil(firebaseUser.PhoneNumber)
-		profile.DisplayName = strOrNil(firebaseUser.DisplayName)
-		profile.EmailVerified = firebaseUser.EmailVerified
-	}
-}
-
-func RetrieveFirebaseUserData(ctx context.Context, uid string) *auth.UserRecord {
+func retrieveFirebaseUserData(ctx context.Context, uid string) *auth.UserRecord {
 	opt := option.WithCredentialsFile("keys/hudumaapp-firebase-adminsdk-jtet8-7370576c3f.json")
 	app, err := firebase.NewApp(ctx, nil, opt)
+	if err != nil {
+		log.Printf("error creating firebase app %s: %v\n", uid, err)
+	}
 	// Get an auth client from the firebase.App
 	client, err := app.Auth(ctx)
 	if err != nil {
@@ -157,6 +146,37 @@ func strOrNil(v string) *string {
 		return nil
 	}
 	return &v
+}
+
+func strOrNull(ptr *string) string {
+	switch ptr {
+	case nil:
+		return "null"
+	default:
+		return *ptr
+	}
+}
+
+// newOrCurr returns the new value if it is not empty, otherwise the current value.
+func PtrNewOrCurr(new string, curr *string) string {
+	if new == "" {
+		return *curr
+	}
+	return new
+}
+
+func NewOrCurr(new string, curr string) string {
+	if new == "" {
+		return curr
+	}
+	return new
+}
+
+func ptrToStr(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
 }
 
 func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
@@ -280,6 +300,16 @@ func handleSuccess(w http.ResponseWriter, resource interface{}) {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
+}
+
+func handleSuccessText(w http.ResponseWriter, resource interface{}) {
+	jsonResp, err := json.Marshal(resource)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResp)
 }

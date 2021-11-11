@@ -25,7 +25,7 @@ type Category struct {
 
 type Provider struct {
 	ID int `json:"id"`
-	User
+	Profile
 	Bio        *string `json:"bio"`
 	Profession *string `json:"profession"`
 	//Professions []string `json:"professons"`
@@ -54,13 +54,10 @@ type Stats struct {
 	Services   int `json:"services"`
 }
 
-type Client struct {
-	User
-}
-
 type Location struct {
 	ID        string  `json:"id"`
-	Title     string  `json:"title"`
+	Name      *string  `json:"name"`
+	Title     *string  `json:"title"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Address   string  `json:"address"`
@@ -100,6 +97,10 @@ type RequestDetail struct {
 	Bids    int       `json:"bids"`
 	Photos  []string  `json:"photos"`
 	Client  string    `json:"client"`
+}
+
+type Client struct {
+	Profile
 }
 
 type Booking struct {
@@ -155,10 +156,12 @@ type User struct {
 	DisplayName *string `json:"display_name"`
 	Email       *string `json:"email"`
 	Phone       *string `json:"phone"`
-	Location    *string `json:"location"`
+	Location `json:"location"`
+	PhotoUrl    *string `json:"photo_url"`
 }
 
 type Profile struct {
+	ID uuid.UUID `json:"profile_id"`
 	User
 	//UserID        string  `json:"user_id"`
 	//FirstName     *string `json:"first_name"`

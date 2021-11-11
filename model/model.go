@@ -172,16 +172,17 @@ type Transaction struct {
 
 type Profile struct {
 	Model
-	UserID     string `valid:"required"`
-	FirstName  *string
-	LastName   *string
-	Email      string
-	Phone      string
-	PhotoUrl   *string
-	LocationID *string
-	Status     *string
-	Type       string `valid:"required"`
-	Verified   bool
+	UserID      string `valid:"required"`
+	DisplayName *string
+	FirstName   *string
+	LastName    *string
+	Email       *string
+	Phone       string
+	PhotoUrl    *string
+	LocationID  *string
+	Status      *string
+	Type        string `valid:"required"`
+	Verified    bool
 }
 
 type Schedule struct {

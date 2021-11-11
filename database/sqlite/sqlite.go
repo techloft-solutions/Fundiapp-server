@@ -6,6 +6,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"sort"
 	"time"
@@ -147,9 +148,11 @@ func (db *DB) dropFile(name string) error {
 // is not re-executed. Migrations run in a transaction to prevent partial
 // migrations.
 func (db *DB) migrate() error {
+	log.Println("migrating database")
 	if os.Getenv("APP_ENV") != "production" {
+		log.Println("dropping database tables")
 		if err := db.drop(); err != nil {
-			fmt.Errorf("drop: %w", err)
+			log.Println("drop:", err)
 		}
 	}
 
