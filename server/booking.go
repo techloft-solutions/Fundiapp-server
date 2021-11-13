@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
@@ -141,44 +140,6 @@ func retrieveFirebaseUserData(ctx context.Context, uid string) *auth.UserRecord 
 	return user
 }
 
-func strOrNil(v string) *string {
-	if v == "" {
-		return nil
-	}
-	return &v
-}
-
-func strOrNull(ptr *string) string {
-	switch ptr {
-	case nil:
-		return "null"
-	default:
-		return *ptr
-	}
-}
-
-// newOrCurr returns the new value if it is not empty, otherwise the current value.
-func PtrNewOrCurr(new string, curr *string) string {
-	if new == "" {
-		return *curr
-	}
-	return new
-}
-
-func NewOrCurr(new string, curr string) string {
-	if new == "" {
-		return curr
-	}
-	return new
-}
-
-func ptrToStr(v *string) string {
-	if v == nil {
-		return ""
-	}
-	return *v
-}
-
 func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	var request model.Request
 	request.ID = uuid.New()
@@ -279,52 +240,5 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
-	w.Write(jsonResp)
-}
-
-func handleUnathorised(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusUnauthorized)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	resp := make(map[string]string)
-	resp["message"] = "Unauthorized"
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
-}
-
-func handleSuccess(w http.ResponseWriter, resource interface{}) {
-	jsonResp, err := json.Marshal(resource)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
-}
-
-func handleSuccessText(w http.ResponseWriter, resource interface{}) {
-	jsonResp, err := json.Marshal(resource)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
-}
-
-func handleError(w http.ResponseWriter, err error, code int) {
-	resp := make(map[string]app.Error)
-	resp["error"] = app.Error{
-		Code:    strconv.Itoa(code),
-		Message: err.Error(),
-	}
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(code)
 	w.Write(jsonResp)
 }

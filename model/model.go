@@ -171,15 +171,16 @@ type Transaction struct {
 }
 
 type Profile struct {
-	Model
-	UserID      string `valid:"required"`
-	DisplayName *string
-	FirstName   *string
-	LastName    *string
-	Email       *string
-	Phone       string
-	PhotoUrl    *string
-	LocationID  *string
+	//Model
+	ID          uuid.UUID `valid:"required"`
+	UserID      string    `valid:"required"`
+	DisplayName *string   `json:"display_name"`
+	FirstName   *string   `json:"first_name"`
+	LastName    *string   `json:"last_name"`
+	Email       *string   `json:"email"`
+	Phone       string    `json:"phone"`
+	PhotoUrl    *string   `json:"photo_url"`
+	LocationID  *string   `json:"location_id"`
 	Status      *string
 	Type        string `valid:"required"`
 	Verified    bool

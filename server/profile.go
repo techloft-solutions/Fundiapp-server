@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -28,6 +30,10 @@ func (s *Server) handleProfileGet(w http.ResponseWriter, r *http.Request) {
 	profile, err := s.UsrSvc.GetProfile(ctx, userID.String())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			http.Error(w, "profile not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
@@ -36,52 +42,81 @@ func (s *Server) handleProfileGet(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, profile)
 }
 
+// handleProfileUpdate updates a profile or creates a new one if it does not exist.
 func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	var profile model.Profile
 	ctx := r.Context()
-	userID, err := middlewares.UserIDFromContext(r.Context())
-	// Return an error if the user is not currently logged in.
+
+	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &profile); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if user is currently logged in.
+	userID, err := middlewares.UserIDFromContext(ctx)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		handleUnathorised(w)
 		return
 	}
-	profile.UserID = userID.String()
 
-	currProfilePtr, err := s.UsrSvc.GetProfile(ctx, userID.String())
+	// retrieve existing profile from database
+	currProfile, err := s.UsrSvc.GetProfile(ctx, userID.String())
 	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("profile does not exist")
+			s.handleProfileCreate(w, r)
+			return
+		}
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
-	currProfile := *currProfilePtr
-	profile.FirstName = strOrNil(NewOrCurr(r.PostFormValue("first_name"), *currProfile.FirstName))
-	profile.LastName = strOrNil(NewOrCurr(r.PostFormValue("last_name"), *currProfile.LastName))
-	//email := PtrNewOrCurr(r.PostFormValue("email"), currProfile.Email)
-	//profile.Email = &email
-	//photoUrl := PtrNewOrCurr(r.PostFormValue("photo_url"), currProfile.PhotoUrl)
-	//profile.PhotoUrl = &photoUrl
-	//profile.LocationID = &(PtrNewOrCurr(r.PostFormValue("location_id"), &currProfile.Location.ID))
-	fBuserData := *retrieveFirebaseUserData(ctx, userID.String())
-	profile.DisplayName = strOrNil(NewOrCurr(r.PostFormValue("display_name"), fBuserData.DisplayName))
-	profile.PhotoUrl = strOrNil(NewOrCurr(r.PostFormValue("photo_url"), fBuserData.PhotoURL))
-	profile.Email = strOrNil(NewOrCurr(r.PostFormValue("email"), fBuserData.Email))
-	/*
-		err = s.UsrSvc.UpdateProfile(ctx, &profile)
-		if err != nil {
-			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+
+	// if profile does not exist, create a new one
+	if currProfile == nil {
+		s.handleProfileCreate(w, r)
+		return
+	}
+
+	profile.ID = currProfile.ID
+	profile.UserID = userID.String()
+
+	err = updateFirebaseUserData(ctx, profile)
+	if err != nil {
+		log.Printf("error updating firebase user %s: %v\n", userID, err)
+		http.Error(w, "error updating firebase user data", http.StatusInternalServerError)
+		return
+	}
+
+	err = s.UsrSvc.UpdateProfile(ctx, &profile)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		switch err {
+		case sql.ErrNoRows:
+			log.Println(w, "updating db was not successful", http.StatusNotFound)
+		default:
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 			return
-		}*/
-
-	updateFirebaseUserData(ctx, profile)
+		}
+	}
 
 	handleSuccess(w, profile)
 	//handleSuccessText(w, profile.ID)
+	//json.NewEncoder(w).Encode(profile)
 }
 
 func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 	var profile model.Profile
-	profile.ID = uuid.New()
+
 	ctx := r.Context()
 	userID, err := middlewares.UserIDFromContext(ctx)
 	// Return an error if the user is not currently logged in.
@@ -92,14 +127,21 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 
 	//userData := RetrieveFirebaseUserData(ctx, userID.String())
 
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &profile); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	profile.ID = uuid.New()
 	profile.UserID = userID.String()
-	profile.FirstName = strOrNil(r.PostFormValue("first_name"))
-	profile.LastName = strOrNil(r.PostFormValue("last_name"))
-	//profile.Email = r.PostFormValue("email")
-	//profile.Phone = r.PostFormValue("phone")
-	profile.PhotoUrl = strOrNil(r.PostFormValue("photo_url"))
-	profile.LocationID = strOrNil(r.PostFormValue("location_id"))
-	//profile.Status = strOrNil(r.PostFormValue("status"))
 	profile.Type = "client"
 
 	err = s.UsrSvc.CreateProfile(r.Context(), &profile)
@@ -111,20 +153,11 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		res := app.Profile{
-			User: app.User{
-				UserID:    profile.UserID,
-				FirstName: profile.FirstName,
-				LastName:  profile.LastName,
-			},
-			//Email:     profile.Email,
-			//Phone:     profile.Phone,
-			//Bio:       profile.Bio,
-		}*/
-
 	handleSuccessText(w, profile.ID)
+	//handleSuccess(w, profile)
 }
+
+// Proivder
 
 func (s *Server) handleProviderByID(w http.ResponseWriter, r *http.Request) {
 	providerId := mux.Vars(r)["id"]
@@ -223,7 +256,7 @@ func (s *Server) handleProfileByUserID(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, user)
 }
 
-func updateFirebaseUserData(ctx context.Context, profile model.Profile) {
+func updateFirebaseUserData(ctx context.Context, profile model.Profile) error {
 	uid := profile.UserID
 	opt := option.WithCredentialsFile("keys/hudumaapp-firebase-adminsdk-jtet8-7370576c3f.json")
 	app, err := firebase.NewApp(ctx, nil, opt)
@@ -235,16 +268,40 @@ func updateFirebaseUserData(ctx context.Context, profile model.Profile) {
 	if err != nil {
 		log.Fatalf("error getting Auth client: %v\n", err)
 	}
+	/*
+		params := (&auth.UserToUpdate{}).
+			Email(strOrNull(profile.Email)).
+			DisplayName(strOrNull(profile.DisplayName)).
+			PhotoURL(strOrNull(profile.PhotoUrl))
+	*/
+	var update bool
+	par := &auth.UserToUpdate{}
+	if profile.Email != nil {
+		par.Email(*profile.Email)
+		update = true
+	}
+	if profile.DisplayName != nil {
+		par.DisplayName(*profile.DisplayName)
+		update = true
+	}
+	if profile.PhotoUrl != nil {
+		par.PhotoURL(*profile.PhotoUrl)
+		update = true
+	}
+	if profile.Phone == "" {
+		par.PhoneNumber(profile.Phone)
+		update = true
+	}
 
-	params := (&auth.UserToUpdate{}).
-		Email(strOrNull(profile.Email)).
-		DisplayName(strOrNull(profile.DisplayName)).
-		PhotoURL(strOrNull(profile.PhotoUrl))
+	if !update {
+		return nil
+	}
 
-	_, err = client.UpdateUser(ctx, uid, params)
+	_, err = client.UpdateUser(ctx, uid, par)
 	if err != nil {
 		log.Printf("error updating firebase user %s: %v\n", uid, err)
 	}
+	return err
 }
 
 func saveFirebaseUserToProfile(ctx context.Context, profile *app.Profile) {

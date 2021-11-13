@@ -37,14 +37,15 @@ type Provider struct {
 }
 
 type ProviderBrief struct {
-	ID     uuid.UUID `json"id"`
-	UserID string    `json:"user_id"`
-	Name   string    `json:"name"`
-	Rate
-	Jobs    int     `json:"num_jobs"`
-	Rating  float32 `json:"avg_rating"`
-	Reviews int     `json:"num_reviews"`
-	Photo   string  `json:"photo_url"`
+	ID       uuid.UUID `json"id"`
+	UserID   string    `json:"user_id"`
+	Name     string    `json:"name"`
+	Rate     `json:"rate"`
+	Jobs     int     `json:"num_jobs"`
+	Rating   float32 `json:"avg_rating"`
+	Reviews  int     `json:"num_reviews"`
+	Photo    string  `json:"photo_url"`
+	Distance string  `json:"distance"`
 }
 
 type Stats struct {
@@ -55,9 +56,9 @@ type Stats struct {
 }
 
 type Location struct {
-	ID        string  `json:"id"`
-	Name      *string  `json:"name"`
-	Title     *string  `json:"title"`
+	ID        string  `json:"location_id"`
+	Name      *string `json:"name"`
+	Title     *string `json:"title"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Address   string  `json:"address"`
@@ -156,7 +157,7 @@ type User struct {
 	DisplayName *string `json:"display_name"`
 	Email       *string `json:"email"`
 	Phone       *string `json:"phone"`
-	Location `json:"location"`
+	Location    `json:"location"`
 	PhotoUrl    *string `json:"photo_url"`
 }
 
@@ -170,7 +171,7 @@ type Profile struct {
 	//Email         *string `json:"email"`
 	EmailVerified bool `json:"email_verified"`
 	//Phone         *string `json:"phone"`
-	//Location      *string `json:"location"`
+	Verified  bool    `json:"verified"`
 }
 
 type Bid struct{}

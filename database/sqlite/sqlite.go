@@ -149,7 +149,7 @@ func (db *DB) dropFile(name string) error {
 // migrations.
 func (db *DB) migrate() error {
 	log.Println("migrating database")
-	if os.Getenv("APP_ENV") != "production" {
+	if os.Getenv("APP_ENV") != "production" || os.Getenv("DB_RESET") == "true" {
 		log.Println("dropping database tables")
 		if err := db.drop(); err != nil {
 			log.Println("drop:", err)

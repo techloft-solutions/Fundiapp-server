@@ -100,18 +100,19 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 		SELECT
 			profile_id,
 			first_name,
-			last_name
+			last_name,
+			location_id,
+			verified
 		FROM profiles
 		WHERE user_id = ?
 	`, userId).Scan(
 		&profile.ID,
 		&profile.FirstName,
 		&profile.LastName,
+		&profile.Location.ID,
+		&profile.Verified,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return profile, nil
-		}
 		return nil, err
 	}
 	return profile, nil
@@ -131,11 +132,11 @@ func (s *UserService) UpdateProfile(ctx context.Context, profile *model.Profile)
 }
 
 func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
-	_, err := tx.ExecContext(ctx, `
+	result, err := tx.ExecContext(ctx, `
 		UPDATE profiles as p
-		SET first_name = ?,
-			last_name = ?,
-			location_id = ?
+		SET first_name = COALESCE(?, first_name),
+			last_name = COALESCE(?, last_name),
+			location_id = COALESCE(?, location_id)
 		WHERE user_id = ?
 	`,
 		profile.FirstName,
@@ -145,6 +146,11 @@ func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil
