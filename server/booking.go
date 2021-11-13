@@ -114,7 +114,7 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 		Photos:      booking.Photos,
 		Client:      app.Client{},
 		Location: app.Location{
-			ID: booking.LocationID,
+			ID: &booking.LocationID,
 		},
 	}
 

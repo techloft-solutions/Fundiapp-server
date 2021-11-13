@@ -56,7 +56,7 @@ type Stats struct {
 }
 
 type Location struct {
-	ID        string  `json:"location_id"`
+	ID        *string  `json:"location_id"`
 	Name      *string `json:"name"`
 	Title     *string `json:"title"`
 	Latitude  float64 `json:"latitude"`
