@@ -176,55 +176,18 @@ func NewLocationService(db *DB) *LocationService {
 	return &LocationService{db}
 }
 
-func (s *LocationService) ListMyLocations(ctx context.Context, authUser *app.AuthUser) ([]*app.Location, error) {
+func (s *LocationService) ListMyLocations(ctx context.Context, userId string) ([]*app.Location, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	locations, err := getLocationsByUserID(ctx, tx, authUser.ID)
+	locations, err := getLocationsByUserID(ctx, tx, userId)
 	if err != nil {
 		return nil, err
 	}
 	return locations, tx.Commit()
-}
-
-func (s *LocationService) CreateLocation(ctx context.Context, location *model.Location) error {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	// Create location and attach associated owner user.
-	if err := createLocation(ctx, tx, location); err != nil {
-		return err
-	}
-	return tx.Commit()
-}
-
-func createLocation(ctx context.Context, tx *Tx, location *model.Location) error {
-	_, err := tx.ExecContext(ctx, `INSERT INTO locations(
-		location_id,
-		user_id,
-		title,
-		address,
-		latitude,
-		longitude,
-		) VALUES (?,?,?,?,?,?,?,?)
-		`,
-		location.ID,
-		location.UserID,
-		location.Title,
-		location.Address,
-		location.Latitude,
-		location.Longitude,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func getLocationsByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Location, error) {
@@ -242,16 +205,17 @@ func getLocationsByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Lo
 	if err != nil {
 		return nil, err
 	}
-	var locations []*app.Location
+	locations := make([]*app.Location, 0)
 	for rows.Next() {
 		var location app.Location
 		if err := rows.Scan(
 			&location.ID,
-			&location.Title,
+			&location.Name,
 			&location.Address,
 			&location.Latitude,
 			&location.Longitude,
 		); err != nil {
+			log.Println("rows scan error:", err)
 			return nil, err
 		}
 		locations = append(locations, &location)
@@ -260,6 +224,44 @@ func getLocationsByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Lo
 		return nil, err
 	}
 	return locations, nil
+}
+
+func (s *LocationService) CreateLocation(ctx context.Context, location *model.Location) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Create location and attach associated owner user.
+	if err := createLocation(ctx, tx, location); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func createLocation(ctx context.Context, tx *Tx, location *model.Location) error {
+	_, err := tx.ExecContext(ctx, `
+	INSERT INTO locations(
+		location_id,
+		user_id,
+		name,
+		address,
+		latitude,
+		longitude
+		) VALUES (?,?,?,?,?,?)
+		`,
+		location.ID,
+		location.UserID,
+		location.Name,
+		location.Address,
+		location.Latitude,
+		location.Longitude,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type TransactionService struct {
@@ -393,7 +395,7 @@ func findLocationsByUserID(ctx context.Context, tx *Tx, userId uuid.UUID) ([]*ap
 		var location app.Location
 		if err := rows.Scan(
 			&location.ID,
-			&location.Title,
+			&location.Name,
 			&location.Address,
 			&location.Latitude,
 			&location.Longitude,

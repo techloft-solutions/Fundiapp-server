@@ -6,13 +6,12 @@ import (
 	"log"
 	"net/http"
 
-	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
+/*
 func (s *Server) handlePortfolioList(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["user_id"]
 	// Fetch portfolios from database.
@@ -30,9 +29,9 @@ func (s *Server) handlePortfolioList(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
 	w.Write(jsonResp)
-	return
 }
-
+*/
+/*
 func (s *Server) handlePortfolioCreate(w http.ResponseWriter, r *http.Request) {
 	var portfolio model.Portfolio
 	portfolio.Title = r.PostFormValue("title")
@@ -60,41 +59,63 @@ func (s *Server) handlePortfolioCreate(w http.ResponseWriter, r *http.Request) {
 
 	handleSuccess(w, nil)
 }
-
-func (s *Server) handleLocationList(w http.ResponseWriter, r *http.Request) {
-	var authUser = &app.AuthUser{}
+*/
+func (s *Server) handleMyLocationList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	authUser = middlewares.UserFromContext(ctx)
-	resp, err := s.LcSvc.ListMyLocations(ctx, authUser)
-	if err != nil {
-		log.Println(err)
-		handleError(w, errors.New("Something went wrong!"), http.StatusInternalServerError)
-		return
-	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	jsonResp, err := json.Marshal(resp)
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	// Return an error if the user is not currently logged in.
 	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
-	return
-}
-
-func (s *Server) handleLocationCreate(w http.ResponseWriter, r *http.Request) {
-	var location model.Location
-	location.Title = r.PostFormValue("title")
-	//location.Latitude = r.PostFormValue("latitude")
-	//location.Longitude = r.PostFormValue("longitude")
-	location.Address = r.PostFormValue("address")
-
-	err := s.LcSvc.CreateLocation(r.Context(), &location)
-	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleUnathorised(w)
 		return
 	}
 
-	handleSuccess(w, nil)
+	resp, err := s.LcSvc.ListMyLocations(ctx, userID.String())
+	if err != nil {
+		log.Println(err)
+		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, resp)
+}
+
+func (s *Server) handleLocationCreate(w http.ResponseWriter, r *http.Request) {
+	var location model.Location
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	// Return an error if the user is not currently logged in.
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+	location.UserID = userID.String()
+	location.ID = uuid.New()
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &location); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	err = location.Validate()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = s.LcSvc.CreateLocation(r.Context(), &location)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccessText(w, location.ID)
 }

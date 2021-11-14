@@ -156,7 +156,6 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 	}
 	defer rows.Close()
 
-	// Iterate over rows and deserialize into Dial objects.
 	providers := make([]*app.ProviderBrief, 0)
 	for rows.Next() {
 		var fname string
@@ -183,20 +182,6 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 	}
 
 	return providers, nil
-}
-
-func (s *UserService) GetProfile(ctx context.Context, userId string) (*app.Profile, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	profile, err := getProfileByUserID(ctx, tx, userId)
-	if err != nil {
-		return nil, err
-	}
-	return profile, tx.Commit()
 }
 
 func (s *UserService) FindProfileByUserID(ctx context.Context, userId string) (*app.Profile, error) {

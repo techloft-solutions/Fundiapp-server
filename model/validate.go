@@ -25,3 +25,11 @@ func (p Profile) Validate() error {
 	}
 	return nil
 }
+
+func (l Location) Validate() error {
+	_, err := govalidator.ValidateStruct(l)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -128,16 +128,15 @@ type ProviderProfession struct {
 }
 
 type Location struct {
-	Model
-	Title     string
-	Latitude  string `valid:"required"`
-	Longitude string `valid:"required"`
-	City      string
-	State     string
-	Zip       string
-	UserID    string
-	BookingID uuid.UUID
-	Address   string
+	ID        uuid.UUID `valid:"required"`
+	Name      *string   `json:"display_name"`
+	Latitude  string    `valid:"required" json:"latitude"`
+	Longitude string    `valid:"required" json:"longitude"`
+	City      *string   `json:"city"`
+	State     *string   `json:"state"`
+	Zip       *string   `json:"zip"`
+	UserID    string    `valid:"required"`
+	Address   *string   `json:"address"`
 }
 
 type BookingLocation struct {

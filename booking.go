@@ -37,16 +37,16 @@ type Provider struct {
 }
 
 type ProviderBrief struct {
-	ID       uuid.UUID `json"id"`
-	UserID   string    `json:"user_id"`
-	Name     string    `json:"name"`
+	ID         uuid.UUID `json"id"`
+	UserID     string    `json:"user_id"`
+	Name       string    `json:"name"`
 	Profession string    `json:"profession"`
-	Rate     `json:"rate"`
-	Jobs     int     `json:"num_jobs"`
-	Rating   float32 `json:"avg_rating"`
-	Reviews  int     `json:"num_reviews"`
-	Photo    string  `json:"photo_url"`
-	Distance string  `json:"distance"`
+	Rate       `json:"rate"`
+	Jobs       int     `json:"num_jobs"`
+	Rating     float32 `json:"avg_rating"`
+	Reviews    int     `json:"num_reviews"`
+	Photo      string  `json:"photo_url"`
+	Distance   string  `json:"distance"`
 }
 
 type Stats struct {
@@ -57,12 +57,11 @@ type Stats struct {
 }
 
 type Location struct {
-	ID        *string  `json:"location_id"`
+	ID        *string `json:"location_id"`
 	Name      *string `json:"name"`
-	Title     *string `json:"title"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Address   string  `json:"address"`
+	Latitude  *string `json:"latitude"`
+	Longitude *string `json:"longitude"`
+	Address   *string  `json:"address"`
 }
 
 type Service struct {
@@ -172,7 +171,7 @@ type Profile struct {
 	//Email         *string `json:"email"`
 	EmailVerified bool `json:"email_verified"`
 	//Phone         *string `json:"phone"`
-	Verified  bool    `json:"verified"`
+	Verified bool `json:"verified"`
 }
 
 type Bid struct{}
@@ -202,7 +201,6 @@ type UserService interface {
 	FindProviderByID(context.Context, string) (*Provider, error)
 	ListProviders(context.Context) ([]*ProviderBrief, error)
 	// User profile
-	GetProfile(context.Context, string) (*Profile, error)
 	FindProfileByUserID(context.Context, string) (*Profile, error)
 	CreateProfile(context.Context, *model.Profile) error
 	UpdateProfile(context.Context, *model.Profile) error
@@ -243,5 +241,5 @@ type BidService interface {
 type LocationService interface {
 	CreateLocation(context.Context, *model.Location) error
 	//FindLocationByID(context.Context, uuid.UUID) (*Location, error)
-	ListMyLocations(context.Context, *AuthUser) ([]*Location, error)
+	ListMyLocations(context.Context, string) ([]*Location, error)
 }

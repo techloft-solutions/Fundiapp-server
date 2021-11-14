@@ -27,7 +27,7 @@ func (s *Server) handleProfileGet(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	profile, err := s.UsrSvc.GetProfile(ctx, userID.String())
+	profile, err := s.UsrSvc.FindProfileByUserID(ctx, userID.String())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
@@ -69,7 +69,7 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// retrieve existing profile from database
-	currProfile, err := s.UsrSvc.GetProfile(ctx, userID.String())
+	currProfile, err := s.UsrSvc.FindProfileByUserID(ctx, userID.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("profile does not exist")
@@ -203,27 +203,7 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	provider.UserID = userID.String()
-	/*
-		provider.FirstName = strOrNil(r.PostFormValue("first_name"))
-		provider.LastName = strOrNil(r.PostFormValue("last_name"))
-		provider.Email = strOrNil(r.PostFormValue("email"))
-		provider.PhotoUrl = strOrNil(r.PostFormValue("photo_url"))
-		provider.Bio = strOrNil(r.PostFormValue("bio"))
-		provider.LocationID = strOrNil(r.PostFormValue("location_id"))
-		provider.Profession = strOrNil(r.PostFormValue("profession"))
-		//profile.Status = strOrNil(r.PostFormValue("status"))
-	*/
 	provider.Type = "provider"
-	/*
-		err = s.UsrSvc.CreateProfile(r.Context(), &provider.Profile)
-		if err != nil {
-			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-			if err = handleDuplicateEntry(w, err); err != nil {
-				http.Error(w, "something went wrong", http.StatusInternalServerError)
-			}
-			return
-		}
-	*/
 
 	err = s.UsrSvc.CreateProvider(r.Context(), &provider)
 	if err != nil {
