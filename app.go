@@ -51,10 +51,10 @@ func (a *App) Close() error {
 */
 
 type AuthUser struct {
-	ID            string `json:"user_id"`
-	Name          string `json:"name"`
-	PictureUrl    string `json:"picture_url"`
-	Provider      string `json:"provider"`
-	Email         string `json:"email_address"`
-	EmailVerified bool   `json:"email_verified"`
+	ID            string  `json:"user_id"`
+	Name          *string `json:"name"`
+	PictureUrl    *string `json:"picture_url"`
+	Provider      string  `json:"provider"`
+	Email         *string `json:"email_address"`
+	EmailVerified bool    `json:"email_verified"`
 }

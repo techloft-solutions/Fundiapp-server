@@ -33,3 +33,27 @@ func (l Location) Validate() error {
 	}
 	return nil
 }
+
+func (c Category) Validate() error {
+	_, err := govalidator.ValidateStruct(c)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r Review) Validate() error {
+	_, err := govalidator.ValidateStruct(r)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s Service) Validate() error {
+	_, err := govalidator.ValidateStruct(s)
+	if err != nil {
+		return err
+	}
+	return nil
+}

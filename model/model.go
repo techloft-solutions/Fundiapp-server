@@ -31,17 +31,16 @@ type Client struct {
 }
 
 type Service struct {
-	Model
-	User
+	UserID     string
 	ProviderID uuid.UUID
-	ClientID   uuid.UUID
+	Name       string `json:"name"`
+	Rate
 }
 
 type Rate struct {
-	Model
-	Amount   uint
-	Unit     string
-	Currency string
+	Amount   uint   `json:"rate_amount"`
+	Unit     string `json:"rate_unit"`
+	Currency string `json:"rate_currency"`
 }
 
 type Statistic struct {
@@ -54,17 +53,15 @@ type Statistic struct {
 }
 
 type Review struct {
-	Model
-	AuthorID             uuid.UUID
-	ProviderID           uuid.UUID
-	ServiceID            uuid.UUID
-	RateID               uuid.UUID
-	Comment              string
-	Rating               float32
-	IntegrityRating      float32
-	CompetenceRating     float32
-	ResponsivenessRating float32
-	QualityRating        float32
+	AuthorID             string  `valid:"required" json:"author_id"`
+	ProviderID           string  `valid:"required,uuid" json:"provider_id"`
+	ServiceID            string  `valid:"required,uuid" json:"service_id"`
+	Comment              string  `valid:"required" json:"comment"`
+	Rating               string  `valid:"required" json:"rating"`
+	IntegrityRating      *string `json:"integrity_rating"`
+	CompetenceRating     *string `json:"competence_rating"`
+	ResponsivenessRating *string `json:"responsiveness_rating"`
+	QualityRating        *string `json:"quality_rating"`
 }
 
 type Booking struct {
@@ -116,9 +113,9 @@ type Portfolio struct {
 
 type Category struct {
 	Name        string `valid:"required"`
-	Description string
-	ParentID    int
-	Profession  string
+	Description *string
+	ParentID    *int
+	Profession  *string
 }
 
 type ProviderProfession struct {

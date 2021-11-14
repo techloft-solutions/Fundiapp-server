@@ -52,7 +52,7 @@ func main() {
 	}
 
 	server.BkSvc = sqlite.NewBookingService(db)
-	server.LcSvc = sqlite.NewLocationService(db)
+	server.LocSvc = sqlite.NewLocationService(db)
 	//server.BidSvc = sqlite.NewBidService(db)
 	server.CatSvc = sqlite.NewCategoryService(db)
 	server.PfoSvc = sqlite.NewPortfolioService(db)

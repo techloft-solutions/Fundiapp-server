@@ -23,6 +23,36 @@ func NewUserService(db *DB) *UserService {
 
 //func (s *UserService) FindClientByID(ctx context.Context, booking *model.Client) error {}
 
+func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (*app.Provider, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	profile, err := getProviderByUserID(ctx, tx, userId)
+	if err != nil {
+		return nil, err
+	}
+	return profile, tx.Commit()
+}
+
+func getProviderByUserID(ctx context.Context, tx *Tx, id string) (*app.Provider, error) {
+	profile := &app.Provider{}
+	err := tx.QueryRowContext(ctx, `
+		SELECT
+			providers.provider_id
+		FROM providers
+		WHERE providers.user_id = ?
+	`, id).Scan(
+		&profile.ID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return profile, nil
+}
+
 func (s *UserService) FindProviderByID(ctx context.Context, id string) (*app.Provider, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {

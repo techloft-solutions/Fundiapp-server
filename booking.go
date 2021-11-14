@@ -21,6 +21,7 @@ type Rate struct {
 type Category struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+	ParentID *string `json:"parent_id"`
 }
 
 type Provider struct {
@@ -65,8 +66,9 @@ type Location struct {
 }
 
 type Service struct {
-	//ID    uuid.UUID `json:"service_id"
-	Title *string `json:"service_title"`
+	ID    uuid.UUID `json:"id"`
+	Name *string `json:"name"`
+	Rate `json:"rate"`
 }
 
 type Review struct {
@@ -199,6 +201,7 @@ type UserService interface {
 	// Provider
 	CreateProvider(context.Context, *model.Provider) error
 	FindProviderByID(context.Context, string) (*Provider, error)
+	FindProviderByUserID(context.Context, string) (*Provider, error)
 	ListProviders(context.Context) ([]*ProviderBrief, error)
 	// User profile
 	FindProfileByUserID(context.Context, string) (*Profile, error)
@@ -212,8 +215,10 @@ type ClientService interface {
 }
 
 type ServiceService interface {
-	FindServiceByID(context.Context, uuid.UUID) (*Service, error)
-	FindServices(context.Context) ([]*Service, error)
+	CreateService(context.Context, *model.Service) error
+	//FindServiceByID(context.Context, uuid.UUID) (*Service, error)
+	ListMyServices(context.Context, string) ([]*Service, error)
+	ListServices(context.Context) ([]*Service, error)
 }
 
 type ReviewService interface {

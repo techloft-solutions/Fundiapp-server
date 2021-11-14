@@ -143,7 +143,8 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 		request.LocationID,
 		request.Status,
 	); err != nil {
-		panic(err)
+		log.Println("failed inserting into db:", err)
+		return err
 	}
 
 	// Save photos information if present

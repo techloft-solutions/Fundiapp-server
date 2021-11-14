@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS reviews(
-    review_id VARCHAR(255) PRIMARY KEY,
+    id INT(20) PRIMARY KEY AUTO_INCREMENT,
     author_id VARCHAR(255) NOT NULL,
     comment TEXT NOT NULL,
     rating DECIMAL(1,1) NOT NULL,

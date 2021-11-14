@@ -27,8 +27,8 @@ func AuthHandler(next http.Handler) http.Handler {
 
 		user := app.AuthUser{
 			ID: token.UID,
-			//Name:  token.Claims["name"].(string),
-			Email: token.Claims["email"].(string),
+			//Name: token.Claims["name"].(*string),
+			//Email: token.Claims["email"].(string),
 		}
 
 		r = r.WithContext(context.WithValue(r.Context(), accessKeyAuthToken, user))
@@ -46,6 +46,9 @@ func parseAuthorizationHeader(ctx context.Context, tokenHeader string) (*auth.To
 	}
 	opt := option.WithCredentialsFile("keys/hudumaapp-firebase-adminsdk-jtet8-7370576c3f.json")
 	app, err := firebase.NewApp(context.Background(), nil, opt)
+	if err != nil {
+		log.Println("error creating firebase app:", err)
+	}
 
 	client, err := app.Auth(ctx)
 	if err != nil {

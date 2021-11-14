@@ -60,7 +60,7 @@ func (s *Server) handlePortfolioCreate(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, nil)
 }
 */
-func (s *Server) handleMyLocationList(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleMyLocations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userID, err := middlewares.UserIDFromContext(r.Context())
@@ -70,7 +70,7 @@ func (s *Server) handleMyLocationList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.LcSvc.ListMyLocations(ctx, userID.String())
+	resp, err := s.LocSvc.ListMyLocations(ctx, userID.String())
 	if err != nil {
 		log.Println(err)
 		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
@@ -110,7 +110,7 @@ func (s *Server) handleLocationCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.LcSvc.CreateLocation(r.Context(), &location)
+	err = s.LocSvc.CreateLocation(r.Context(), &location)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)

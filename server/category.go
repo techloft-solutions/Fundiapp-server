@@ -1,53 +1,166 @@
 package server
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
-	"strconv"
 
-	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
+	"github.com/andrwkng/hudumaapp/server/middlewares"
+	"github.com/google/uuid"
 )
 
 func (s *Server) handleCategoriesList(w http.ResponseWriter, r *http.Request) {
 	// Fetch categories from database.
 	resp, err := s.CatSvc.ListCategories(r.Context())
 	if err != nil {
-		log.Println(err)
-		//handleError(w, errors.New("Something went wrong!"), http.StatusInternalServerError)
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
+	handleSuccess(w, resp)
 }
 
 func (s *Server) handleCategoryCreate(w http.ResponseWriter, r *http.Request) {
 	var category model.Category
-	category.Name = r.PostFormValue("name")
-	category.Profession = r.PostFormValue("profession")
-	category.Description = r.PostFormValue("description")
-	parentId, err := strconv.Atoi(r.PostFormValue("parent_id"))
+
+	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
-		log.Println(err)
-		//handleError(w, errors.New("Something went wrong!"), http.StatusInternalServerError)
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
-	category.ParentID = parentId
+
+	if err := json.Unmarshal(jsonStr, &category); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	if err := category.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	err = s.CatSvc.CreateCategory(r.Context(), &category)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, category)
+}
+
+func (s *Server) handleReviewCreate(w http.ResponseWriter, r *http.Request) {
+	var review model.Review
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &review); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	if err := review.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	/*
+		err = s.RevSvc.CreateReview(r.Context(), &review)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+			return
+		}
+	*/
+	handleSuccess(w, review)
+}
+
+func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
+	var service model.Service
+
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	// Return an error if the user is not currently logged in.
+	if err != nil {
 		handleUnathorised(w)
 		return
 	}
-	res := app.Category{
-		Name: category.Name,
+
+	provider, err := s.UsrSvc.FindProviderByUserID(r.Context(), userID.String())
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
 	}
-	handleSuccess(w, res)
+
+	providerID, err := uuid.Parse(provider.ID)
+	if err != nil {
+		log.Println("error parsing providerID:", err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+	service.ProviderID = providerID
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &service); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	service.UserID = userID.String()
+
+	if err := service.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = s.ServiceSvc.CreateService(r.Context(), &service)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, service)
+}
+
+func (s *Server) handleMyServices(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	// Return an error if the user is not currently logged in.
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+
+	resp, err := s.ServiceSvc.ListMyServices(ctx, userID.String())
+	if err != nil {
+		log.Println(err)
+		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, resp)
 }
