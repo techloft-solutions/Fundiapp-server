@@ -165,6 +165,10 @@ func (s *Server) handleProviderByID(w http.ResponseWriter, r *http.Request) {
 	provider, err := s.UsrSvc.FindProviderByID(r.Context(), providerId)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			http.Error(w, "profile not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
@@ -184,25 +188,42 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 		handleUnathorised(w)
 		return
 	}
-	provider.UserID = userID.String()
-	provider.FirstName = strOrNil(r.PostFormValue("first_name"))
-	provider.LastName = strOrNil(r.PostFormValue("last_name"))
-	provider.Email = strOrNil(r.PostFormValue("email"))
-	provider.PhotoUrl = strOrNil(r.PostFormValue("photo_url"))
-	provider.Bio = strOrNil(r.PostFormValue("bio"))
-	provider.LocationID = strOrNil(r.PostFormValue("location_id"))
-	provider.Profession = strOrNil(r.PostFormValue("profession"))
-	//profile.Status = strOrNil(r.PostFormValue("status"))
-	provider.Type = "provider"
 
-	err = s.UsrSvc.CreateProfile(r.Context(), &provider.Profile)
+	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		if err = handleDuplicateEntry(w, err); err != nil {
-			http.Error(w, "something went wrong", http.StatusInternalServerError)
-		}
+		http.Error(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
+
+	if err := json.Unmarshal(jsonStr, &provider); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	provider.UserID = userID.String()
+	/*
+		provider.FirstName = strOrNil(r.PostFormValue("first_name"))
+		provider.LastName = strOrNil(r.PostFormValue("last_name"))
+		provider.Email = strOrNil(r.PostFormValue("email"))
+		provider.PhotoUrl = strOrNil(r.PostFormValue("photo_url"))
+		provider.Bio = strOrNil(r.PostFormValue("bio"))
+		provider.LocationID = strOrNil(r.PostFormValue("location_id"))
+		provider.Profession = strOrNil(r.PostFormValue("profession"))
+		//profile.Status = strOrNil(r.PostFormValue("status"))
+	*/
+	provider.Type = "provider"
+	/*
+		err = s.UsrSvc.CreateProfile(r.Context(), &provider.Profile)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			if err = handleDuplicateEntry(w, err); err != nil {
+				http.Error(w, "something went wrong", http.StatusInternalServerError)
+			}
+			return
+		}
+	*/
 
 	err = s.UsrSvc.CreateProvider(r.Context(), &provider)
 	if err != nil {

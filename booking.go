@@ -24,7 +24,7 @@ type Category struct {
 }
 
 type Provider struct {
-	ID int `json:"id"`
+	ID string `json:"id"`
 	Profile
 	Bio        *string `json:"bio"`
 	Profession *string `json:"profession"`
@@ -40,6 +40,7 @@ type ProviderBrief struct {
 	ID       uuid.UUID `json"id"`
 	UserID   string    `json:"user_id"`
 	Name     string    `json:"name"`
+	Profession string    `json:"profession"`
 	Rate     `json:"rate"`
 	Jobs     int     `json:"num_jobs"`
 	Rating   float32 `json:"avg_rating"`

@@ -21,8 +21,8 @@ type User struct {
 
 type Provider struct {
 	Profile
-	Bio        *string
-	Profession *string
+	Bio        *string `json:"bio"`
+	Profession *string `json:"profession"`
 }
 
 type Client struct {
