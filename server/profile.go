@@ -152,8 +152,7 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleSuccessMsg(w, "Profile created successfuly")
-	//handleSuccess(w, profile)
+	handleSuccessMsgWithRes(w, "Profile created successfuly", profile)
 }
 
 // Proivder
@@ -213,7 +212,7 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleSuccessMsg(w, "Provider created successfuly")
+	handleSuccessMsgWithRes(w, "Provider created successfuly", provider)
 }
 
 func handleDuplicateEntry(w http.ResponseWriter, err error) error {

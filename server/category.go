@@ -51,7 +51,7 @@ func (s *Server) handleCategoryCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleSuccess(w, category)
+	handleSuccessMsgWithRes(w, "Category created successfully", category)
 }
 
 func (s *Server) handleReviewCreate(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func (s *Server) handleReviewCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	*/
-	handleSuccess(w, review)
+	handleSuccessMsgWithRes(w, "Review created successfully", review)
 }
 
 func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +141,7 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleSuccess(w, service)
+	handleSuccessMsgWithRes(w, "Service created successfully", service)
 }
 
 func (s *Server) handleMyServices(w http.ResponseWriter, r *http.Request) {
