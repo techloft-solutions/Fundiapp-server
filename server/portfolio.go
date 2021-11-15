@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 
@@ -73,7 +72,7 @@ func (s *Server) handleMyLocations(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.LocSvc.ListMyLocations(ctx, userID.String())
 	if err != nil {
 		log.Println(err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -94,28 +93,28 @@ func (s *Server) handleLocationCreate(w http.ResponseWriter, r *http.Request) {
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.Unmarshal(jsonStr, &location); err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
 	err = location.Validate()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = s.LocSvc.CreateLocation(r.Context(), &location)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	handleSuccessText(w, location.ID)
+	handleSuccessMsgWithRes(w, "Location created successfuly", location)
 }

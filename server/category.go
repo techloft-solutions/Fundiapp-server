@@ -3,7 +3,6 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 
@@ -17,7 +16,7 @@ func (s *Server) handleCategoriesList(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.CatSvc.ListCategories(r.Context())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -30,25 +29,25 @@ func (s *Server) handleCategoryCreate(w http.ResponseWriter, r *http.Request) {
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.Unmarshal(jsonStr, &category); err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
 	if err := category.Validate(); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = s.CatSvc.CreateCategory(r.Context(), &category)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -61,25 +60,25 @@ func (s *Server) handleReviewCreate(w http.ResponseWriter, r *http.Request) {
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.Unmarshal(jsonStr, &review); err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
 	if err := review.Validate(); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	/*
 		err = s.RevSvc.CreateReview(r.Context(), &review)
 		if err != nil {
 			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-			handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+			handleError(w, "Something went wrong", http.StatusInternalServerError)
 			return
 		}
 	*/
@@ -100,17 +99,17 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			handleError(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
 	providerID, err := uuid.Parse(provider.ID)
 	if err != nil {
 		log.Println("error parsing providerID:", err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 	service.ProviderID = providerID
@@ -118,27 +117,27 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.Unmarshal(jsonStr, &service); err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
 	service.UserID = userID.String()
 
 	if err := service.Validate(); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = s.ServiceSvc.CreateService(r.Context(), &service)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -158,7 +157,7 @@ func (s *Server) handleMyServices(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.ServiceSvc.ListMyServices(ctx, userID.String())
 	if err != nil {
 		log.Println(err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 

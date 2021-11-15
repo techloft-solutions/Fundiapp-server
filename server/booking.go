@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,14 +21,14 @@ func (s *Server) handleBookingByID(w http.ResponseWriter, r *http.Request) {
 	// Parse ID from path.
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		handleError(w, app.Errorf(app.INVALID_ERR, "Invalid ID format"), 400)
+		handleError(w, "Id is not a valid UUID", http.StatusBadRequest)
 		return
 	}
 
 	resp, err := s.BkSvc.FindBookingByID(r.Context(), id)
 	if err != nil {
 		log.Println(err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -46,7 +45,7 @@ func (s *Server) handleBookingList(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.BkSvc.FindBookings(r.Context())
 	if err != nil {
 		log.Println(err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -78,7 +77,7 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 	if photoData != "" {
 		err = json.Unmarshal([]byte(photoData), &photos)
 		if err != nil {
-			http.Error(w, "photos: must input a valid photo value", http.StatusBadRequest)
+			handleError(w, "photos: must input a valid photo value", http.StatusBadRequest)
 			return
 		}
 	}
@@ -93,14 +92,14 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 
 	err = booking.Validate()
 	if err != nil {
-		//handleError(w, err, http.StatusBadRequest)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = s.BkSvc.CreateBooking(r.Context(), &booking)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -159,7 +158,7 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	if photoData != "" {
 		err = json.Unmarshal([]byte(photoData), &photos)
 		if err != nil {
-			http.Error(w, "photos: must input a valid photo value", http.StatusBadRequest)
+			handleError(w, "photos: must input a valid photo value", http.StatusBadRequest)
 			return
 		}
 	}
@@ -174,7 +173,7 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	err = request.Validate()
 	if err != nil {
 		//handleError(w, err, http.StatusBadRequest)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -207,7 +206,7 @@ func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.ReqSvc.ListRequests(r.Context(), userId)
 	if err != nil {
 		log.Println(err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -223,14 +222,14 @@ func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		handleError(w, app.Errorf(app.INVALID_ERR, "Invalid ID format"), 400)
+		handleError(w, "Id is not a valid UUID", http.StatusBadRequest)
 		return
 	}
 	// Fetch dials from database.
 	resp, err := s.ReqSvc.FindRequestByID(r.Context(), id)
 	if err != nil {
 		log.Println(err)
-		handleError(w, errors.New("something went wrong"), http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 

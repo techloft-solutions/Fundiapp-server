@@ -31,10 +31,10 @@ func (s *Server) handleProfileGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
-			http.Error(w, "profile not found", http.StatusNotFound)
+			handleError(w, "Profile not found", http.StatusNotFound)
 			return
 		}
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 	saveFirebaseUserToProfile(ctx, profile)
@@ -50,20 +50,20 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.Unmarshal(jsonStr, &profile); err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
 	// Check if user is currently logged in.
 	userID, err := middlewares.UserIDFromContext(ctx)
 	if err != nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		handleError(w, "unauthorized", http.StatusUnauthorized)
 		handleUnathorised(w)
 		return
 	}
@@ -77,7 +77,7 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	err = updateFirebaseUserData(ctx, profile)
 	if err != nil {
 		log.Printf("error updating firebase user %s: %v\n", userID, err)
-		http.Error(w, "error updating firebase user data", http.StatusInternalServerError)
+		handleError(w, "error updating firebase user data", http.StatusInternalServerError)
 		return
 	}
 
@@ -104,13 +104,12 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		case sql.ErrNoRows:
 			log.Println(w, "updating db was not successful", http.StatusNotFound)
 		default:
-			http.Error(w, "something went wrong", http.StatusInternalServerError)
+			handleError(w, "something went wrong", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	handleSuccess(w, profile)
-	//handleSuccessText(w, profile.ID)
+	handleSuccessMsgWithRes(w, "Profile updated successfuly", profile)
 	//json.NewEncoder(w).Encode(profile)
 }
 
@@ -130,13 +129,13 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.Unmarshal(jsonStr, &profile); err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
@@ -148,12 +147,12 @@ func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err = handleDuplicateEntry(w, err); err != nil {
-			http.Error(w, "something went wrong", http.StatusInternalServerError)
+			handleError(w, "something went wrong", http.StatusInternalServerError)
 		}
 		return
 	}
 
-	handleSuccessText(w, profile.ID)
+	handleSuccessMsg(w, "Profile created successfuly")
 	//handleSuccess(w, profile)
 }
 
@@ -166,10 +165,10 @@ func (s *Server) handleProviderByID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
-			http.Error(w, "profile not found", http.StatusNotFound)
+			handleError(w, "profile not found", http.StatusNotFound)
 			return
 		}
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -192,13 +191,13 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing form values", http.StatusInternalServerError)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.Unmarshal(jsonStr, &provider); err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "error parsing json string", http.StatusInternalServerError)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
@@ -209,12 +208,12 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err = handleDuplicateEntry(w, err); err != nil {
-			http.Error(w, "something went wrong", http.StatusInternalServerError)
+			handleError(w, "something went wrong", http.StatusInternalServerError)
 		}
 		return
 	}
 
-	handleSuccessText(w, provider.ID)
+	handleSuccessMsg(w, "Provider created successfuly")
 }
 
 func handleDuplicateEntry(w http.ResponseWriter, err error) error {
@@ -223,7 +222,7 @@ func handleDuplicateEntry(w http.ResponseWriter, err error) error {
 		return err
 	}
 	if me.Number == 1062 {
-		http.Error(w, "record already exists", http.StatusConflict)
+		handleError(w, "record already exists", http.StatusConflict)
 	}
 	return nil
 }
@@ -232,7 +231,7 @@ func (s *Server) handleProviderList(w http.ResponseWriter, r *http.Request) {
 	providers, err := s.UsrSvc.ListProviders(r.Context())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -250,7 +249,7 @@ func (s *Server) handleProfileByUserID(w http.ResponseWriter, r *http.Request) {
 	user, err := s.UsrSvc.FindProfileByUserID(r.Context(), userID.String())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 

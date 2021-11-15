@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,7 +22,8 @@ func AuthHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := parseAuthorizationHeader(r.Context(), r.Header.Get("Authorization"))
 		if err != nil {
-			http.Error(w, "Invalid authorization token", http.StatusUnauthorized)
+			//handleError(w, "Invalid authorization token", http.StatusUnauthorized)
+			handleInvalidToken(w)
 			return
 		}
 
@@ -61,4 +63,16 @@ func parseAuthorizationHeader(ctx context.Context, tokenHeader string) (*auth.To
 	}
 
 	return token, nil
+}
+
+func handleInvalidToken(w http.ResponseWriter) {
+	resp := make(map[string]string)
+	resp["error"] = "Invalid Authorization token"
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Write(jsonResp)
 }

@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
-
-	app "github.com/andrwkng/hudumaapp"
 )
 
 // allFormValues returns a map that contains all the form values.
@@ -20,18 +17,6 @@ func allFormValues(r *http.Request) map[string]string {
 	return m
 }
 
-func handleUnathorised(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusUnauthorized)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	resp := make(map[string]string)
-	resp["message"] = "Unauthorized"
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
-}
-
 func handleSuccess(w http.ResponseWriter, resource interface{}) {
 	jsonResp, err := json.Marshal(resource)
 	if err != nil {
@@ -42,27 +27,51 @@ func handleSuccess(w http.ResponseWriter, resource interface{}) {
 	w.Write(jsonResp)
 }
 
-func handleSuccessText(w http.ResponseWriter, resource interface{}) {
-	jsonResp, err := json.Marshal(resource)
+func handleSuccessMsg(w http.ResponseWriter, msg string) {
+	resp := make(map[string]string)
+	resp["success"] = msg
+	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResp)
 }
 
-func handleError(w http.ResponseWriter, err error, code int) {
-	resp := make(map[string]app.Error)
-	resp["error"] = app.Error{
-		Code:    strconv.Itoa(code),
-		Message: err.Error(),
+func handleSuccessMsgWithRes(w http.ResponseWriter, msg string, res interface{}) {
+	resp := make(map[string]interface{})
+	resp["success"] = msg
+	resp["data"] = res
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
+}
+
+func handleError(w http.ResponseWriter, errorMsg string, code int) {
+	resp := make(map[string]string)
+	resp["error"] = errorMsg
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(code)
+	w.Write(jsonResp)
+}
+
+func handleUnathorised(w http.ResponseWriter) {
+	resp := make(map[string]string)
+	resp["error"] = "Unauthorized"
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusUnauthorized)
 	w.Write(jsonResp)
 }
