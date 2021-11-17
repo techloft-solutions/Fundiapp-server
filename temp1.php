@@ -43,12 +43,11 @@ Photo:
 - type
 - date
 
-Schedule:
+ServiceRequest:
 - date
 - time
 - location
 - description
-- employee
 - customer
 
 

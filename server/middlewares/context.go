@@ -25,3 +25,10 @@ func UserIDFromContext(ctx context.Context) (app.UserID, error) {
 	}
 	return app.UserIDNil, app.Errorf(app.UNAUTHORIZED_ERR, "Not logged in.")
 }
+
+func PhoneFromContext(ctx context.Context) *string {
+	if user := UserFromContext(ctx); user != nil {
+		return &user.PhoneNumber
+	}
+	return nil
+}

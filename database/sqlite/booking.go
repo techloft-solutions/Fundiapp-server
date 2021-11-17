@@ -39,6 +39,54 @@ func (s *RequestService) CreateRequest(ctx context.Context, request *model.Reque
 	return tx.Commit()
 }
 
+func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
+	if _, err := tx.ExecContext(ctx, `
+		INSERT INTO bookings (
+			booking_id,
+			client_id,
+			title,
+			description,
+			start_date,
+			location_id,
+			status,
+			urgent
+		) VALUES (?,?,?,?,?,?,?,?)
+		`,
+		request.ID,
+		request.ClientID,
+		request.Title,
+		request.Note,
+		request.StartDate,
+		request.LocationID,
+		request.Status,
+		request.Urgent,
+	); err != nil {
+		log.Println("failed inserting into db:", err)
+		return err
+	}
+
+	// Save photos information if present
+	if request.Photos != nil {
+		for _, photoUrl := range request.Photos {
+			photo := model.Photo{
+				Owner: request.ClientID,
+				Url:   photoUrl,
+			}
+			photo.ID = uuid.New()
+			err := createPhoto(ctx, tx, photo)
+			if err != nil {
+				log.Println(err)
+			}
+			bookingPhoto := model.BookingPhoto{
+				BookingID: request.ID,
+				PhotoID:   photo.ID,
+			}
+			createBookingPhoto(ctx, tx, bookingPhoto)
+		}
+	}
+	return nil
+}
+
 func (s *RequestService) ListRequests(ctx context.Context, userId app.UserID) ([]*app.Request, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -75,6 +123,7 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 			title,
 			description,
 			client_id,
+			status,
 			start_date,
 			created_at
 		FROM bookings
@@ -84,6 +133,7 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 		&request.Title,
 		&request.Note,
 		&request.Client,
+		&request.Status,
 		&request.Start,
 		&request.Created,
 	)
@@ -99,6 +149,7 @@ func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]*ap
 		SELECT
 			booking_id,
 			title,
+			status,
 			start_date,
 			created_at
 		FROM bookings
@@ -113,6 +164,7 @@ func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]*ap
 		if err := rows.Scan(
 			&request.ID,
 			&request.Title,
+			&request.Status,
 			&request.Start,
 			&request.Created,
 		); err != nil {
@@ -121,52 +173,6 @@ func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]*ap
 		requests = append(requests, request)
 	}
 	return requests, nil
-}
-
-func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
-	if _, err := tx.ExecContext(ctx, `
-		INSERT INTO bookings (
-			booking_id,
-			client_id,
-			title,
-			description,
-			start_date,
-			location_id,
-			status
-		) VALUES (?,?,?,?,?,?,?)
-		`,
-		request.ID,
-		request.ClientID,
-		request.Title,
-		request.Note,
-		request.StartDate,
-		request.LocationID,
-		request.Status,
-	); err != nil {
-		log.Println("failed inserting into db:", err)
-		return err
-	}
-
-	// Save photos information if present
-	if request.Photos != nil {
-		for _, photoUrl := range request.Photos {
-			photo := model.Photo{
-				Owner: request.ClientID,
-				Url:   photoUrl,
-			}
-			photo.ID = uuid.New()
-			err := createPhoto(ctx, tx, photo)
-			if err != nil {
-				log.Println(err)
-			}
-			bookingPhoto := model.BookingPhoto{
-				BookingID: request.ID,
-				PhotoID:   photo.ID,
-			}
-			createBookingPhoto(ctx, tx, bookingPhoto)
-		}
-	}
-	return nil
 }
 
 type LocationService struct {
@@ -615,4 +621,43 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 	}
 
 	return booking, nil
+}
+
+type BidService struct {
+	db *DB
+}
+
+func NewBidService(db *DB) *BidService {
+	return &BidService{db}
+}
+
+func (s *BidService) Create(ctx context.Context, bid *model.Bid) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := createBid(ctx, tx, bid); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func createBid(ctx context.Context, tx *Tx, bid *model.Bid) error {
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO bids (
+			booking_id,
+			provider_id,
+			price,
+		) VALUES (?, ?, ?)
+		`,
+		bid.BookingID,
+		bid.BidderID,
+		bid.Price,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }

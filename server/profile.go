@@ -7,15 +7,12 @@ import (
 	"log"
 	"net/http"
 
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/auth"
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"google.golang.org/api/option"
 )
 
 func (s *Server) handleProfileGet(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +34,8 @@ func (s *Server) handleProfileGet(w http.ResponseWriter, r *http.Request) {
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
-	saveFirebaseUserToProfile(ctx, profile)
+
+	profile.Phone = middlewares.PhoneFromContext(ctx)
 
 	handleSuccess(w, profile)
 }
@@ -89,14 +87,14 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	profile.ID = currProfile.ID
 	profile.UserID = userID.String()
-
-	err = updateFirebaseUserData(ctx, profile)
-	if err != nil {
-		log.Printf("error updating firebase user %s: %v\n", userID, err)
-		handleError(w, "error updating firebase user data", http.StatusInternalServerError)
-		return
-	}
-
+	/*
+		err = updateFirebaseUserData(ctx, profile)
+		if err != nil {
+			log.Printf("error updating firebase user %s: %v\n", userID, err)
+			handleError(w, "error updating firebase user data", http.StatusInternalServerError)
+			return
+		}
+	*/
 	err = s.UsrSvc.UpdateProfile(ctx, &profile)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
@@ -171,7 +169,7 @@ func (s *Server) handleProviderByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	saveFirebaseUserToProfile(r.Context(), &provider.Profile)
+	//saveFirebaseUserToProfile(r.Context(), &provider.Profile)
 
 	handleSuccess(w, provider)
 }
@@ -255,40 +253,17 @@ func (s *Server) handleProfileByUserID(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, user)
 }
 
+/*
 func updateFirebaseUserData(ctx context.Context, profile model.Profile) error {
-	uid := profile.UserID
-	opt := option.WithCredentialsFile("keys/hudumaapp-firebase-adminsdk-jtet8-7370576c3f.json")
-	app, err := firebase.NewApp(ctx, nil, opt)
-	if err != nil {
-		log.Printf("error creating firebase app %s: %v\n", uid, err)
-	}
-	// Get an auth client from the firebase.App
-	client, err := app.Auth(ctx)
-	if err != nil {
-		log.Fatalf("error getting Auth client: %v\n", err)
-	}
-	/*
-		params := (&auth.UserToUpdate{}).
-			Email(strOrNull(profile.Email)).
-			DisplayName(strOrNull(profile.DisplayName)).
-			PhotoURL(strOrNull(profile.PhotoUrl))
-	*/
 	var update bool
-	par := &auth.UserToUpdate{}
-	if profile.Email != nil {
-		par.Email(*profile.Email)
-		update = true
-	}
+	params := &auth.UserToUpdate{}
+
 	if profile.DisplayName != nil {
-		par.DisplayName(*profile.DisplayName)
+		params.DisplayName(*profile.DisplayName)
 		update = true
 	}
 	if profile.PhotoUrl != nil {
-		par.PhotoURL(*profile.PhotoUrl)
-		update = true
-	}
-	if profile.Phone == "" {
-		par.PhoneNumber(profile.Phone)
+		params.PhotoURL(*profile.PhotoUrl)
 		update = true
 	}
 
@@ -296,19 +271,33 @@ func updateFirebaseUserData(ctx context.Context, profile model.Profile) error {
 		return nil
 	}
 
-	_, err = client.UpdateUser(ctx, uid, par)
+	uid := profile.UserID
+	opt := option.WithCredentialsFile("keys/hudumaapp-firebase-adminsdk-jtet8-7370576c3f.json")
+	app, err := firebase.NewApp(ctx, nil, opt)
+	if err != nil {
+		log.Printf("error creating firebase app %s: %v\n", uid, err)
+		return err
+	}
+	// Get an auth client from the firebase.App
+	client, err := app.Auth(ctx)
+	if err != nil {
+		log.Printf("error getting Auth client: %v\n", err)
+		return err
+	}
+
+	_, err = client.UpdateUser(ctx, uid, params)
 	if err != nil {
 		log.Printf("error updating firebase user %s: %v\n", uid, err)
 	}
 	return err
 }
-
+*/
 func saveFirebaseUserToProfile(ctx context.Context, profile *app.Profile) {
 	firebaseUser := retrieveFirebaseUserData(ctx, profile.UserID)
 	if firebaseUser != nil {
 		profile.Email = strOrNil(firebaseUser.Email)
 		profile.Phone = strOrNil(firebaseUser.PhoneNumber)
-		profile.DisplayName = strOrNil(firebaseUser.DisplayName)
+		profile.Username = strOrNil(firebaseUser.DisplayName)
 		profile.PhotoUrl = strOrNil(firebaseUser.PhotoURL)
 		profile.EmailVerified = firebaseUser.EmailVerified
 	}

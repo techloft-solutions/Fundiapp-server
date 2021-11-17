@@ -1,6 +1,6 @@
 CREATE TABLE `bids` (
   `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-  `bidder_id` VARCHAR(255) NOT NULL,
+  `provider_id` VARCHAR(255) NOT NULL,
   `booking_id` VARCHAR(255) NOT NULL,
   `amount` INTEGER NOT NULL,
   `created_at` DATETIME NOT NULL,

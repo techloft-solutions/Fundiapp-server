@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     service_id VARCHAR(255),
     start_date DATETIME NOT NULL,
     status VARCHAR(255),
+    urgent BOOLEAN,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     deleted_at DATETIME DEFAULT NULL

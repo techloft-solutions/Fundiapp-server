@@ -30,9 +30,14 @@ func New() *Server {
 		server: &http.Server{},
 		router: mux.NewRouter(),
 	}
-	s.router.Use(middlewares.AuthHandler)
 	s.router.HandleFunc("/", handleHello).Methods("GET")
+	// Users
+	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
+	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
+	s.router.HandleFunc("/user/validate", s.handleUserValidate).Methods("POST")
+
 	r := s.router.PathPrefix("/").Subrouter()
+	r.Use(middlewares.AuthHandler)
 	s.registerRoutes(r)
 	return s
 }
@@ -50,6 +55,8 @@ func handleHello(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) registerRoutes(r *mux.Router) {
+	//r.HandleFunc("/user/{id}", s.handleUsersUpdate).Methods("PUT")
+	//r.HandleFunc("/user/{id}", s.handleUsersDelete).Methods("DELETE")
 	// Profile
 	r.HandleFunc("/profile", s.handleProfileCreate).Methods("POST")
 	r.HandleFunc("/profile", s.handleProfileGet).Methods("GET")
@@ -72,9 +79,11 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/services", s.handleMyServices).Methods("GET")
 	r.HandleFunc("/services", s.handleServiceCreate).Methods("POST")
 	// Request
-	//r.HandleFunc("/requests", s.handleRequestList).Methods("GET")
-	//r.HandleFunc("/requests", s.handleRequestCreate).Methods("POST")
-	//r.HandleFunc("/requests/{id}", s.handleRequest).Methods("GET")
+	r.HandleFunc("/requests", s.handleRequestList).Methods("GET")
+	r.HandleFunc("/requests", s.handleRequestCreate).Methods("POST")
+	r.HandleFunc("/requests/{id}", s.handleRequest).Methods("GET")
+	r.HandleFunc("/requests/{id}/bids", s.handleBidCreate).Methods("POST")
+	//r.HandleFunc("/requests/{id}/bids", s.handleBidList).Methods("GET")
 	// Bookings
 	//r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
 	//r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")
@@ -83,7 +92,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	//r.HandleFunc("/bookings/{id}", s.handleBookingDelete).Methods("DELETE")
 	// Bids
 	//r.HandleFunc("/bids", s.handleBidCreate).Methods("POST")
-	//r.HandleFunc("/bids", s.handleBookingList).Methods("GET")
+	//r.HandleFunc("/bids", s.handleBidList).Methods("GET")
 	// Portfolios
 	//r.HandleFunc("/portfolios", s.handlePortfolioList).Methods("GET")
 	// Payments

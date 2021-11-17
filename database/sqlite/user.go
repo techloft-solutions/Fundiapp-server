@@ -3,7 +3,6 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
@@ -23,6 +22,37 @@ func NewUserService(db *DB) *UserService {
 
 //func (s *UserService) FindClientByID(ctx context.Context, booking *model.Client) error {}
 
+func (s *UserService) CreateUser(ctx context.Context, user *model.User) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := createUser(ctx, tx, user); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func createUser(ctx context.Context, tx *Tx, user *model.User) error {
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO users (
+			username,
+			phone,
+			password
+		) VALUES (?, ?, ?)
+		`,
+		user.Username,
+		user.Phone,
+		user.Password,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (*app.Provider, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -38,19 +68,19 @@ func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (
 }
 
 func getProviderByUserID(ctx context.Context, tx *Tx, id string) (*app.Provider, error) {
-	profile := &app.Provider{}
+	provider := &app.Provider{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
 			providers.provider_id
 		FROM providers
 		WHERE providers.user_id = ?
 	`, id).Scan(
-		&profile.ID,
+		&provider.ID,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return profile, nil
+	return provider, nil
 }
 
 func (s *UserService) FindProviderByID(ctx context.Context, id string) (*app.Provider, error) {
@@ -84,7 +114,7 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 			locations.name
 		FROM providers
 		LEFT JOIN profiles ON profiles.user_id = providers.user_id
-		LEFT JOIN locations ON profiles.location_id = locations.location_id
+		LEFT JOIN locations ON locations.location_id = profiles.location_id
 		WHERE providers.provider_id = ?
 	`, id).Scan(
 		&profile.ID,
@@ -97,7 +127,7 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 		&profile.Stats.Reviews,
 		&profile.Stats.Services,
 		&profile.Stats.Portfolios,
-		&profile.Location.Name,
+		&profile.Location,
 	)
 	if err != nil {
 		return nil, err
@@ -115,8 +145,6 @@ func (s *UserService) CreateProvider(ctx context.Context, provider *model.Provid
 	if err := createProvider(ctx, tx, provider); err != nil {
 		return err
 	}
-
-	log.Println("Provider created")
 
 	if err := createProfile(ctx, tx, &provider.Profile); err != nil {
 		return err
@@ -176,7 +204,8 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 			providers.reviews_count,
 			providers.jobs_count,
 			providers.rate_per_hour,
-			providers.currency
+			providers.currency,
+			profiles.photo_url
 		FROM providers
 		LEFT JOIN profiles ON profiles.user_id = providers.user_id
 		`,
@@ -201,6 +230,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 			&provider.Jobs,
 			&provider.Rate.Price,
 			&provider.Currency,
+			&provider.Photo,
 		); err != nil {
 			return nil, err
 		}
@@ -233,18 +263,25 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 	profile.UserID = userId
 	err := tx.QueryRowContext(ctx, `
 		SELECT
-			profile_id,
-			first_name,
-			last_name,
-			location_id,
-			verified
-		FROM profiles
-		WHERE user_id = ?
+			p.profile_id,
+			p.username,
+			p.first_name,
+			p.last_name,
+			p.email,
+			p.photo_url,
+			locations.address,
+			p.verified
+		FROM profiles as p
+		LEFT JOIN locations ON locations.location_id = p.location_id
+		WHERE p.user_id = ?
 	`, userId).Scan(
 		&profile.ID,
+		&profile.Username,
 		&profile.FirstName,
 		&profile.LastName,
-		&profile.Location.ID,
+		&profile.Email,
+		&profile.PhotoUrl,
+		&profile.Location,
 		&profile.Verified,
 	)
 	if err != nil {
@@ -269,13 +306,18 @@ func (s *UserService) UpdateProfile(ctx context.Context, profile *model.Profile)
 func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 	result, err := tx.ExecContext(ctx, `
 		UPDATE profiles as p
-		SET first_name = COALESCE(?, first_name),
+		SET
+			first_name = COALESCE(?, first_name),
 			last_name = COALESCE(?, last_name),
+			email = COALESCE(?, email),
+			photo_url = COALESCE(?, photo_url),
 			location_id = COALESCE(?, location_id)
 		WHERE user_id = ?
 	`,
 		profile.FirstName,
 		profile.LastName,
+		profile.Email,
+		profile.PhotoUrl,
 		profile.LocationID,
 		profile.UserID,
 	)
@@ -310,17 +352,93 @@ func createProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 			profile_id,
 			user_id, 
 			first_name, 
-			last_name, 
+			last_name,
+			email,
+			photo_url,
 			location_id,
 			account_type
-		) VALUES (?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`,
 		profile.ID,
 		profile.UserID,
 		profile.FirstName,
 		profile.LastName,
+		profile.Email,
+		profile.PhotoUrl,
 		profile.LocationID,
 		profile.Type,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *UserService) FindUserByUsername(ctx context.Context, username string) (*app.User, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	user, err := getUserByCriteria(ctx, tx, "username", username)
+	if err != nil {
+		return nil, err
+	}
+	return user, tx.Commit()
+}
+
+func (s *UserService) FindUserByPhoneNumber(ctx context.Context, phone string) (*app.User, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	user, err := getUserByCriteria(ctx, tx, "phone", phone)
+	if err != nil {
+		return nil, err
+	}
+	return user, tx.Commit()
+}
+
+func getUserByCriteria(ctx context.Context, tx *Tx, haystack string, needle string) (*app.User, error) {
+	user := &app.User{}
+	err := tx.QueryRowContext(ctx, `
+		SELECT
+			username			
+		FROM users
+		WHERE `+haystack+` = ?
+	`, needle).Scan(
+		&user.Username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) ValidateUser(ctx context.Context, phone string, password string) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := validateUser(ctx, tx, phone, password); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func validateUser(ctx context.Context, tx *Tx, phone string, password string) error {
+	err := tx.QueryRowContext(ctx, `
+		SELECT
+			username
+		FROM users
+		WHERE phone = ? AND password = ?
+	`, phone, password).Scan(
+		&phone,
 	)
 	if err != nil {
 		return err

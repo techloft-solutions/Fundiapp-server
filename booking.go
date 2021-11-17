@@ -1,10 +1,8 @@
 package app
 
 import (
-	"context"
 	"time"
 
-	"github.com/andrwkng/hudumaapp/model"
 	"github.com/google/uuid"
 )
 
@@ -19,13 +17,13 @@ type Rate struct {
 }
 
 type Category struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID       int     `json:"id"`
+	Name     string  `json:"name"`
 	ParentID *string `json:"parent_id"`
 }
 
 type Provider struct {
-	ID string `json:"id"`
+	ID string `json:"provder_id"`
 	Profile
 	Bio        *string `json:"bio"`
 	Profession *string `json:"profession"`
@@ -38,7 +36,7 @@ type Provider struct {
 }
 
 type ProviderBrief struct {
-	ID         uuid.UUID `json"id"`
+	ID         uuid.UUID `json:"provder_id"`
 	UserID     string    `json:"user_id"`
 	Name       string    `json:"name"`
 	Profession string    `json:"profession"`
@@ -62,12 +60,12 @@ type Location struct {
 	Name      *string `json:"name"`
 	Latitude  *string `json:"latitude"`
 	Longitude *string `json:"longitude"`
-	Address   *string  `json:"address"`
+	Address   *string `json:"address"`
 }
 
 type Service struct {
-	ID    uuid.UUID `json:"id"`
-	Name *string `json:"name"`
+	ID   uuid.UUID `json:"id"`
+	Name *string   `json:"name"`
 	Rate `json:"rate"`
 }
 
@@ -153,27 +151,27 @@ type Portfolio struct {
 }
 
 type User struct {
-	UserID      string  `json:"user_id"`
-	FirstName   *string `json:"first_name"`
-	LastName    *string `json:"last_name"`
-	DisplayName *string `json:"display_name"`
-	Email       *string `json:"email"`
-	Phone       *string `json:"phone"`
-	Location    `json:"location"`
-	PhotoUrl    *string `json:"photo_url"`
+	UserID    string  `json:"user_id"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Username  *string `json:"display_name"`
+	Email     *string `json:"email"`
+	Phone     *string `json:"phone"`
 }
 
 type Profile struct {
 	ID uuid.UUID `json:"profile_id"`
 	User
-	//UserID        string  `json:"user_id"`
-	//FirstName     *string `json:"first_name"`
-	//LastName      *string `json:"last_name"`
-	//DisplayName   *string `json:"display_name"`
-	//Email         *string `json:"email"`
-	EmailVerified bool `json:"email_verified"`
-	//Phone         *string `json:"phone"`
-	Verified bool `json:"verified"`
+	// UserID    string  `json:"user_id"`
+	// FirstName *string `json:"first_name"`
+	// LastName  *string `json:"last_name"`
+	// Username  *string `json:"display_name"`
+	// Email     *string `json:"email"`
+	// Phone     *string `json:"phone"`
+	Location      *string `json:"location"`
+	PhotoUrl      *string `json:"photo_url"`
+	EmailVerified bool    `json:"email_verified"`
+	Verified      bool    `json:"verified"`
 }
 
 type Bid struct{}
@@ -184,67 +182,4 @@ type Transaction struct {
 	Currency  string
 	Status    string
 	CreatedAt time.Time
-}
-
-type BookingService interface {
-	FindBookingByID(context.Context, uuid.UUID) (*Booking, error)
-	CreateBooking(context.Context, *model.Booking) error
-	FindBookings(context.Context) ([]*BookingBrief, error)
-}
-
-type CategoryService interface {
-	CreateCategory(context.Context, *model.Category) error
-	ListCategories(context.Context) ([]*Category, error)
-}
-
-type UserService interface {
-	// Provider
-	CreateProvider(context.Context, *model.Provider) error
-	FindProviderByID(context.Context, string) (*Provider, error)
-	FindProviderByUserID(context.Context, string) (*Provider, error)
-	ListProviders(context.Context) ([]*ProviderBrief, error)
-	// User profile
-	FindProfileByUserID(context.Context, string) (*Profile, error)
-	CreateProfile(context.Context, *model.Profile) error
-	UpdateProfile(context.Context, *model.Profile) error
-}
-
-type ClientService interface {
-	FindClientByID(context.Context, uuid.UUID) (*Client, error)
-	FindClients(context.Context) ([]*Client, error)
-}
-
-type ServiceService interface {
-	CreateService(context.Context, *model.Service) error
-	//FindServiceByID(context.Context, uuid.UUID) (*Service, error)
-	ListMyServices(context.Context, string) ([]*Service, error)
-	ListServices(context.Context) ([]*Service, error)
-}
-
-type ReviewService interface {
-	FindReviews(context.Context) ([]*Review, error)
-	CreateReview(context.Context, *model.Review) error
-}
-
-type PortfolioService interface {
-	CreatePortfolio(context.Context, *model.Portfolio) error
-	FindPortfolioByID(context.Context, uuid.UUID) (*Portfolio, error)
-	ListPortfoliosByUserId(context.Context, string) ([]*Portfolio, error)
-}
-
-type RequestService interface {
-	FindRequestByID(context.Context, uuid.UUID) (*RequestDetail, error)
-	ListRequests(context.Context, UserID) ([]*Request, error)
-	CreateRequest(context.Context, *model.Request) error
-}
-
-type BidService interface {
-	FindBids(context.Context) ([]*Bid, error)
-	CreateBid(context.Context, *model.Bid) error
-}
-
-type LocationService interface {
-	CreateLocation(context.Context, *model.Location) error
-	//FindLocationByID(context.Context, uuid.UUID) (*Location, error)
-	ListMyLocations(context.Context, string) ([]*Location, error)
 }

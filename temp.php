@@ -12,3 +12,5 @@ variable var
 bookingservice bksvc
 portfolioservice pfosvc
 locationservice lcsvc
+interface iface
+resource res

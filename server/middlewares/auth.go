@@ -28,7 +28,8 @@ func AuthHandler(next http.Handler) http.Handler {
 		}
 
 		user := app.AuthUser{
-			ID: token.UID,
+			ID:          token.UID,
+			PhoneNumber: token.Claims["phone_number"].(string),
 			//Name: token.Claims["name"].(*string),
 			//Email: token.Claims["email"].(string),
 		}

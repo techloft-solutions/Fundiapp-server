@@ -57,3 +57,19 @@ func (s Service) Validate() error {
 	}
 	return nil
 }
+
+func (b Bid) Validate() error {
+	_, err := govalidator.ValidateStruct(b)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u User) Validate() error {
+	_, err := govalidator.ValidateStruct(u)
+	if err != nil {
+		return err
+	}
+	return nil
+}

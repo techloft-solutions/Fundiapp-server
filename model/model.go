@@ -15,19 +15,16 @@ type Model struct {
 }
 
 type User struct {
-	UserID     string
-	LocationID uuid.UUID
+	Username string `valid:"required" json:"displayname,omitempty"`
+	Password string `valid:"required" json:"password"`
+	Phone    string `valid:"required" json:"phone"`
 }
 
 type Provider struct {
+	ID uuid.UUID `valid:"required" json:"provider_id"`
 	Profile
 	Bio        *string `json:"bio"`
 	Profession *string `json:"profession"`
-}
-
-type Client struct {
-	Model
-	User
 }
 
 type Service struct {
@@ -78,15 +75,16 @@ type Booking struct {
 }
 
 type Request struct {
-	Model
-	Title      string `valid:"required"`
-	StartDate  string `valid:"required,rfc3339"`
-	Note       string `valid:"required"`
-	LocationID string `valid:"required,uuid"`
-	Type       string `valid:"required"`
-	ClientID   string `valid:"required"`
-	Photos     []string
-	Status     string
+	ID         uuid.UUID `valid:"required"`
+	Title      string    `valid:"required" json:"title"`
+	StartDate  string    `valid:"required, rfc3339" json:"start_date"`
+	Note       string    `valid:"required" json:"note"`
+	LocationID string    `valid:"required,uuid" json:"location_id"`
+	Type       string    `valid:"required" json:"type"`
+	ClientID   string    `valid:"required" json:"client_id"`
+	Photos     []string  `json:"photos"`
+	Status     string    `json:"status"`
+	Urgent     bool      `valid:"required" json:"urgent,string"`
 }
 
 type Photo struct {
@@ -125,15 +123,15 @@ type ProviderProfession struct {
 }
 
 type Location struct {
-	ID        uuid.UUID `valid:"required"`
-	Name      *string   `json:"display_name"`
+	ID        uuid.UUID `json:"location_id" valid:"required"`
+	Name      *string   `json:"name,omitempty"`
 	Latitude  string    `valid:"required" json:"latitude"`
 	Longitude string    `valid:"required" json:"longitude"`
-	City      *string   `json:"city"`
-	State     *string   `json:"state"`
-	Zip       *string   `json:"zip"`
+	City      *string   `json:"city,omitempty"`
+	State     *string   `json:"state,omitempty"`
+	Zip       *string   `json:"zip,omitempty"`
 	UserID    string    `valid:"required"`
-	Address   *string   `json:"address"`
+	Address   string    `valid:"required" json:"address"`
 }
 
 type BookingLocation struct {
@@ -149,10 +147,9 @@ type UserLocation struct {
 }
 
 type Bid struct {
-	Model
 	BookingID uuid.UUID
-	UserID    string
-	Price     int
+	BidderID  string
+	Price     int `valid:"required"`
 }
 
 type Transaction struct {
@@ -168,18 +165,18 @@ type Transaction struct {
 
 type Profile struct {
 	//Model
-	ID          uuid.UUID `valid:"required"`
-	UserID      string    `valid:"required"`
-	DisplayName *string   `json:"display_name"`
-	FirstName   *string   `json:"first_name"`
-	LastName    *string   `json:"last_name"`
-	Email       *string   `json:"email"`
-	Phone       string    `json:"phone"`
-	PhotoUrl    *string   `json:"photo_url"`
-	LocationID  *string   `json:"location_id"`
-	Status      *string
-	Type        string `valid:"required"`
-	Verified    bool
+	ID     uuid.UUID `valid:"required" json:"profile_id"`
+	UserID string    `valid:"required" json:"user_id"`
+	//Username  *string   `json:"display_name,omitempty"`
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	Email     *string `json:"email,omitempty"`
+	//Phone       string    `json:"phone,omitempty"`
+	PhotoUrl   *string `json:"photo_url,omitempty"`
+	LocationID *string `json:"location_id,omitempty"`
+	Status     *string `json:"status,omitempty"`
+	Type       string  `valid:"required,omitempty"`
+	Verified   bool
 }
 
 type Schedule struct {

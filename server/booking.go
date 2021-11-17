@@ -2,16 +2,19 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
+	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"google.golang.org/api/option"
@@ -142,6 +145,7 @@ func retrieveFirebaseUserData(ctx context.Context, uid string) *auth.UserRecord 
 func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	var request model.Request
 	request.ID = uuid.New()
+	request.Status = "bidding"
 
 	userID, err := middlewares.UserIDFromContext(r.Context())
 	// Return an error if the user is not currently logged in.
@@ -151,24 +155,48 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	request.ClientID = userID.String()
-
-	var photos []string
-	photoData := r.PostFormValue("photos")
-	fmt.Println("photodata:", photoData)
-	if photoData != "" {
-		err = json.Unmarshal([]byte(photoData), &photos)
-		if err != nil {
-			handleError(w, "photos: must input a valid photo value", http.StatusBadRequest)
-			return
+	/*
+		var photos []string
+		photoData := r.PostFormValue("photos")
+		fmt.Println("photodata:", photoData)
+		if photoData != "" {
+			err = json.Unmarshal([]byte(photoData), &photos)
+			if err != nil {
+				handleError(w, "photos: must input a valid photo value", http.StatusBadRequest)
+				return
+			}
 		}
-	}
-	request.Photos = photos
-	request.Title = r.PostFormValue("title")
-	request.StartDate = r.PostFormValue("start_date")
-	request.Note = r.PostFormValue("note")
-	//urgent := r.PostFormValue("urgent")
-	request.LocationID = r.PostFormValue("location_id")
+		request.Photos = photos
+
+		request.Title = r.PostFormValue("title")
+		request.StartDate = r.PostFormValue("start_date")
+		request.Note = r.PostFormValue("note")
+		//urgent := r.PostFormValue("urgent")
+		request.LocationID = r.PostFormValue("location_id")
+	*/
 	request.Type = "REQUEST"
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &request); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	urgent, err := govalidator.ToBoolean(r.PostFormValue("urgent"))
+	if err == nil {
+		request.Urgent = urgent
+	}
+
+	if request.Urgent {
+		request.StartDate = time.Now().Add(time.Hour * 24).Format(time.RFC3339)
+	}
 
 	err = request.Validate()
 	if err != nil {
@@ -184,17 +212,18 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := app.RequestDetail{
-		ID:      request.ID,
-		Title:   request.Title,
-		Status:  request.Status,
-		Created: request.CreatedAt.String(),
-		Start:   request.StartDate,
-		Note:    request.Note,
-		Photos:  request.Photos,
-	}
-
-	handleSuccess(w, res)
+	/*
+		res := app.RequestDetail{
+			ID:      request.ID,
+			Title:   request.Title,
+			Status:  request.Status,
+			Created: request.CreatedAt.String(),
+			Start:   request.StartDate,
+			Note:    request.Note,
+			Photos:  request.Photos,
+		}
+	*/
+	handleSuccessMsgWithRes(w, "Request created successfully", request)
 }
 
 func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
@@ -210,13 +239,7 @@ func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
+	handleSuccess(w, resp)
 }
 
 func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
@@ -226,18 +249,56 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Fetch dials from database.
-	resp, err := s.ReqSvc.FindRequestByID(r.Context(), id)
+	request, err := s.ReqSvc.FindRequestByID(r.Context(), id)
 	if err != nil {
 		log.Println(err)
+		if err == sql.ErrNoRows {
+			handleError(w, "Profile not found", http.StatusNotFound)
+			return
+		}
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	request.Status = "pending"
+
+	handleSuccess(w, request)
+}
+
+func (s *Server) handleBidCreate(w http.ResponseWriter, r *http.Request) {
+	var bid model.Bid
+
+	userId, err := middlewares.UserIDFromContext(r.Context())
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+
+	bid.BidderID = userId.String()
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &bid); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	if err := bid.Validate(); err != nil {
+		handleError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = s.BidSvc.CreateBid(r.Context(), &bid)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
+	handleSuccessMsgWithRes(w, "Service created successfully", bid)
 }
