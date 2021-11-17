@@ -264,7 +264,6 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 	err := tx.QueryRowContext(ctx, `
 		SELECT
 			p.profile_id,
-			p.username,
 			p.first_name,
 			p.last_name,
 			p.email,
@@ -276,7 +275,6 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 		WHERE p.user_id = ?
 	`, userId).Scan(
 		&profile.ID,
-		&profile.Username,
 		&profile.FirstName,
 		&profile.LastName,
 		&profile.Email,

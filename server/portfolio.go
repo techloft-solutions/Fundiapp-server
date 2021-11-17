@@ -234,5 +234,5 @@ func (s *Server) handleUserValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleSuccess(w, nil)
+	handleSuccessMsg(w, "User is valid")
 }
