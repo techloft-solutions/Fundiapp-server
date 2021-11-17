@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
@@ -142,6 +144,10 @@ func (s *Server) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.IsProvider = r.URL.Query().Get("provider")
+
+	log.Println(r.URL.Query().Get("provider"))
+
 	err = user.Validate()
 	if err != nil {
 		handleError(w, err.Error(), http.StatusBadRequest)
@@ -151,19 +157,26 @@ func (s *Server) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 	err = s.UsrSvc.CreateUser(r.Context(), &user)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "something went wrong", http.StatusInternalServerError)
+		if err = handleDuplicateEntry(w, err); err != nil {
+			handleError(w, "something went wrong", http.StatusInternalServerError)
+		}
 		return
 	}
+
+	//retrieveFirebaseUserData(r.Context(), user.ID.String())
+
 	// obfuscate the password
 	user.Password = strings.Repeat("*", len(user.Password))
 
 	handleSuccessMsgWithRes(w, "User created successfuly", user)
 }
 
+//func linkFirebaseUserToUser(userID string, firebaseUserID string) error {
+
 func (s *Server) handleUserGet(w http.ResponseWriter, r *http.Request) {
 	var res user
 	urlquery := r.URL.Query()
-	res.Username = urlquery.Get("displayname")
+	res.Username = urlquery.Get("display_name")
 	res.Phone = urlquery.Get("phone")
 
 	switch {
@@ -235,4 +248,71 @@ func (s *Server) handleUserValidate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccessMsg(w, "User is valid")
+}
+
+func (s *Server) handleUserPassword(w http.ResponseWriter, r *http.Request) {
+	reset := r.FormValue("reset")
+
+	if reset == "true" {
+		phone := r.FormValue("phone")
+		if phone == "" {
+			handleError(w, "Phone number is required", http.StatusBadRequest)
+			return
+		}
+		err := s.sendPasswordResetSMS(phone)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			handleError(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+		handleSuccessMsg(w, "Password reset code was sent to: "+phone)
+		return
+
+	}
+
+	var user *model.ResetUser
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &user); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	err = user.Validate()
+	if err != nil {
+		handleError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = s.UsrSvc.UpdateUserPassword(r.Context(), user)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			handleError(w, "password update failed", http.StatusNotFound)
+			return
+		}
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccessMsg(w, "Password updated successfuly")
+}
+
+func (s *Server) sendPasswordResetSMS(phone string) error {
+	rand.Seed(time.Now().UnixNano())
+	min := 999
+	max := 10000
+	code := rand.Intn(max-min+1) + min
+
+	//err := s.UsrSvc.UpdateUser(context.Background(), user)
+
+	log.Println("Sending password reset code: ", code, " SMS to:", phone)
+	return nil
 }

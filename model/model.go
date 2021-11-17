@@ -15,9 +15,18 @@ type Model struct {
 }
 
 type User struct {
-	Username string `valid:"required" json:"displayname,omitempty"`
-	Password string `valid:"required" json:"password"`
-	Phone    string `valid:"required" json:"phone"`
+	UserID     string `valid:"required" json:"user_id"`
+	Username   string `valid:"required" json:"displayname,omitempty"`
+	Password   string `valid:"required" json:"password"`
+	Phone      string `valid:"required" json:"phone"`
+	ResetCode  int    `json:"code,omitempty"`
+	IsProvider string `json:"is_provider,omitempty"`
+}
+
+type ResetUser struct {
+	Phone       string `valid:"required" json:"phone"`
+	NewPassword string `valid:"required" json:"new_password"`
+	ResetCode   string `valid:"required" json:"code"`
 }
 
 type Provider struct {

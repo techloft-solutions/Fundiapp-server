@@ -83,6 +83,8 @@ type UserService interface {
 	FindUserByUsername(context.Context, string) (*User, error)
 	FindUserByPhoneNumber(context.Context, string) (*User, error)
 	ValidateUser(context.Context, string, string) error
+	UpdateUserPassword(context.Context, *model.ResetUser) error
+	UpdateUser(context.Context, *model.User) error
 	// Provider
 	CreateProvider(context.Context, *model.Provider) error
 	FindProviderByID(context.Context, string) (*Provider, error)

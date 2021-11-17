@@ -6,6 +6,7 @@ import (
 
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
+	"github.com/google/uuid"
 )
 
 type UserService struct {
@@ -38,11 +39,13 @@ func (s *UserService) CreateUser(ctx context.Context, user *model.User) error {
 func createUser(ctx context.Context, tx *Tx, user *model.User) error {
 	_, err := tx.ExecContext(ctx, `
 		INSERT INTO users (
+			user_id,
 			username,
 			phone,
 			password
-		) VALUES (?, ?, ?)
+		) VALUES (?, ?, ?, ?)
 		`,
+		user.UserID,
 		user.Username,
 		user.Phone,
 		user.Password,
@@ -50,6 +53,94 @@ func createUser(ctx context.Context, tx *Tx, user *model.User) error {
 	if err != nil {
 		return err
 	}
+
+	if user.IsProvider == "true" {
+		_, err := tx.ExecContext(ctx, `
+			INSERT INTO providers (
+				provider_id,
+				user_id
+			) VALUES (?, ?)
+			`,
+			uuid.New(),
+			user.UserID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *UserService) UpdateUserPassword(ctx context.Context, user *model.ResetUser) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := updateUserPassword(ctx, tx, user); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func updateUserPassword(ctx context.Context, tx *Tx, user *model.ResetUser) error {
+	result, err := tx.ExecContext(ctx, `
+		UPDATE users SET
+			password = ?
+		WHERE phone = ? AND reset_password_code = ?
+		`,
+		user.NewPassword,
+		user.Phone,
+		user.ResetCode,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (s *UserService) UpdateUser(ctx context.Context, user *model.User) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := updateUser(ctx, tx, user); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func updateUser(ctx context.Context, tx *Tx, user *model.User) error {
+	result, err := tx.ExecContext(ctx, `
+		UPDATE users SET
+			username = COALESCE(?, username),
+			reset_password_code = COALESCE(?, reset_password_code)
+		WHERE id = ?
+		`,
+		user.Username,
+		user.ResetCode,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
 	return nil
 }
 
@@ -103,8 +194,8 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 		SELECT
 			providers.provider_id,
 			providers.user_id,
-			profiles.first_name,
-			profiles.last_name,
+			users.first_name,
+			users.last_name,
 			providers.bio,
 			providers.profession,
 			providers.ratings_average,
@@ -113,8 +204,8 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 			providers.portfolio_count,
 			locations.name
 		FROM providers
-		LEFT JOIN profiles ON profiles.user_id = providers.user_id
-		LEFT JOIN locations ON locations.location_id = profiles.location_id
+		LEFT JOIN users ON users.user_id = providers.user_id
+		LEFT JOIN locations ON locations.location_id = users.location_id
 		WHERE providers.provider_id = ?
 	`, id).Scan(
 		&profile.ID,
@@ -145,11 +236,11 @@ func (s *UserService) CreateProvider(ctx context.Context, provider *model.Provid
 	if err := createProvider(ctx, tx, provider); err != nil {
 		return err
 	}
-
-	if err := createProfile(ctx, tx, &provider.Profile); err != nil {
-		return err
-	}
-
+	/*
+		if err := createProfile(ctx, tx, &provider.Profile); err != nil {
+			return err
+		}
+	*/
 	return tx.Commit()
 }
 
@@ -197,17 +288,16 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 
 		    providers.provider_id,
-			profiles.first_name,
-			profiles.last_name,
+			users.username,
 			providers.profession,
 			providers.ratings_average,
 			providers.reviews_count,
 			providers.jobs_count,
 			providers.rate_per_hour,
 			providers.currency,
-			profiles.photo_url
+			users.photo_url
 		FROM providers
-		LEFT JOIN profiles ON profiles.user_id = providers.user_id
+		LEFT JOIN users ON users.user_id = providers.user_id
 		`,
 	)
 	if err != nil {
@@ -217,13 +307,10 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 
 	providers := make([]*app.ProviderBrief, 0)
 	for rows.Next() {
-		var fname string
-		var lname string
 		var provider app.ProviderBrief
 		if err := rows.Scan(
 			&provider.ID,
-			&fname,
-			&lname,
+			&provider.Name,
 			&provider.Profession,
 			&provider.Rating,
 			&provider.Reviews,
@@ -234,7 +321,6 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 		); err != nil {
 			return nil, err
 		}
-		provider.Name = fname + " " + lname
 		providers = append(providers, &provider)
 	}
 	if err := rows.Err(); err != nil {
@@ -263,18 +349,18 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 	profile.UserID = userId
 	err := tx.QueryRowContext(ctx, `
 		SELECT
-			p.profile_id,
+			p.username,
 			p.first_name,
 			p.last_name,
 			p.email,
 			p.photo_url,
 			locations.address,
 			p.verified
-		FROM profiles as p
+		FROM users as p
 		LEFT JOIN locations ON locations.location_id = p.location_id
-		WHERE p.user_id = ?
+		WHERE p.user_id = ? AND p.is_provider = 0
 	`, userId).Scan(
-		&profile.ID,
+		&profile.Username,
 		&profile.FirstName,
 		&profile.LastName,
 		&profile.Email,
@@ -303,14 +389,14 @@ func (s *UserService) UpdateProfile(ctx context.Context, profile *model.Profile)
 
 func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 	result, err := tx.ExecContext(ctx, `
-		UPDATE profiles as p
+		UPDATE users as p
 		SET
 			first_name = COALESCE(?, first_name),
 			last_name = COALESCE(?, last_name),
 			email = COALESCE(?, email),
 			photo_url = COALESCE(?, photo_url),
 			location_id = COALESCE(?, location_id)
-		WHERE user_id = ?
+		WHERE user_id = ? AND is_provider = 0
 	`,
 		profile.FirstName,
 		profile.LastName,
@@ -346,8 +432,7 @@ func (s *UserService) CreateProfile(ctx context.Context, profile *model.Profile)
 
 func createProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 	_, err := tx.ExecContext(ctx, `
-		INSERT INTO profiles (
-			profile_id,
+		INSERT INTO users (
 			user_id, 
 			first_name, 
 			last_name,
@@ -357,7 +442,6 @@ func createProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 			account_type
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`,
-		profile.ID,
 		profile.UserID,
 		profile.FirstName,
 		profile.LastName,

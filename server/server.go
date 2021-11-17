@@ -35,6 +35,7 @@ func New() *Server {
 	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
 	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
 	s.router.HandleFunc("/user/validate", s.handleUserValidate).Methods("POST")
+	s.router.HandleFunc("/user/password", s.handleUserPassword).Methods("POST")
 
 	r := s.router.PathPrefix("/").Subrouter()
 	r.Use(middlewares.AuthHandler)
@@ -55,17 +56,17 @@ func handleHello(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) registerRoutes(r *mux.Router) {
-	//r.HandleFunc("/user/{id}", s.handleUsersUpdate).Methods("PUT")
+	//r.HandleFunc("/user/password", s.handleUserPasswordChange).Methods("PUT")
 	//r.HandleFunc("/user/{id}", s.handleUsersDelete).Methods("DELETE")
 	// Profile
-	r.HandleFunc("/profile", s.handleProfileCreate).Methods("POST")
+	//r.HandleFunc("/profile", s.handleProfileCreate).Methods("POST")
 	r.HandleFunc("/profile", s.handleProfileGet).Methods("GET")
 	r.HandleFunc("/profile", s.handleProfileUpdate).Methods("PUT")
 	//r.HandleFunc("/profile/{id}", s.handleProfileDelete).Methods("DELETE")
 	// Providers
 	r.HandleFunc("/providers", s.handleProviderList).Methods("GET")
 	r.HandleFunc("/providers/{id}", s.handleProviderByID).Methods("GET")
-	r.HandleFunc("/providers", s.handleProviderCreate).Methods("POST")
+	//r.HandleFunc("/providers", s.handleProviderCreate).Methods("POST")
 	// Locations
 	r.HandleFunc("/locations", s.handleMyLocations).Methods("GET")
 	r.HandleFunc("/locations", s.handleLocationCreate).Methods("POST")

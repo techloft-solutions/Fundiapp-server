@@ -67,11 +67,12 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// retrieve existing profile from database
-	currProfile, err := s.UsrSvc.FindProfileByUserID(ctx, userID.String())
+	_, err = s.UsrSvc.FindProfileByUserID(ctx, userID.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("profile does not exist")
-			s.handleProfileCreate(w, r)
+			handleError(w, "profile does not exist", http.StatusNotFound)
+			//s.handleProfileCreate(w, r)
 			return
 		}
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
@@ -79,13 +80,8 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if profile does not exist, create a new one
-	if currProfile == nil {
-		s.handleProfileCreate(w, r)
-		return
-	}
-
-	profile.ID = currProfile.ID
+	//profile.ID = currProfile.ID
+	//profile.UserID = currProfile.UserID
 	profile.UserID = userID.String()
 	/*
 		err = updateFirebaseUserData(ctx, profile)
@@ -98,13 +94,13 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	err = s.UsrSvc.UpdateProfile(ctx, &profile)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		switch err {
-		case sql.ErrNoRows:
-			log.Println(w, "updating db was not successful", http.StatusNotFound)
-		default:
-			handleError(w, "something went wrong", http.StatusInternalServerError)
+
+		if err == sql.ErrNoRows {
+			handleError(w, "profile update failed", http.StatusNotFound)
 			return
 		}
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
 	}
 
 	handleSuccessMsgWithRes(w, "Profile updated successfuly", profile)

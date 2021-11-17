@@ -73,3 +73,11 @@ func (u User) Validate() error {
 	}
 	return nil
 }
+
+func (ru ResetUser) Validate() error {
+	_, err := govalidator.ValidateStruct(ru)
+	if err != nil {
+		return err
+	}
+	return nil
+}
