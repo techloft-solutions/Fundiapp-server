@@ -42,19 +42,21 @@ func createUser(ctx context.Context, tx *Tx, user *model.User) error {
 			user_id,
 			username,
 			phone,
-			password
-		) VALUES (?, ?, ?, ?)
+			password,
+			is_provider
+		) VALUES (?, ?, ?, ?, ?)
 		`,
 		user.UserID,
 		user.Username,
 		user.Phone,
 		user.Password,
+		user.IsProvider,
 	)
 	if err != nil {
 		return err
 	}
 
-	if user.IsProvider == "true" {
+	if user.IsProvider {
 		_, err := tx.ExecContext(ctx, `
 			INSERT INTO providers (
 				provider_id,
@@ -323,6 +325,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 
 		    providers.provider_id,
+			users.user_id,
 			users.username,
 			providers.profession,
 			providers.ratings_average,
@@ -345,6 +348,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 		var provider app.ProviderBrief
 		if err := rows.Scan(
 			&provider.ID,
+			&provider.UserID,
 			&provider.Name,
 			&provider.Profession,
 			&provider.Rating,
@@ -431,7 +435,7 @@ func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 			email = COALESCE(?, email),
 			photo_url = COALESCE(?, photo_url),
 			location_id = COALESCE(?, location_id)
-		WHERE user_id = ? AND is_provider = 0
+		WHERE user_id = ?
 	`,
 		profile.FirstName,
 		profile.LastName,
@@ -439,6 +443,47 @@ func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 		profile.PhotoUrl,
 		profile.LocationID,
 		profile.UserID,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (s *UserService) UpdateProvider(ctx context.Context, provider *model.Provider) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := updateProvider(ctx, tx, provider); err != nil {
+		return err
+	}
+
+	if err := updateProfile(ctx, tx, &provider.Profile); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func updateProvider(ctx context.Context, tx *Tx, provider *model.Provider) error {
+	result, err := tx.ExecContext(ctx, `
+		UPDATE providers
+		SET
+			bio = COALESCE(?, bio),
+			profession = COALESCE(?, profession)
+		WHERE user_id = ? 
+	`,
+		provider.Bio,
+		provider.Profession,
+		provider.UserID,
 	)
 	if err != nil {
 		return err
@@ -519,15 +564,31 @@ func (s *UserService) FindUserByPhoneNumber(ctx context.Context, phone string) (
 	return user, tx.Commit()
 }
 
+func (s *UserService) FindUserByID(ctx context.Context, userID string) (*app.User, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	user, err := getUserByCriteria(ctx, tx, "user_id", userID)
+	if err != nil {
+		return nil, err
+	}
+	return user, tx.Commit()
+}
+
 func getUserByCriteria(ctx context.Context, tx *Tx, haystack string, needle string) (*app.User, error) {
 	user := &app.User{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
-			username			
+			username,
+			is_provider			
 		FROM users
 		WHERE `+haystack+` = ?
 	`, needle).Scan(
 		&user.Username,
+		&user.IsProvider,
 	)
 	if err != nil {
 		return nil, err

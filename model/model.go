@@ -20,7 +20,7 @@ type User struct {
 	Password   string `valid:"required" json:"password"`
 	Phone      string `valid:"required" json:"phone"`
 	ResetCode  int    `json:"-"`
-	IsProvider string `json:"is_provider,omitempty"`
+	IsProvider bool   `json:"is_provider,omitempty"`
 }
 
 type ResetUser struct {
@@ -34,6 +34,7 @@ type Provider struct {
 	Profile
 	Bio        *string `json:"bio"`
 	Profession *string `json:"profession"`
+	Rate
 }
 
 type Service struct {
@@ -134,8 +135,8 @@ type ProviderProfession struct {
 type Location struct {
 	ID        uuid.UUID `json:"location_id" valid:"required"`
 	Name      *string   `json:"name,omitempty"`
-	Latitude  string    `valid:"required" json:"latitude"`
-	Longitude string    `valid:"required" json:"longitude"`
+	Latitude  string    `valid:"required,latitude" json:"latitude"`
+	Longitude string    `valid:"required,longitude" json:"longitude"`
 	City      *string   `json:"city,omitempty"`
 	State     *string   `json:"state,omitempty"`
 	Zip       *string   `json:"zip,omitempty"`
@@ -181,7 +182,7 @@ type Profile struct {
 	LastName  *string `json:"last_name,omitempty"`
 	Email     *string `json:"email,omitempty"`
 	//Phone       string    `json:"phone,omitempty"`
-	PhotoUrl   *string `json:"photo_url,omitempty"`
+	PhotoUrl   *string `valid:"url" json:"photo_url,omitempty"`
 	LocationID *string `json:"location_id,omitempty"`
 	Status     *string `json:"status,omitempty"`
 	Type       string  `valid:"required,omitempty"`

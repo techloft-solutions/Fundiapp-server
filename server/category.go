@@ -99,7 +99,7 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
-			handleError(w, "unauthorized", http.StatusUnauthorized)
+			handleUnathorised(w)
 			return
 		}
 		handleError(w, "something went wrong", http.StatusInternalServerError)

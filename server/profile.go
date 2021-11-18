@@ -60,7 +60,6 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	// Check if user is currently logged in.
 	userID, err := middlewares.UserIDFromContext(ctx)
 	if err != nil {
-		handleError(w, "unauthorized", http.StatusUnauthorized)
 		handleUnathorised(w)
 		return
 	}
@@ -104,6 +103,65 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	handleSuccessMsgWithRes(w, "Profile updated successfuly", profile)
 	//json.NewEncoder(w).Encode(profile)
+}
+
+func (s *Server) handleProviderUpdate(w http.ResponseWriter, r *http.Request) {
+	var provider model.Provider
+	ctx := r.Context()
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &provider); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if user is currently logged in.
+	userID, err := middlewares.UserIDFromContext(ctx)
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+
+	provider.UserID = userID.String()
+
+	// Check if user is a service provider.
+	user, err := s.UsrSvc.FindUserByID(ctx, userID.String())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Provider does not exist")
+			handleError(w, "Provider not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+	json.NewDecoder(r.Body).Decode(&user)
+	if !user.IsProvider {
+		handleError(w, "User is not a provider", http.StatusUnauthorized)
+		return
+	}
+
+	err = s.UsrSvc.UpdateProvider(ctx, &provider)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+
+		if err == sql.ErrNoRows {
+			handleError(w, "provider update failed", http.StatusNotFound)
+			return
+		}
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccessMsgWithRes(w, "Provider updated successfuly", provider)
 }
 
 func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
@@ -215,8 +273,9 @@ func handleDuplicateEntry(w http.ResponseWriter, err error) error {
 	}
 	if me.Number == 1062 {
 		handleError(w, "record already exists", http.StatusConflict)
+		return nil
 	}
-	return nil
+	return err
 }
 
 func (s *Server) handleProviderList(w http.ResponseWriter, r *http.Request) {

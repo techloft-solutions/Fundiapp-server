@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -145,9 +146,7 @@ func (s *Server) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.IsProvider = r.URL.Query().Get("provider")
-
-	log.Println(r.URL.Query().Get("provider"))
+	user.IsProvider, _ = strconv.ParseBool(r.URL.Query().Get("provider"))
 
 	err = user.Validate()
 	if err != nil {

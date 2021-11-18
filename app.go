@@ -80,6 +80,7 @@ type CategoryService interface {
 
 type UserService interface {
 	CreateUser(context.Context, *model.User) error
+	FindUserByID(context.Context, string) (*User, error)
 	FindUserByUsername(context.Context, string) (*User, error)
 	FindUserByPhoneNumber(context.Context, string) (*User, error)
 	ValidateUser(context.Context, string, string) error
@@ -91,6 +92,7 @@ type UserService interface {
 	FindProviderByID(context.Context, string) (*Provider, error)
 	FindProviderByUserID(context.Context, string) (*Provider, error)
 	ListProviders(context.Context) ([]*ProviderBrief, error)
+	UpdateProvider(context.Context, *model.Provider) error
 	// User profile
 	FindProfileByUserID(context.Context, string) (*Profile, error)
 	CreateProfile(context.Context, *model.Profile) error
