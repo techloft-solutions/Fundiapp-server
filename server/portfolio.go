@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -259,6 +260,7 @@ func (s *Server) handleUserPassword(w http.ResponseWriter, r *http.Request) {
 			handleError(w, "Phone number is required", http.StatusBadRequest)
 			return
 		}
+
 		err := s.sendPasswordResetSMS(phone)
 		if err != nil {
 			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
@@ -295,7 +297,7 @@ func (s *Server) handleUserPassword(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
-			handleError(w, "password update failed", http.StatusNotFound)
+			handleError(w, "Incorrect reset code", http.StatusNotFound)
 			return
 		}
 		handleError(w, "something went wrong", http.StatusInternalServerError)
@@ -311,7 +313,10 @@ func (s *Server) sendPasswordResetSMS(phone string) error {
 	max := 10000
 	code := rand.Intn(max-min+1) + min
 
-	//err := s.UsrSvc.UpdateUser(context.Background(), user)
+	err := s.UsrSvc.UpdateResetCode(context.Background(), code, phone)
+	if err != nil {
+		return err
+	}
 
 	log.Println("Sending password reset code: ", code, " SMS to:", phone)
 	return nil

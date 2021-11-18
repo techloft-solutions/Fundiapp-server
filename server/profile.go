@@ -40,7 +40,6 @@ func (s *Server) handleProfileGet(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, profile)
 }
 
-// handleProfileUpdate updates a profile or creates a new one if it does not exist.
 func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	var profile model.Profile
 	ctx := r.Context()
