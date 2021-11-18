@@ -15,6 +15,7 @@ import (
 	"github.com/andrwkng/hudumaapp/server/middlewares"
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type user struct {
@@ -319,4 +320,21 @@ func (s *Server) sendPasswordResetSMS(phone string) error {
 
 	log.Println("Sending password reset code: ", code, " SMS to:", phone)
 	return nil
+}
+
+func (s *Server) handleUserByID(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	usr, err := s.UsrSvc.FindUserByID(r.Context(), id)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			handleError(w, "User not found", http.StatusNotFound)
+			return
+		}
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, usr)
 }

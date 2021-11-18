@@ -157,6 +157,7 @@ type User struct {
 	Username   *string `json:"display_name"`
 	Email      *string `json:"email"`
 	Phone      *string `json:"phone"`
+	PhotoUrl	  *string `json:"photo_url"`
 	IsProvider bool    `json:"-"`
 }
 

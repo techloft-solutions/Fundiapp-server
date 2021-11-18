@@ -518,9 +518,8 @@ func createProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 			last_name,
 			email,
 			photo_url,
-			location_id,
-			account_type
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			location_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`,
 		profile.UserID,
 		profile.FirstName,
@@ -528,7 +527,6 @@ func createProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 		profile.Email,
 		profile.PhotoUrl,
 		profile.LocationID,
-		profile.Type,
 	)
 	if err != nil {
 		return err
@@ -582,12 +580,24 @@ func getUserByCriteria(ctx context.Context, tx *Tx, haystack string, needle stri
 	user := &app.User{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
+			user_id,
 			username,
+			first_name,
+			last_name,
+			email,
+			photo_url,
+			phone,
 			is_provider			
 		FROM users
 		WHERE `+haystack+` = ?
 	`, needle).Scan(
+		&user.UserID,
 		&user.Username,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.PhotoUrl,
+		&user.Phone,
 		&user.IsProvider,
 	)
 	if err != nil {

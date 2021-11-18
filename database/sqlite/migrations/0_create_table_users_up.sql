@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE,
   photo_url VARCHAR(255),
   location_id VARCHAR(255),
-  account_type VARCHAR(255) DEFAULT 'client',
   status VARCHAR(255) DEFAULT 'active',
   verified BOOLEAN DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
