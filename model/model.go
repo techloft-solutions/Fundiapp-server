@@ -29,6 +29,12 @@ type ResetUser struct {
 	ResetCode   string `valid:"required" json:"code"`
 }
 
+type PwdChange struct {
+	UserID      string `valid:"required" json:"user_id"`
+	OldPassword string `valid:"required" json:"old_password"`
+	NewPassword string `valid:"required" json:"new_password"`
+}
+
 type Provider struct {
 	ID uuid.UUID `valid:"required" json:"provider_id"`
 	Profile

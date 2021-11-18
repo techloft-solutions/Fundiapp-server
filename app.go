@@ -79,14 +79,17 @@ type CategoryService interface {
 }
 
 type UserService interface {
+	// User
 	CreateUser(context.Context, *model.User) error
+	UpdateUser(context.Context, *model.User) error
 	FindUserByID(context.Context, string) (*User, error)
 	FindUserByUsername(context.Context, string) (*User, error)
 	FindUserByPhoneNumber(context.Context, string) (*User, error)
+	// Password
 	ValidateUser(context.Context, string, string) error
-	UpdateUserPassword(context.Context, *model.ResetUser) error
+	ResetUserPassword(context.Context, *model.ResetUser) error
+	ChangeUserPassword(context.Context, *model.PwdChange) error
 	UpdateResetCode(context.Context, int, string) error
-	UpdateUser(context.Context, *model.User) error
 	// Provider
 	CreateProvider(context.Context, *model.Provider) error
 	FindProviderByID(context.Context, string) (*Provider, error)

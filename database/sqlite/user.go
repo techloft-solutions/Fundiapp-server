@@ -74,21 +74,21 @@ func createUser(ctx context.Context, tx *Tx, user *model.User) error {
 	return nil
 }
 
-func (s *UserService) UpdateUserPassword(ctx context.Context, user *model.ResetUser) error {
+func (s *UserService) ResetUserPassword(ctx context.Context, user *model.ResetUser) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if err := updateUserPassword(ctx, tx, user); err != nil {
+	if err := resetUserPassword(ctx, tx, user); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func updateUserPassword(ctx context.Context, tx *Tx, user *model.ResetUser) error {
+func resetUserPassword(ctx context.Context, tx *Tx, user *model.ResetUser) error {
 	result, err := tx.ExecContext(ctx, `
 		UPDATE users SET
 			password = ?
@@ -97,6 +97,42 @@ func updateUserPassword(ctx context.Context, tx *Tx, user *model.ResetUser) erro
 		user.NewPassword,
 		user.Phone,
 		user.ResetCode,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (s *UserService) ChangeUserPassword(ctx context.Context, user *model.PwdChange) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := changePassword(ctx, tx, user); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func changePassword(ctx context.Context, tx *Tx, user *model.PwdChange) error {
+	result, err := tx.ExecContext(ctx, `
+		UPDATE users SET
+			password = ?
+		WHERE user_id = ? AND password = ?
+		`,
+		user.NewPassword,
+		user.UserID,
+		user.OldPassword,
 	)
 	if err != nil {
 		return err

@@ -272,7 +272,7 @@ func (s *Server) handleUserPassword(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	var user *model.ResetUser
+	var user model.ResetUser
 
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
@@ -293,11 +293,55 @@ func (s *Server) handleUserPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.UsrSvc.UpdateUserPassword(r.Context(), user)
+	err = s.UsrSvc.ResetUserPassword(r.Context(), &user)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
 			handleError(w, "Incorrect reset code", http.StatusNotFound)
+			return
+		}
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccessMsg(w, "Password updated successfuly")
+}
+
+func (s *Server) handlePasswordChange(w http.ResponseWriter, r *http.Request) {
+	var pw model.PwdChange
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &pw); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	// Return an error if the user is not currently logged in.
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+	pw.UserID = userID.String()
+
+	_, err = govalidator.ValidateStruct(pw)
+	if err != nil {
+		handleError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = s.UsrSvc.ChangeUserPassword(r.Context(), &pw)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			handleError(w, "Incorrect current password", http.StatusNotFound)
 			return
 		}
 		handleError(w, "something went wrong", http.StatusInternalServerError)

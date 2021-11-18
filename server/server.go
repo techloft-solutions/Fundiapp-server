@@ -56,7 +56,7 @@ func handleHello(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) registerRoutes(r *mux.Router) {
-	//r.HandleFunc("/user/password", s.handleUserPasswordChange).Methods("PUT")
+	r.HandleFunc("/user/password", s.handlePasswordChange).Methods("PUT")
 	r.HandleFunc("/user/{id}", s.handleUserByID).Methods("GET")
 	// Profile
 	//r.HandleFunc("/profile", s.handleProfileCreate).Methods("POST")
