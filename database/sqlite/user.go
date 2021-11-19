@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
@@ -231,15 +232,45 @@ func updateResetCode(ctx context.Context, tx *Tx, code int, phone string) error 
 	return nil
 }
 
-func getProviderByUserID(ctx context.Context, tx *Tx, id string) (*app.Provider, error) {
+func getProviderByUserID(ctx context.Context, tx *Tx, userId string) (*app.Provider, error) {
 	provider := &app.Provider{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
-			providers.provider_id
+			providers.provider_id,
+			providers.user_id,
+			users.username,
+			users.first_name,
+			users.last_name,
+			users.phone,
+			users.email,
+			users.photo_url,
+			providers.bio,
+			providers.profession,
+			providers.ratings_average,
+			providers.reviews_count,
+			providers.services_count,
+			providers.portfolio_count,
+			locations.name
 		FROM providers
+		LEFT JOIN users ON users.user_id = providers.user_id
+		LEFT JOIN locations ON locations.location_id = users.location_id
 		WHERE providers.user_id = ?
-	`, id).Scan(
+	`, userId).Scan(
 		&provider.ID,
+		&provider.UserID,
+		&provider.Username,
+		&provider.FirstName,
+		&provider.LastName,
+		&provider.Phone,
+		&provider.Email,
+		&provider.PhotoUrl,
+		&provider.Bio,
+		&provider.Profession,
+		&provider.AvgRating,
+		&provider.Stats.Reviews,
+		&provider.Stats.Services,
+		&provider.Stats.Portfolios,
+		&provider.Location,
 	)
 	if err != nil {
 		return nil, err
@@ -464,7 +495,7 @@ func (s *UserService) UpdateProfile(ctx context.Context, profile *model.Profile)
 
 func updateProfile(ctx context.Context, tx *Tx, profile *model.Profile) error {
 	result, err := tx.ExecContext(ctx, `
-		UPDATE users as p
+		UPDATE users
 		SET
 			first_name = COALESCE(?, first_name),
 			last_name = COALESCE(?, last_name),
@@ -500,10 +531,12 @@ func (s *UserService) UpdateProvider(ctx context.Context, provider *model.Provid
 	defer tx.Rollback()
 
 	if err := updateProvider(ctx, tx, provider); err != nil {
+		log.Println("error updating provider:", err)
 		return err
 	}
 
 	if err := updateProfile(ctx, tx, &provider.Profile); err != nil {
+		log.Println("error updating profile:", err)
 		return err
 	}
 	return tx.Commit()

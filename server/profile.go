@@ -143,11 +143,12 @@ func (s *Server) handleProviderUpdate(w http.ResponseWriter, r *http.Request) {
 		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
-	json.NewDecoder(r.Body).Decode(&user)
 	if !user.IsProvider {
 		handleError(w, "User is not a provider", http.StatusUnauthorized)
 		return
 	}
+
+	handleSuccessMsgWithRes(w, "Provider:", provider.Profile)
 
 	err = s.UsrSvc.UpdateProvider(ctx, &provider)
 	if err != nil {
@@ -225,6 +226,27 @@ func (s *Server) handleProviderByID(w http.ResponseWriter, r *http.Request) {
 	//saveFirebaseUserToProfile(r.Context(), &provider.Profile)
 
 	handleSuccess(w, provider)
+}
+
+func (s *Server) handleProviderGet(w http.ResponseWriter, r *http.Request) {
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+
+	providers, err := s.UsrSvc.FindProviderByUserID(r.Context(), userID.String())
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			handleError(w, "provider not found", http.StatusNotFound)
+			return
+		}
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, providers)
 }
 
 func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {

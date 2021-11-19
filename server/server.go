@@ -64,6 +64,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/profile", s.handleProfileUpdate).Methods("PUT")
 	//r.HandleFunc("/profile/{id}", s.handleProfileDelete).Methods("DELETE")
 	// Providers
+	r.HandleFunc("/provider", s.handleProviderGet).Methods("GET")
 	r.HandleFunc("/providers", s.handleProviderList).Methods("GET")
 	r.HandleFunc("/providers/{id}", s.handleProviderByID).Methods("GET")
 	r.HandleFunc("/providers", s.handleProviderUpdate).Methods("PUT")
