@@ -151,19 +151,17 @@ type Portfolio struct {
 }
 
 type User struct {
-	ID         uuid.UUID `json:"profile_id"`
-	UserID     string    `json:"user_id"`
-	FirstName  *string   `json:"first_name"`
-	LastName   *string   `json:"last_name"`
-	Username   *string   `json:"display_name"`
-	Email      *string   `json:"email"`
-	Phone      *string   `json:"phone"`
-	PhotoUrl   *string   `json:"photo_url"`
-	IsProvider bool      `json:"-"`
+	UserID     string  `json:"user_id"`
+	FirstName  *string `json:"first_name"`
+	LastName   *string `json:"last_name"`
+	Username   *string `json:"display_name"`
+	Email      *string `json:"email"`
+	Phone      *string `json:"phone"`
+	PhotoUrl   *string `json:"photo_url"`
+	IsProvider bool    `json:"-"`
 }
 
 type Profile struct {
-	//ID uuid.UUID `json:"profile_id`
 	User
 	// UserID    string  `json:"user_id"`
 	// FirstName *string `json:"first_name"`

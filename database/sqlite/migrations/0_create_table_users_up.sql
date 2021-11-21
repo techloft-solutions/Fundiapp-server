@@ -5,8 +5,6 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   is_admin BOOLEAN NOT NULL DEFAULT 0,
   is_provider BOOLEAN DEFAULT 0,
-  reset_password_code VARCHAR(255),
-  reset_password_expires TIMESTAMP,
   -- profile_id VARCHAR(255) PRIMARY KEY,
   user_id VARCHAR(255) NOT NULL UNIQUE,
   first_name VARCHAR(255),

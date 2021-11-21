@@ -146,42 +146,6 @@ func changePassword(ctx context.Context, tx *Tx, user *model.PwdChange) error {
 	return nil
 }
 
-func (s *UserService) UpdateUser(ctx context.Context, user *model.User) error {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	if err := updateUser(ctx, tx, user); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func updateUser(ctx context.Context, tx *Tx, user *model.User) error {
-	result, err := tx.ExecContext(ctx, `
-		UPDATE users SET
-			username = COALESCE(?, username),
-			reset_password_code = COALESCE(?, reset_password_code)
-		WHERE id = ?
-		`,
-		user.Username,
-		user.ResetCode,
-	)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return sql.ErrNoRows
-	}
-
-	return nil
-}
-
 func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (*app.Provider, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -194,41 +158,6 @@ func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (
 		return nil, err
 	}
 	return profile, tx.Commit()
-}
-
-func (s *UserService) UpdateResetCode(ctx context.Context, code int, phone string) error {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	if err := updateResetCode(ctx, tx, code, phone); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func updateResetCode(ctx context.Context, tx *Tx, code int, phone string) error {
-	result, err := tx.ExecContext(ctx, `
-		UPDATE users SET
-			reset_password_code = ?
-		WHERE phone = ?
-		`,
-		code,
-		phone,
-	)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return sql.ErrNoRows
-	}
-
-	return nil
 }
 
 func getProviderByUserID(ctx context.Context, tx *Tx, userId string) (*app.Provider, error) {
@@ -529,15 +458,20 @@ func (s *UserService) UpdateProvider(ctx context.Context, provider *model.Provid
 	}
 	defer tx.Rollback()
 
-	if err := updateProvider(ctx, tx, provider); err != nil {
-		log.Println("error updating provider:", err)
-		return err
+	success := true
+
+	if errProvider := updateProvider(ctx, tx, provider); err != nil {
+		log.Println("error updating provider:", errProvider)
+		success = false
 	}
 
-	if err := updateProfile(ctx, tx, &provider.Profile); err != nil {
-		log.Println("error updating profile:", err)
-		return err
+	if errProfile := updateProfile(ctx, tx, &provider.Profile); err != nil {
+		log.Println("error updating profile:", errProfile)
+		if !success {
+			return errProfile
+		}
 	}
+
 	return tx.Commit()
 }
 

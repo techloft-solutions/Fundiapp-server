@@ -19,7 +19,6 @@ type User struct {
 	Username   string `valid:"required" json:"display_name,omitempty"`
 	Password   string `valid:"required" json:"password"`
 	Phone      string `valid:"required" json:"phone"`
-	ResetCode  int    `json:"-"`
 	IsProvider bool   `json:"is_provider,omitempty"`
 }
 
@@ -175,8 +174,8 @@ type Transaction struct {
 
 type Profile struct {
 	//Model
-	ID     uuid.UUID `valid:"required" json:"profile_id"`
-	UserID string    `valid:"required" json:"user_id"`
+	//ID     uuid.UUID `valid:"required" json:"profile_id"`
+	UserID string `valid:"required" json:"user_id"`
 	//Username  *string   `json:"display_name,omitempty"`
 	FirstName *string `json:"first_name,omitempty"`
 	LastName  *string `json:"last_name,omitempty"`

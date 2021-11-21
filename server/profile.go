@@ -136,7 +136,7 @@ func (s *Server) handleProviderUpdate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("Provider does not exist")
-			handleError(w, "Provider not found", http.StatusNotFound)
+			handleError(w, "User not found", http.StatusNotFound)
 			return
 		}
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
@@ -147,8 +147,6 @@ func (s *Server) handleProviderUpdate(w http.ResponseWriter, r *http.Request) {
 		handleError(w, "User is not a provider", http.StatusUnauthorized)
 		return
 	}
-
-	provider.Profile.ID = user.ID
 
 	err = s.UsrSvc.UpdateProvider(ctx, &provider)
 	if err != nil {
@@ -165,49 +163,7 @@ func (s *Server) handleProviderUpdate(w http.ResponseWriter, r *http.Request) {
 	handleSuccessMsgWithRes(w, "Provider updated successfuly", provider)
 }
 
-func (s *Server) handleProfileCreate(w http.ResponseWriter, r *http.Request) {
-	var profile model.Profile
-
-	ctx := r.Context()
-	userID, err := middlewares.UserIDFromContext(ctx)
-	// Return an error if the user is not currently logged in.
-	if err != nil {
-		handleUnathorised(w)
-		return
-	}
-
-	//userData := RetrieveFirebaseUserData(ctx, userID.String())
-
-	jsonStr, err := json.Marshal(allFormValues(r))
-	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "error parsing form values", http.StatusInternalServerError)
-		return
-	}
-
-	if err := json.Unmarshal(jsonStr, &profile); err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "error parsing json string", http.StatusInternalServerError)
-		return
-	}
-
-	profile.ID = uuid.New()
-	profile.UserID = userID.String()
-	profile.Type = "client"
-
-	err = s.UsrSvc.CreateProfile(r.Context(), &profile)
-	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		if err = handleDuplicateEntry(w, err); err != nil {
-			handleError(w, "something went wrong", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	handleSuccessMsgWithRes(w, "Profile created successfuly", profile)
-}
-
-// Proivder
+// Provider
 
 func (s *Server) handleProviderByID(w http.ResponseWriter, r *http.Request) {
 	providerId := mux.Vars(r)["id"]
