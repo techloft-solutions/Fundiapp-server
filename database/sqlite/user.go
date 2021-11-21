@@ -75,29 +75,28 @@ func createUser(ctx context.Context, tx *Tx, user *model.User) error {
 	return nil
 }
 
-func (s *UserService) ResetUserPassword(ctx context.Context, user *model.ResetUser) error {
+func (s *UserService) ResetUserPassword(ctx context.Context, password string, userID string) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if err := resetUserPassword(ctx, tx, user); err != nil {
+	if err := resetUserPassword(ctx, tx, password, userID); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func resetUserPassword(ctx context.Context, tx *Tx, user *model.ResetUser) error {
+func resetUserPassword(ctx context.Context, tx *Tx, newPass string, userID string) error {
 	result, err := tx.ExecContext(ctx, `
 		UPDATE users SET
 			password = ?
-		WHERE phone = ? AND reset_password_code = ?
+		WHERE user_id = ?
 		`,
-		user.NewPassword,
-		user.Phone,
-		user.ResetCode,
+		newPass,
+		userID,
 	)
 	if err != nil {
 		return err
@@ -543,6 +542,7 @@ func (s *UserService) UpdateProvider(ctx context.Context, provider *model.Provid
 }
 
 func updateProvider(ctx context.Context, tx *Tx, provider *model.Provider) error {
+	log.Println("updating provider:", *provider.Bio, *provider.Profession, provider.UserID)
 	result, err := tx.ExecContext(ctx, `
 		UPDATE providers
 		SET

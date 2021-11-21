@@ -87,7 +87,7 @@ type UserService interface {
 	FindUserByPhoneNumber(context.Context, string) (*User, error)
 	// Password
 	ValidateUser(context.Context, string, string) error
-	ResetUserPassword(context.Context, *model.ResetUser) error
+	ResetUserPassword(context.Context, string, string) error
 	ChangeUserPassword(context.Context, *model.PwdChange) error
 	UpdateResetCode(context.Context, int, string) error
 	// Provider

@@ -1,15 +1,12 @@
 package server
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
@@ -251,60 +248,34 @@ func (s *Server) handleUserValidate(w http.ResponseWriter, r *http.Request) {
 	handleSuccessMsg(w, "User is valid")
 }
 
-func (s *Server) handleUserPassword(w http.ResponseWriter, r *http.Request) {
-	reset := r.FormValue("reset")
-
-	if reset == "true" {
-		phone := r.FormValue("phone")
-		if phone == "" {
-			handleError(w, "Phone number is required", http.StatusBadRequest)
-			return
-		}
-
-		err := s.sendPasswordResetSMS(phone)
-		if err != nil {
-			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-			handleError(w, "Something went wrong", http.StatusInternalServerError)
-			return
-		}
-		handleSuccessMsg(w, "Password reset code was sent to: "+phone)
+func (s *Server) handlePasswordNew(w http.ResponseWriter, r *http.Request) {
+	newPassWord := r.FormValue("new_password")
+	if newPassWord == "" {
+		handleError(w, "New password is required", http.StatusBadRequest)
 		return
-
 	}
 
-	var user model.ResetUser
-
-	jsonStr, err := json.Marshal(allFormValues(r))
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	// Return an error if the user is not currently logged in.
 	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		handleUnathorised(w)
 		return
 	}
 
-	if err := json.Unmarshal(jsonStr, &user); err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "error parsing json string", http.StatusInternalServerError)
-		return
-	}
+	log.Println("[http]", r.Method, r.URL.Path, "userID:", userID, "new_password:", newPassWord)
 
-	err = user.Validate()
-	if err != nil {
-		handleError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = s.UsrSvc.ResetUserPassword(r.Context(), &user)
+	err = s.UsrSvc.ResetUserPassword(r.Context(), newPassWord, userID.String())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
-			handleError(w, "Incorrect reset code", http.StatusNotFound)
+			handleError(w, "Failed to reset password", http.StatusNotFound)
 			return
 		}
 		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	handleSuccessMsg(w, "Password updated successfuly")
+	handleSuccessMsg(w, "Password reset successfuly")
 }
 
 func (s *Server) handlePasswordChange(w http.ResponseWriter, r *http.Request) {
@@ -349,21 +320,6 @@ func (s *Server) handlePasswordChange(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccessMsg(w, "Password updated successfuly")
-}
-
-func (s *Server) sendPasswordResetSMS(phone string) error {
-	rand.Seed(time.Now().UnixNano())
-	min := 999
-	max := 10000
-	code := rand.Intn(max-min+1) + min
-
-	err := s.UsrSvc.UpdateResetCode(context.Background(), code, phone)
-	if err != nil {
-		return err
-	}
-
-	log.Println("Sending password reset code: ", code, " SMS to:", phone)
-	return nil
 }
 
 func (s *Server) handleUserByID(w http.ResponseWriter, r *http.Request) {

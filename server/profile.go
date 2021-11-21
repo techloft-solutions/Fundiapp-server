@@ -148,7 +148,7 @@ func (s *Server) handleProviderUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleSuccessMsgWithRes(w, "Provider:", provider.Profile)
+	provider.Profile.ID = user.ID
 
 	err = s.UsrSvc.UpdateProvider(ctx, &provider)
 	if err != nil {

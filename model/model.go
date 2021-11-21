@@ -23,12 +23,6 @@ type User struct {
 	IsProvider bool   `json:"is_provider,omitempty"`
 }
 
-type ResetUser struct {
-	Phone       string `valid:"required" json:"phone"`
-	NewPassword string `valid:"required" json:"new_password"`
-	ResetCode   string `valid:"required" json:"code"`
-}
-
 type PwdChange struct {
 	UserID      string `valid:"required" json:"user_id"`
 	OldPassword string `valid:"required" json:"old_password"`
@@ -78,15 +72,15 @@ type Review struct {
 }
 
 type Booking struct {
-	Model
-	Title       string `valid:"required"`
-	StartDate   string `valid:"required,rfc3339"`
+	ID          uuid.UUID `valid:"required,uuid" json:"booking_id"`
+	Title       string    `json:"title"`
+	StartDate   string    `valid:"required,rfc3339" json:"start_date"`
 	Description *string
-	LocationID  string `valid:"required,uuid"`
+	LocationID  string `valid:"required,uuid" json:"location_id"`
 	Status      string
 	ProviderID  *string
-	ClientID    string `valid:"required"`
-	ServiceID   string `valid:"required,uuid"`
+	ClientID    string `valid:"required" json:"client_id"`
+	ServiceID   string `valid:"required,uuid" json:"service_id"`
 	Photos      []string
 }
 

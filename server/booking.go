@@ -11,7 +11,6 @@ import (
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
-	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
 	"github.com/asaskevich/govalidator"
@@ -63,6 +62,20 @@ func (s *Server) handleBookingList(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 	var booking model.Booking
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &booking); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
 	booking.ID = uuid.New()
 
 	userID, err := middlewares.UserIDFromContext(r.Context())
@@ -84,14 +97,16 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	booking.Photos = photos
-	booking.Title = r.PostFormValue("title")
-	booking.StartDate = r.PostFormValue("start_date")
-	booking.Description = strOrNil(r.PostFormValue("description"))
-	booking.LocationID = r.PostFormValue("location_id")
-	booking.Status = r.PostFormValue("status")
-	booking.ProviderID = strOrNil(r.PostFormValue("provider_id"))
-	booking.ServiceID = r.PostFormValue("service_id")
+	/*
+		booking.Photos = photos
+		booking.Title = r.PostFormValue("title")
+		booking.StartDate = r.PostFormValue("start_date")
+		booking.Description = strOrNil(r.PostFormValue("description"))
+		booking.LocationID = r.PostFormValue("location_id")
+		booking.Status = r.PostFormValue("status")
+		booking.ProviderID = strOrNil(r.PostFormValue("provider_id"))
+		booking.ServiceID = r.PostFormValue("service_id")
+	*/
 
 	err = booking.Validate()
 	if err != nil {
@@ -99,28 +114,32 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.BkSvc.CreateBooking(r.Context(), &booking)
-	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
+	/*
+		err = s.BkSvc.CreateBooking(r.Context(), &booking)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			handleError(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+	*/
+	/*
+		res := app.Booking{
+			ID:          booking.ID,
+			Title:       booking.Title,
+			Status:      booking.Status,
+			BookedAt:    booking.CreatedAt.String(),
+			StartAt:     booking.StartDate,
+			Description: booking.Description,
+			Photos:      booking.Photos,
+			Client:      app.Client{},
+			Location: app.Location{
+				ID: &booking.LocationID,
+			},
+		}
 
-	res := app.Booking{
-		ID:          booking.ID,
-		Title:       booking.Title,
-		Status:      booking.Status,
-		BookedAt:    booking.CreatedAt.String(),
-		StartAt:     booking.StartDate,
-		Description: booking.Description,
-		Photos:      booking.Photos,
-		Client:      app.Client{},
-		Location: app.Location{
-			ID: &booking.LocationID,
-		},
-	}
-
-	handleSuccess(w, res)
+		handleSuccess(w, res)
+	*/
+	handleSuccessMsgWithRes(w, "Booking:", booking)
 }
 
 func retrieveFirebaseUserData(ctx context.Context, uid string) *auth.UserRecord {

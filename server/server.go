@@ -35,7 +35,6 @@ func New() *Server {
 	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
 	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
 	s.router.HandleFunc("/user/validate", s.handleUserValidate).Methods("POST")
-	s.router.HandleFunc("/user/password", s.handleUserPassword).Methods("POST")
 
 	r := s.router.PathPrefix("/").Subrouter()
 	r.Use(middlewares.AuthHandler)
@@ -56,6 +55,7 @@ func handleHello(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) registerRoutes(r *mux.Router) {
+	r.HandleFunc("/user/password", s.handlePasswordNew).Methods("POST")
 	r.HandleFunc("/user/password", s.handlePasswordChange).Methods("PUT")
 	r.HandleFunc("/user/{id}", s.handleUserByID).Methods("GET")
 	// Profile
@@ -89,7 +89,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	// Bookings
 	//r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
 	//r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")
-	//r.HandleFunc("/bookings", s.handleBookingCreate).Methods("POST")
+	r.HandleFunc("/bookings", s.handleBookingCreate).Methods("POST")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingUpdate).Methods("PUT")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingDelete).Methods("DELETE")
 	// Bids
