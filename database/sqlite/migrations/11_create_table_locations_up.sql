@@ -8,6 +8,6 @@ CREATE TABLE locations(
     country VARCHAR(255),
     latitude VARCHAR(255) NOT NULL,
     longitude VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
