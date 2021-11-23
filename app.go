@@ -113,8 +113,9 @@ type ServiceService interface {
 }
 
 type ReviewService interface {
-	FindReviews(context.Context) ([]*Review, error)
+	//FindReviews(context.Context) ([]*Review, error)
 	CreateReview(context.Context, *model.Review) error
+	FindReviewsByProviderID(context.Context, string) ([]*Review, error)
 }
 
 type PortfolioService interface {

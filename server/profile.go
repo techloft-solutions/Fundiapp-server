@@ -244,6 +244,23 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 	handleSuccessMsgWithRes(w, "Provider created successfuly", provider)
 }
 
+func (s *Server) handleProviderReviews(w http.ResponseWriter, r *http.Request) {
+	providerId := mux.Vars(r)["id"]
+
+	reviews, err := s.RevSvc.FindReviewsByProviderID(r.Context(), providerId)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			handleError(w, "reviews not found", http.StatusNotFound)
+			return
+		}
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, reviews)
+}
+
 func handleDuplicateEntry(w http.ResponseWriter, err error) error {
 	me, ok := err.(*mysql.MySQLError)
 	if !ok {

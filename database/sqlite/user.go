@@ -321,7 +321,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 		SELECT 
 		    providers.provider_id,
 			users.user_id,
-			users.username,
+			CONCAT(users.first_name, ' ', users.last_name) AS full_name,
 			providers.profession,
 			providers.ratings_average,
 			providers.reviews_count,
@@ -330,7 +330,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 			providers.currency,
 			users.photo_url
 		FROM providers
-		LEFT JOIN users ON users.user_id = providers.user_id
+		INNER JOIN users ON users.user_id = providers.user_id
 		`,
 	)
 	if err != nil {

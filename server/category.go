@@ -74,17 +74,51 @@ func (s *Server) handleReviewCreate(w http.ResponseWriter, r *http.Request) {
 		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	/*
-		err = s.RevSvc.CreateReview(r.Context(), &review)
-		if err != nil {
-			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-			handleError(w, "Something went wrong", http.StatusInternalServerError)
-			return
-		}
-	*/
+
+	err = s.RevSvc.CreateReview(r.Context(), &review)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
 	handleSuccessMsgWithRes(w, "Review created successfully", review)
 }
 
+/*
+func (s *Server) handleReviewCreate(w http.ResponseWriter, r *http.Request) {
+	//var review model.Review
+	review := model.Review{}
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &review); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	if err := review.Validate(); err != nil {
+		handleError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	handleSuccessMsgWithRes(w, "Review created successfully", review)
+
+	err = s.RevSvc.CreateReview(r.Context(), &review)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+}
+*/
 func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 	var service model.Service
 

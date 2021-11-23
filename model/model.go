@@ -62,8 +62,8 @@ type Review struct {
 	AuthorID             string  `valid:"required" json:"author_id"`
 	ProviderID           string  `valid:"required,uuid" json:"provider_id"`
 	ServiceID            string  `valid:"required,uuid" json:"service_id"`
-	Comment              string  `valid:"required" json:"comment"`
-	Rating               string  `valid:"required" json:"rating"`
+	Comment              *string `valid:"required" json:"comment"`
+	Rating               *string `valid:"required" json:"rating"`
 	IntegrityRating      *string `json:"integrity_rating"`
 	CompetenceRating     *string `json:"competence_rating"`
 	ResponsivenessRating *string `json:"responsiveness_rating"`

@@ -58,6 +58,7 @@ func main() {
 	server.PfoSvc = sqlite.NewPortfolioService(db)
 	server.ReqSvc = sqlite.NewRequestService(db)
 	server.UsrSvc = sqlite.NewUserService(db)
+	server.RevSvc = sqlite.NewReviewService(db)
 
 	log.Fatal(server.Start())
 

@@ -129,6 +129,7 @@ func createReview(ctx context.Context, tx *Tx, review *model.Review) error {
 	query := `
 	INSERT INTO reviews (
 		author_id,
+		provider_id,
 		comment,
 		rating,
 		rating_quality,
@@ -136,12 +137,13 @@ func createReview(ctx context.Context, tx *Tx, review *model.Review) error {
 		rating_integrity,
 		rating_competence,
 		service_id
-	) VALUES (?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	// Insert row into database.
 	_, err := tx.ExecContext(ctx, query,
 		review.AuthorID,
+		review.ProviderID,
 		review.Comment,
 		review.Rating,
 		review.QualityRating,
@@ -155,6 +157,68 @@ func createReview(ctx context.Context, tx *Tx, review *model.Review) error {
 	}
 
 	return nil
+}
+
+func (s *ReviewService) FindReviewsByProviderID(ctx context.Context, providerId string) ([]*app.Review, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	reviews, err := getReviewsByProviderID(ctx, tx, providerId)
+	if err != nil {
+		return nil, err
+	}
+	return reviews, tx.Commit()
+}
+
+func getReviewsByProviderID(ctx context.Context, tx *Tx, providerId string) ([]*app.Review, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			id,
+			author_id,
+			comment,
+			rating,
+			rating_quality,
+			rating_resposiveness,
+			rating_integrity,
+			rating_competence,
+			service_id
+		FROM reviews
+		WHERE provider_id = ?
+		`,
+		providerId,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate over rows and deserialize into Dial objects.
+	reviews := make([]*app.Review, 0)
+	for rows.Next() {
+		var review app.Review
+		if err := rows.Scan(
+			&review.ID,
+			//&review.AuthorID,
+			&review.Comment,
+			&review.Rating,
+			//&review.QualityRating,
+			//&review.ResponsivenessRating,
+			//&review.IntegrityRating,
+			//&review.CompetenceRating,
+			//&review.ServiceID,
+		); err != nil {
+			return nil, err
+		}
+		reviews = append(reviews, &review)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return reviews, nil
 }
 
 type SvcService struct {
