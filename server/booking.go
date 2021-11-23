@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -87,16 +86,6 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 
 	booking.ClientID = userID.String()
 
-	var photos []string
-	photoData := r.PostFormValue("photos")
-	fmt.Println("photodata:", photoData)
-	if photoData != "" {
-		err = json.Unmarshal([]byte(photoData), &photos)
-		if err != nil {
-			handleError(w, "photos: must input a valid photo value", http.StatusBadRequest)
-			return
-		}
-	}
 	/*
 		booking.Photos = photos
 		booking.Title = r.PostFormValue("title")
@@ -114,14 +103,13 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		err = s.BkSvc.CreateBooking(r.Context(), &booking)
-		if err != nil {
-			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-			handleError(w, "Something went wrong", http.StatusInternalServerError)
-			return
-		}
-	*/
+	err = s.BkSvc.CreateBooking(r.Context(), &booking)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
 	/*
 		res := app.Booking{
 			ID:          booking.ID,

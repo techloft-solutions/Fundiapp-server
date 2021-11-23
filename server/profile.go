@@ -68,8 +68,8 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	_, err = s.UsrSvc.FindProfileByUserID(ctx, userID.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Println("profile does not exist")
-			handleError(w, "profile does not exist", http.StatusNotFound)
+			log.Println("profile not found")
+			handleError(w, "profile not found", http.StatusNotFound)
 			//s.handleProfileCreate(w, r)
 			return
 		}

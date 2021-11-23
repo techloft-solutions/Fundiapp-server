@@ -445,6 +445,49 @@ func (s *BookingService) FindBookings(ctx context.Context) ([]*app.BookingBrief,
 	return bookings, tx.Commit()
 }
 
+func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT 
+		    booking_id,
+			status,
+			providers.provider_id,
+			created_at,
+			start_date
+		FROM bookings
+		LEFT JOIN providers ON bookings.provider_id = providers.provider_id
+		LEFT JOIN users ON providers.provider_id = users.user_id
+		ORDER BY start_date ASC
+		`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate over rows and deserialize into Dial objects.
+	bookings := make([]*app.BookingBrief, 0)
+	for rows.Next() {
+		var booking app.BookingBrief
+		if err := rows.Scan(
+			&booking.ID,
+			&booking.Title,
+			&booking.Status,
+			&booking.Description,
+			&booking.BookedAt,
+			&booking.StartAt,
+		); err != nil {
+			return nil, err
+		}
+		bookings = append(bookings, &booking)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bookings, nil
+}
+
 func (s *BookingService) CreateBooking(ctx context.Context, booking *model.Booking) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -497,22 +540,18 @@ func createBooking(ctx context.Context, tx *Tx, booking *model.Booking) error {
 	query := `
 	INSERT INTO bookings (
 		booking_id,
-		title,
-		description,
 		status,
 		start_date,
 		client_id,
 		provider_id,
 		location_id,
 		service_id
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?,?,?,?,?,?,?)
 	`
 
 	// Insert row into database.
 	_, err := tx.ExecContext(ctx, query,
 		booking.ID,
-		booking.Title,
-		booking.Description,
 		booking.Status,
 		booking.StartDate,
 		booking.ClientID,
@@ -524,69 +563,7 @@ func createBooking(ctx context.Context, tx *Tx, booking *model.Booking) error {
 		panic(err)
 	}
 
-	// Save photos information if present
-	if booking.Photos != nil {
-		for _, photoUrl := range booking.Photos {
-			photo := model.Photo{
-				Owner: booking.ClientID,
-				Url:   photoUrl,
-			}
-			photo.ID = uuid.New()
-			err := createPhoto(ctx, tx, photo)
-			if err != nil {
-				log.Println(err)
-			}
-			bookingPhoto := model.BookingPhoto{
-				BookingID: booking.ID,
-				PhotoID:   photo.ID,
-			}
-			createBookingPhoto(ctx, tx, bookingPhoto)
-		}
-	}
-
 	return nil
-}
-
-func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
-
-	rows, err := tx.QueryContext(ctx, `
-		SELECT 
-		    booking_id,
-			title,
-			status,
-			description,
-			created_at,
-			start_date
-		FROM bookings
-		ORDER BY start_date ASC
-		`,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// Iterate over rows and deserialize into Dial objects.
-	bookings := make([]*app.BookingBrief, 0)
-	for rows.Next() {
-		var booking app.BookingBrief
-		if err := rows.Scan(
-			&booking.ID,
-			&booking.Title,
-			&booking.Status,
-			&booking.Description,
-			&booking.BookedAt,
-			&booking.StartAt,
-		); err != nil {
-			return nil, err
-		}
-		bookings = append(bookings, &booking)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return bookings, nil
 }
 
 // findDials retrieves a list of matching dials. Also returns a total matching

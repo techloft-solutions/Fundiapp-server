@@ -392,7 +392,7 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 			p.verified
 		FROM users as p
 		LEFT JOIN locations ON locations.location_id = p.location_id
-		WHERE p.user_id = ? AND p.is_provider = 0
+		WHERE p.user_id = ?
 	`, userId).Scan(
 		&profile.Username,
 		&profile.FirstName,
@@ -476,7 +476,6 @@ func (s *UserService) UpdateProvider(ctx context.Context, provider *model.Provid
 }
 
 func updateProvider(ctx context.Context, tx *Tx, provider *model.Provider) error {
-	log.Println("updating provider:", *provider.Bio, *provider.Profession, provider.UserID)
 	result, err := tx.ExecContext(ctx, `
 		UPDATE providers
 		SET

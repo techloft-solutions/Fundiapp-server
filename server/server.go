@@ -88,7 +88,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	//r.HandleFunc("/requests/{id}/bids", s.handleBidList).Methods("GET")
 	// Bookings
 	//r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
-	//r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")
+	r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingCreate).Methods("POST")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingUpdate).Methods("PUT")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingDelete).Methods("DELETE")

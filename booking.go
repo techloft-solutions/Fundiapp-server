@@ -131,7 +131,7 @@ type BookingBrief struct {
 	StartAt     string    `json:"start_tie"`
 	Category    string    `json:"category"`
 	Service     string    `json:"service"`
-	Provider    string    `json:"proider"`
+	Provider    string    `json:"provider"`
 	Client      string    `json:"clent"`
 	Location    string    `json:"loction"`
 }

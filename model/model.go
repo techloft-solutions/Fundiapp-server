@@ -71,29 +71,26 @@ type Review struct {
 }
 
 type Booking struct {
-	ID          uuid.UUID `valid:"required,uuid" json:"booking_id"`
-	Title       string    `json:"title"`
-	StartDate   string    `valid:"required,rfc3339" json:"start_date"`
-	Description *string
-	LocationID  string `valid:"required,uuid" json:"location_id"`
-	Status      string
-	ProviderID  *string
-	ClientID    string `valid:"required" json:"client_id"`
-	ServiceID   string `valid:"required,uuid" json:"service_id"`
-	Photos      []string
+	ID         uuid.UUID `json:"booking_id"`
+	StartDate  string    `valid:"required,rfc3339" json:"start_date"`
+	LocationID string    `valid:"required,uuid" json:"location_id"`
+	Status     string
+	ProviderID string `valid:"required" json:"provider_id"`
+	ClientID   string `valid:"required" json:"client_id"`
+	ServiceID  string `valid:"required,uuid" json:"service_id"`
 }
 
 type Request struct {
-	ID         uuid.UUID `valid:"required"`
-	Title      string    `valid:"required" json:"title"`
-	StartDate  string    `valid:"required, rfc3339" json:"start_date"`
-	Note       string    `valid:"required" json:"note"`
-	LocationID string    `valid:"required,uuid" json:"location_id"`
-	Type       string    `valid:"required" json:"type"`
-	ClientID   string    `valid:"required" json:"client_id"`
-	Photos     []string  `json:"photos"`
-	Status     string    `json:"status"`
-	Urgent     bool      `valid:"required" json:"urgent,string"`
+	ID         uuid.UUID
+	Title      string   `valid:"required" json:"title"`
+	StartDate  string   `valid:"required, rfc3339" json:"start_date"`
+	Note       string   `valid:"required" json:"note"`
+	LocationID string   `valid:"required,uuid" json:"location_id"`
+	Type       string   `valid:"required" json:"type"`
+	ClientID   string   `valid:"required" json:"client_id"`
+	Photos     []string `json:"photos"`
+	Status     string   `json:"status"`
+	Urgent     bool     `valid:"required" json:"urgent,string"`
 }
 
 type Photo struct {
