@@ -201,14 +201,17 @@ func (s *LocationService) ListMyLocations(ctx context.Context, userId string) ([
 }
 
 func getLocationsByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Location, error) {
+	var defaultLocation string
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
 			locations.location_id,
 			locations.name,
 			locations.address,
 			locations.latitude,
-			locations.longitude
+			locations.longitude,
+			users.location_id AS default_location_id
 		FROM locations
+		LEFT JOIN users ON locations.user_id = users.user_id
 		WHERE locations.user_id = ?
 		ORDER BY locations.created_at DESC
 	`, userId)
@@ -224,9 +227,16 @@ func getLocationsByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Lo
 			&location.Address,
 			&location.Latitude,
 			&location.Longitude,
+			&defaultLocation,
 		); err != nil {
 			log.Println("rows scan error:", err)
 			return nil, err
+		}
+		// mark default location
+		if location.ID == defaultLocation {
+			location.Default = true
+		} else {
+			location.Default = false
 		}
 		locations = append(locations, &location)
 	}

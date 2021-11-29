@@ -40,7 +40,7 @@ type Provider struct {
 	Stats     Stats   `json:"stats"`
 	//distanceKM int `json:"distance`
 	Rate     `json:"rate"`
-	Services []Service `json:"services"`
+	Services []*Service `json:"services"`
 }
 
 type ProviderBrief struct {
@@ -64,11 +64,12 @@ type Stats struct {
 }
 
 type Location struct {
-	ID        *string `json:"location_id"`
+	ID        string  `json:"location_id"`
 	Name      *string `json:"name"`
-	Latitude  *string `json:"latitude"`
-	Longitude *string `json:"longitude"`
+	Latitude  string  `json:"latitude"`
+	Longitude string  `json:"longitude"`
 	Address   *string `json:"address"`
+	Default   bool    `json:"default"`
 }
 
 type Service struct {

@@ -153,11 +153,17 @@ func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (
 	}
 	defer tx.Rollback()
 
-	profile, err := getProviderByUserID(ctx, tx, userId)
+	provider, err := getProviderByUserID(ctx, tx, userId)
 	if err != nil {
 		return nil, err
 	}
-	return profile, tx.Commit()
+
+	service, err := getServicesByProviderID(ctx, tx, provider.ID)
+	if err != nil {
+		return nil, err
+	}
+	provider.Services = service
+	return provider, tx.Commit()
 }
 
 func getProviderByUserID(ctx context.Context, tx *Tx, userId string) (*app.Provider, error) {
@@ -214,14 +220,14 @@ func (s *UserService) FindProviderByID(ctx context.Context, id string) (*app.Pro
 	}
 	defer tx.Rollback()
 
-	profile, err := getProviderProfileByID(ctx, tx, id)
+	profile, err := getProviderByID(ctx, tx, id)
 	if err != nil {
 		return nil, err
 	}
 	return profile, tx.Commit()
 }
 
-func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provider, error) {
+func getProviderByID(ctx context.Context, tx *Tx, id string) (*app.Provider, error) {
 	profile := &app.Provider{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
@@ -237,7 +243,7 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 			providers.portfolio_count,
 			locations.name
 		FROM providers
-		LEFT JOIN users ON users.user_id = providers.user_id
+		INNER JOIN users ON users.user_id = providers.user_id
 		LEFT JOIN locations ON locations.location_id = users.location_id
 		LEFT JOIN categories ON categories.id = providers.category_id
 		WHERE providers.provider_id = ?

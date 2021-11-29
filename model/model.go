@@ -46,14 +46,13 @@ type Provider struct {
 }
 
 type Service struct {
-	UserID     string
 	ProviderID uuid.UUID
-	Name       string `json:"name"`
+	Name       string `valid:"required" json:"name"`
 	Rate
 }
 
 type Rate struct {
-	Amount   uint   `json:"rate_amount"`
+	Amount   string `json:"rate_amount"`
 	Unit     string `json:"rate_unit"`
 	Currency string `json:"rate_currency"`
 }

@@ -219,8 +219,6 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service.UserID = userID.String()
-
 	if err := service.Validate(); err != nil {
 		handleError(w, err.Error(), http.StatusBadRequest)
 		return

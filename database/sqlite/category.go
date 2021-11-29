@@ -369,14 +369,6 @@ func getReviewsByProviderID(ctx context.Context, tx *Tx, providerId string) ([]*
 	return reviews, nil
 }
 
-type SvcService struct {
-	db *DB
-}
-
-func NewSvcService(db *DB) *ReviewService {
-	return &ReviewService{db}
-}
-
 func (s *UserService) CreateService(ctx context.Context, service *model.Service) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -394,18 +386,16 @@ func (s *UserService) CreateService(ctx context.Context, service *model.Service)
 func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 	query := `
 	INSERT INTO services (
-		user_id,
 		provider_id,
 		name,
 		price,
 		currency,
 		price_unit
-	) VALUES (?, ?)
+	) VALUES (?, ?, ?, ?, ?)
 	`
 
 	// Insert row into database.
 	_, err := tx.ExecContext(ctx, query,
-		service.UserID,
 		service.ProviderID,
 		service.Name,
 		service.Rate.Amount,
@@ -433,7 +423,7 @@ func (s *UserService) ListMyServices(ctx context.Context, userId string) ([]*app
 	return services, tx.Commit()
 }
 
-func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Service, error) {
+func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]*app.Service, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
 			name,
@@ -442,10 +432,46 @@ func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Ser
 			price_unit
 		FROM services
 		WHERE provider_id = ?
+	`, providerId)
+	if err != nil {
+		return nil, err
+	}
+	services := make([]*app.Service, 0)
+	for rows.Next() {
+		var service app.Service
+		if err := rows.Scan(
+			&service.Name,
+			&service.Rate.Price,
+			&service.Rate.Currency,
+			&service.Rate.Unit,
+		); err != nil {
+			log.Println("rows scan error:", err)
+			return nil, err
+		}
+		services = append(services, &service)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return services, nil
+}
+
+func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Service, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			name,
+			price,
+			currency,
+			price_unit
+		FROM services
+		WHERE provider_id IN (
+			SELECT provider_id FROM users WHERE id = ?
+		)
 	`, userId)
 	if err != nil {
 		return nil, err
 	}
+
 	services := make([]*app.Service, 0)
 	for rows.Next() {
 		var service app.Service
