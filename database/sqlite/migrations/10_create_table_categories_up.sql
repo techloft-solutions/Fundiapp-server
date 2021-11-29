@@ -4,5 +4,9 @@ CREATE TABLE categories(
     parent_id INT(20),
     profession VARCHAR(255),
     description TEXT,
-    icon_url VARCHAR(255) NOT NULL
+    level INT(20) DEFAULT 0,
+    icon_url VARCHAR(255) NOT NULL,
+    industry_id INT(20),
+    FOREIGN KEY (parent_id) references categories(id),
+    FOREIGN KEY (industry_id) references industries(id)
 );

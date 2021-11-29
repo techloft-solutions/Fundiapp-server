@@ -24,6 +24,12 @@ type Category struct {
 	IconURL  string  `json:"icon_url"`
 }
 
+type Industry struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	IconURL string `json:"icon_url"`
+}
+
 type Provider struct {
 	ID string `json:"provder_id"`
 	Profile

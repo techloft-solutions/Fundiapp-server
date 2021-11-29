@@ -67,6 +67,59 @@ func retrieveCategories(ctx context.Context, tx *Tx) ([]*app.Category, error) {
 	return categories, nil
 }
 
+func (s *CategoryService) ListCategoriesByParentID(ctx context.Context, parentID string) ([]*app.Category, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	locations, err := retrieveCategoriesByParentID(ctx, tx, parentID)
+	if err != nil {
+		return nil, err
+	}
+	return locations, tx.Commit()
+}
+
+func retrieveCategoriesByParentID(ctx context.Context, tx *Tx, parentID string) ([]*app.Category, error) {
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT 
+		    id,
+			name,
+			parent_id,
+			icon_url
+		FROM categories
+		WHERE parent_id = ?
+		`,
+		parentID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate over rows and deserialize into Dial objects.
+	categories := make([]*app.Category, 0)
+	for rows.Next() {
+		var category app.Category
+		if err := rows.Scan(
+			&category.ID,
+			&category.Name,
+			&category.ParentID,
+			&category.IconURL,
+		); err != nil {
+			return nil, err
+		}
+		categories = append(categories, &category)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
 func (s *CategoryService) CreateCategory(ctx context.Context, category *model.Category) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -85,7 +138,6 @@ func createCategory(ctx context.Context, tx *Tx, category *model.Category) error
 	query := `
 	INSERT INTO categories (
 		name,
-		profession,
 		parent_id,
 		description,
 		icon_url
@@ -95,7 +147,6 @@ func createCategory(ctx context.Context, tx *Tx, category *model.Category) error
 	// Insert row into database.
 	_, err := tx.ExecContext(ctx, query,
 		category.Name,
-		category.Profession,
 		category.ParentID,
 		category.Description,
 		category.IconURL,
@@ -105,6 +156,99 @@ func createCategory(ctx context.Context, tx *Tx, category *model.Category) error
 	}
 
 	return nil
+}
+
+type IndustryService struct {
+	db *DB
+}
+
+func NewIndustryService(db *DB) *IndustryService {
+	return &IndustryService{db}
+}
+
+func (s *IndustryService) CreateIndustry(ctx context.Context, industry *model.Industry) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = createIndustry(ctx, tx, industry)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func createIndustry(ctx context.Context, tx *Tx, industry *model.Industry) error {
+	query := `
+	INSERT INTO industries (
+		name,
+		description,
+		icon_url
+	) VALUES (?, ?, ?)
+	`
+
+	// Insert row into database.
+	_, err := tx.ExecContext(ctx, query,
+		industry.Name,
+		industry.Description,
+		industry.IconURL,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *IndustryService) ListIndustries(ctx context.Context) ([]*app.Industry, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	industries, err := retrieveIndustries(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+	return industries, tx.Commit()
+}
+
+func retrieveIndustries(ctx context.Context, tx *Tx) ([]*app.Industry, error) {
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT 
+		    id,
+			name,
+			icon_url
+		FROM industries
+		`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate over rows and deserialize into Dial objects.
+	industries := make([]*app.Industry, 0)
+	for rows.Next() {
+		var industry app.Industry
+		if err := rows.Scan(
+			&industry.ID,
+			&industry.Name,
+			&industry.IconURL,
+		); err != nil {
+			return nil, err
+		}
+		industries = append(industries, &industry)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return industries, nil
 }
 
 type ReviewService struct {

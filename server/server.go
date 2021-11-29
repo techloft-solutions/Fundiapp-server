@@ -23,6 +23,7 @@ type Server struct {
 	UsrSvc     app.UserService
 	RevSvc     app.ReviewService
 	ServiceSvc app.ServiceService
+	IndSvc     app.IndustryService
 }
 
 func New() *Server {
@@ -62,6 +63,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	//r.HandleFunc("/profile", s.handleProfileCreate).Methods("POST")
 	r.HandleFunc("/profile", s.handleProfileGet).Methods("GET")
 	r.HandleFunc("/profile", s.handleProfileUpdate).Methods("PUT")
+	r.HandleFunc("/profile/location", s.handleProfileLocationUpdate).Methods("PUT")
 	//r.HandleFunc("/profile/{id}", s.handleProfileDelete).Methods("DELETE")
 	// Providers
 	r.HandleFunc("/provider", s.handleProviderGet).Methods("GET")
@@ -75,6 +77,9 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	// Categories
 	r.HandleFunc("/categories", s.handleCategoriesList).Methods("GET")
 	r.HandleFunc("/categories", s.handleCategoryCreate).Methods("POST")
+	// Industries
+	r.HandleFunc("/industries", s.handleIndustriesList).Methods("GET")
+	r.HandleFunc("/industries", s.handleIndustryCreate).Methods("POST")
 	// Reviews
 	r.HandleFunc("/reviews", s.handleReviewCreate).Methods("POST")
 	//r.HandleFunc("/reviews", s.handleReviewList).Methods("GET")

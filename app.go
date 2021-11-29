@@ -76,6 +76,12 @@ type BookingService interface {
 type CategoryService interface {
 	CreateCategory(context.Context, *model.Category) error
 	ListCategories(context.Context) ([]*Category, error)
+	ListCategoriesByParentID(context.Context, string) ([]*Category, error)
+}
+
+type IndustryService interface {
+	CreateIndustry(context.Context, *model.Industry) error
+	ListIndustries(context.Context) ([]*Industry, error)
 }
 
 type UserService interface {

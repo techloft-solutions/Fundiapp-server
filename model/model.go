@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 )
 
@@ -12,6 +13,14 @@ type Model struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt sql.NullTime
+}
+
+func (m Model) Validate(v interface{}) error {
+	_, err := govalidator.ValidateStruct(v)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type User struct {
@@ -118,7 +127,12 @@ type Category struct {
 	Name        string  `json:"name" valid:"required"`
 	Description *string `json:"description"`
 	ParentID    *string `json:"parent_id"`
-	Profession  *string `json:"profession"`
+	IconURL     string  `json:"icon_url" valid:"required"`
+}
+
+type Industry struct {
+	Name        string  `json:"name" valid:"required"`
+	Description *string `json:"description"`
 	IconURL     string  `json:"icon_url" valid:"required"`
 }
 

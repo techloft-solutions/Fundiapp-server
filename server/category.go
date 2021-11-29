@@ -6,21 +6,33 @@ import (
 	"log"
 	"net/http"
 
+	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
 	"github.com/google/uuid"
 )
 
 func (s *Server) handleCategoriesList(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var categories []*app.Category
+	parent_id := r.URL.Query().Get("parent_id")
+	log.Println("[DEBUG] parent_id: ", parent_id)
 	// Fetch categories from database.
-	resp, err := s.CatSvc.ListCategories(r.Context())
+	switch {
+	case parent_id != "":
+		log.Println("[DEBUG] parent_id set")
+		categories, err = s.CatSvc.ListCategoriesByParentID(r.Context(), parent_id)
+	default:
+		log.Println("[DEBUG] parent_id not set")
+		categories, err = s.CatSvc.ListCategories(r.Context())
+	}
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	handleSuccess(w, resp)
+	handleSuccess(w, categories)
 }
 
 func (s *Server) handleCategoryCreate(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +66,52 @@ func (s *Server) handleCategoryCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccessMsgWithRes(w, "Category created successfully", category)
+}
+
+func (s *Server) handleIndustryCreate(w http.ResponseWriter, r *http.Request) {
+	var industry model.Industry
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err = handleMysqlErrors(w, err); err != nil {
+			handleError(w, "something went wrong", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &industry); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	if err := industry.Validate(); err != nil {
+		handleError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = s.IndSvc.CreateIndustry(r.Context(), &industry)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccessMsgWithRes(w, "Industry created successfully", industry)
+}
+
+func (s *Server) handleIndustriesList(w http.ResponseWriter, r *http.Request) {
+	// Fetch industries from database.
+	industries, err := s.IndSvc.ListIndustries(r.Context())
+
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, industries)
 }
 
 func (s *Server) handleReviewCreate(w http.ResponseWriter, r *http.Request) {

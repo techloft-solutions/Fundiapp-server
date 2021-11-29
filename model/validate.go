@@ -73,3 +73,11 @@ func (u User) Validate() error {
 	}
 	return nil
 }
+
+func (i Industry) Validate() error {
+	_, err := govalidator.ValidateStruct(i)
+	if err != nil {
+		return err
+	}
+	return nil
+}

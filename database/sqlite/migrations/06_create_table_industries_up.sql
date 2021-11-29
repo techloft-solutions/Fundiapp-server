@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS industries(
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT,
+    icon_url VARCHAR(255) NOT NULL
+);

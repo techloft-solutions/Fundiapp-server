@@ -103,6 +103,11 @@ func (s *Server) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	//json.NewEncoder(w).Encode(profile)
 }
 
+func (s *Server) handleProfileLocationUpdate(w http.ResponseWriter, r *http.Request) {
+	location := r.FormValue("location_id")
+	handleSuccessMsg(w, "Location updated successfuly:"+location)
+}
+
 func (s *Server) handleProviderUpdate(w http.ResponseWriter, r *http.Request) {
 	var provider model.Provider
 	ctx := r.Context()

@@ -40,13 +40,13 @@ func (s *Server) handlePortfolioList(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResp)
 }
 */
-/*
+
 func (s *Server) handlePortfolioCreate(w http.ResponseWriter, r *http.Request) {
 	var portfolio model.Portfolio
 	portfolio.Title = r.PostFormValue("title")
 	bookingId, err := uuid.Parse(r.PostFormValue("booking_id"))
 	if err != nil {
-		handleError(w, app.Errorf(app.INVALID_ERR, "Invalid ID format"), 400)
+		//handleError(w, app.Errorf(app.INVALID_ERR, "Invalid ID format"), 400)
 		return
 	}
 	portfolio.BookingID = bookingId
@@ -59,6 +59,8 @@ func (s *Server) handlePortfolioCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	portfolio.Photos = photos
 
+	portfolio.Validate(portfolio)
+
 	err = s.PfoSvc.CreatePortfolio(r.Context(), &portfolio)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
@@ -68,7 +70,7 @@ func (s *Server) handlePortfolioCreate(w http.ResponseWriter, r *http.Request) {
 
 	handleSuccess(w, nil)
 }
-*/
+
 func (s *Server) handleMyLocations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
