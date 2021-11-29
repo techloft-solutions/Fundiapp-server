@@ -1,0 +1,1 @@
+DROP TABLE `bids`, `bookings`, `booking_photos`, `categories`, `clients`, `locations`, `migrations`, `photos`, `portfolios`, `portfolio_photos`, `providers`, `provider_professions`, `rates`, `reviews`, `services`, `transactions`, `users`, `user_locations`;
