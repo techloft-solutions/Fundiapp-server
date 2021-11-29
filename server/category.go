@@ -186,6 +186,7 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// only providers can create services
 	provider, err := s.UsrSvc.FindProviderByUserID(r.Context(), userID.String())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
@@ -225,7 +226,7 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.ServiceSvc.CreateService(r.Context(), &service)
+	err = s.UsrSvc.CreateService(r.Context(), &service)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
@@ -245,7 +246,7 @@ func (s *Server) handleMyServices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.ServiceSvc.ListMyServices(ctx, userID.String())
+	resp, err := s.UsrSvc.ListMyServices(ctx, userID.String())
 	if err != nil {
 		log.Println(err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)

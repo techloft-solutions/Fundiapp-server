@@ -611,15 +611,21 @@ func getUserByCriteria(ctx context.Context, tx *Tx, haystack string, needle stri
 	return user, nil
 }
 
-func (s *UserService) ValidateUser(ctx context.Context, phone string, password string) error {
+func (s *UserService) ValidateUser(ctx context.Context, phone string, password string, isProvider bool) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if err := validateUser(ctx, tx, phone, password); err != nil {
-		return err
+	if isProvider {
+		if err := validateUserAsProvider(ctx, tx, phone, password); err != nil {
+			return err
+		}
+	} else {
+		if err := validateUser(ctx, tx, phone, password); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
 }
@@ -629,7 +635,22 @@ func validateUser(ctx context.Context, tx *Tx, phone string, password string) er
 		SELECT
 			username
 		FROM users
-		WHERE phone = ? AND password = ?
+		WHERE phone = ? AND password = ? AND is_provider = false
+	`, phone, password).Scan(
+		&phone,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateUserAsProvider(ctx context.Context, tx *Tx, phone string, password string) error {
+	err := tx.QueryRowContext(ctx, `
+		SELECT
+			username
+		FROM users
+		WHERE phone = ? AND password = ? AND is_provider = true
 	`, phone, password).Scan(
 		&phone,
 	)

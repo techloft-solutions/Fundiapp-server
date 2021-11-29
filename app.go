@@ -91,7 +91,7 @@ type UserService interface {
 	FindUserByUsername(context.Context, string) (*User, error)
 	FindUserByPhoneNumber(context.Context, string) (*User, error)
 	// Password
-	ValidateUser(context.Context, string, string) error
+	ValidateUser(context.Context, string, string, bool) error
 	ResetUserPassword(context.Context, string, string) error
 	ChangeUserPassword(context.Context, *model.PwdChange) error
 	// Provider
@@ -104,18 +104,15 @@ type UserService interface {
 	FindProfileByUserID(context.Context, string) (*Profile, error)
 	CreateProfile(context.Context, *model.Profile) error
 	UpdateProfile(context.Context, *model.Profile) error
+	// Service
+	CreateService(context.Context, *model.Service) error
+	//FindServiceByID(context.Context, string) (*Service, error)
+	ListMyServices(context.Context, string) ([]*Service, error)
 }
 
 type ClientService interface {
 	FindClientByID(context.Context, uuid.UUID) (*Client, error)
 	FindClients(context.Context) ([]*Client, error)
-}
-
-type ServiceService interface {
-	CreateService(context.Context, *model.Service) error
-	//FindServiceByID(context.Context, uuid.UUID) (*Service, error)
-	ListMyServices(context.Context, string) ([]*Service, error)
-	ListServices(context.Context) ([]*Service, error)
 }
 
 type ReviewService interface {

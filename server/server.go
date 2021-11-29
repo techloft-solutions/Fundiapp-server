@@ -14,16 +14,15 @@ type Server struct {
 	server *http.Server
 	router *mux.Router
 	//ln     net.Listener
-	BkSvc      app.BookingService
-	CatSvc     app.CategoryService
-	PfoSvc     app.PortfolioService
-	LocSvc     app.LocationService
-	BidSvc     app.BidService
-	ReqSvc     app.RequestService
-	UsrSvc     app.UserService
-	RevSvc     app.ReviewService
-	ServiceSvc app.ServiceService
-	IndSvc     app.IndustryService
+	BkSvc  app.BookingService
+	CatSvc app.CategoryService
+	PfoSvc app.PortfolioService
+	LocSvc app.LocationService
+	BidSvc app.BidService
+	ReqSvc app.RequestService
+	UsrSvc app.UserService
+	RevSvc app.ReviewService
+	IndSvc app.IndustryService
 }
 
 func New() *Server {
@@ -36,6 +35,9 @@ func New() *Server {
 	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
 	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
 	s.router.HandleFunc("/user/validate", s.handleUserValidate).Methods("POST")
+
+	// Tesing
+	s.testingRoutes(s.router)
 
 	r := s.router.PathPrefix("/").Subrouter()
 	r.Use(middlewares.AuthHandler)
@@ -53,6 +55,10 @@ func (s *Server) Start() (err error) {
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "HudumaApp API V1\n")
+}
+
+func (s *Server) testingRoutes(r *mux.Router) {
+
 }
 
 func (s *Server) registerRoutes(r *mux.Router) {

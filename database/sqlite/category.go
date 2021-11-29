@@ -377,7 +377,7 @@ func NewSvcService(db *DB) *ReviewService {
 	return &ReviewService{db}
 }
 
-func (s *ReviewService) CreateService(ctx context.Context, service *model.Service) error {
+func (s *UserService) CreateService(ctx context.Context, service *model.Service) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -419,7 +419,7 @@ func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 	return nil
 }
 
-func (s *LocationService) ListMyServices(ctx context.Context, userId string) ([]*app.Service, error) {
+func (s *UserService) ListMyServices(ctx context.Context, userId string) ([]*app.Service, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
