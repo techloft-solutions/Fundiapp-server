@@ -86,7 +86,6 @@ type Request struct {
 	StartDate  string   `valid:"required, rfc3339" json:"start_date"`
 	Note       string   `valid:"required" json:"note"`
 	LocationID string   `valid:"required,uuid" json:"location_id"`
-	Type       string   `valid:"required" json:"type"`
 	ClientID   string   `valid:"required" json:"client_id"`
 	Photos     []string `json:"photos"`
 	Status     string   `json:"status"`

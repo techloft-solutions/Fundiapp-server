@@ -1,6 +1,7 @@
 package app
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -64,8 +65,8 @@ type Location struct {
 }
 
 type Service struct {
-	ID   uuid.UUID `json:"id"`
-	Name *string   `json:"name"`
+	ID   uuid.UUID      `json:"id"`
+	Name sql.NullString `json:"name"`
 	Rate `json:"rate"`
 }
 
@@ -105,35 +106,33 @@ type Client struct {
 }
 
 type Booking struct {
-	ID          uuid.UUID `json:"booking_id"`
-	Title       string    `json:"title"`
-	Status      string    `json:"status"`
-	Description *string   `json:"description"`
-	Type        *string   `json:"type"`
-	BookedAt    string    `json:"booked_at"`
-	Photos      []string  `json:"photos"`
-	StartAt     string    `json:"start_time"`
-	Category    string    `json:"category"`
-	Service
-	Provider `json:"provider"`
+	ID     uuid.UUID `json:"booking_id"`
+	Title  string    `json:"title"`
+	Status string    `json:"status"`
+	//Description *string  `json:"description"`
+	//Type     *string  `json:"type"`
+	BookedAt string `json:"booked_at"`
+	//Photos   []string `json:"photos"`
+	StartAt  string `json:"start_time"`
+	Category string `json:"category"`
+	Service  `json:"service"`
+	Provider ProviderBrief `json:"provider"`
 	Client   `json:"client"`
 	Location `json:"location"`
 }
 
 type BookingBrief struct {
-	ID          uuid.UUID `json:"booking_id"`
-	Title       string    `json:"title"`
-	Status      string    `json:"status"`
-	Description string    `json:"descripton"`
-	Type        string    `json:"type"`
-	BookedAt    string    `json:"bookedat"`
-	Photos      []string  `json:"photos"`
-	StartAt     string    `json:"start_tie"`
-	Category    string    `json:"category"`
-	Service     string    `json:"service"`
-	Provider    string    `json:"provider"`
-	Client      string    `json:"clent"`
-	Location    string    `json:"loction"`
+	ID     uuid.UUID `json:"booking_id"`
+	Status string    `json:"status"`
+	//Description string    `json:"descripton"`
+	//Type     string `json:"type"`
+	BookedAt string `json:"booked_at"`
+	//Photos      []string  `json:"photos"`
+	StartAt string `json:"start_time"`
+	//Category string `json:"category"`
+	//Service  string `json:"service"`
+	Provider string `json:"provider"`
+	Location string `json:"location"`
 }
 
 type Portfolio struct {

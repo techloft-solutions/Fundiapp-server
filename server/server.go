@@ -30,7 +30,7 @@ func New() *Server {
 		server: &http.Server{},
 		router: mux.NewRouter(),
 	}
-	s.router.HandleFunc("/", handleHello).Methods("GET")
+	s.router.HandleFunc("/", handleHome).Methods("GET")
 	// Users
 	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
 	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
@@ -50,7 +50,7 @@ func (s *Server) Start() (err error) {
 	//return nil
 }
 
-func handleHello(w http.ResponseWriter, r *http.Request) {
+func handleHome(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "HudumaApp API V1\n")
 }
 
@@ -88,7 +88,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/requests/{id}/bids", s.handleBidCreate).Methods("POST")
 	//r.HandleFunc("/requests/{id}/bids", s.handleBidList).Methods("GET")
 	// Bookings
-	//r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
+	r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingCreate).Methods("POST")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingUpdate).Methods("PUT")

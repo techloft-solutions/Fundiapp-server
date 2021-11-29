@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"strings"
 
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
@@ -49,7 +50,8 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 			start_date,
 			location_id,
 			status,
-			urgent
+			urgent,
+			is_request
 		) VALUES (?,?,?,?,?,?,?,?)
 		`,
 		request.ID,
@@ -60,6 +62,7 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 		request.LocationID,
 		request.Status,
 		request.Urgent,
+		true,
 	); err != nil {
 		log.Println("failed inserting into db:", err)
 		return err
@@ -432,6 +435,44 @@ func (s *BookingService) FindBookingByID(ctx context.Context, id uuid.UUID) (_ *
 	return booking, tx.Commit()
 }
 
+func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking, err error) {
+	booking := &app.Booking{}
+	// Execue query with limiting WHERE clause and LIMIT/OFFSET injected.
+	if err := tx.QueryRowContext(ctx, `
+		SELECT
+			bookings.booking_id,
+			bookings.status,
+			bookings.start_date,
+			bookings.client_id,
+			bookings.provider_id,
+			bookings.created_at,
+			services.name
+		FROM
+			bookings
+		LEFT JOIN services ON services.id = bookings.service_id
+		WHERE
+			bookings.booking_id = ?
+		ORDER BY
+			bookings.start_date ASC
+		`,
+		id,
+	).Scan(
+		&booking.ID,
+		&booking.Status,
+		&booking.StartAt,
+		&booking.Client.UserID,
+		&booking.Provider.ID,
+		&booking.BookedAt,
+		&booking.Service.Name,
+	); err != nil {
+		return nil, err
+	}
+
+	booking.Title = booking.Service.Name.String
+
+	return booking, nil
+}
+
 func (s *BookingService) FindBookings(ctx context.Context) ([]*app.BookingBrief, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -449,14 +490,17 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 
-		    booking_id,
-			status,
-			providers.provider_id,
-			created_at,
-			start_date
+		    bookings.booking_id,
+			bookings.status,
+			bookings.created_at,
+			bookings.start_date,
+			users.first_name,
+			users.last_name,
+			locations.name
 		FROM bookings
 		LEFT JOIN providers ON bookings.provider_id = providers.provider_id
-		LEFT JOIN users ON providers.provider_id = users.user_id
+		LEFT JOIN users ON providers.user_id = users.user_id
+		LEFT JOIN locations ON bookings.location_id = locations.location_id
 		ORDER BY start_date ASC
 		`,
 	)
@@ -465,20 +509,25 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 	}
 	defer rows.Close()
 
+	var firstname sql.NullString
+	var lastname sql.NullString
+
 	// Iterate over rows and deserialize into Dial objects.
 	bookings := make([]*app.BookingBrief, 0)
 	for rows.Next() {
 		var booking app.BookingBrief
 		if err := rows.Scan(
 			&booking.ID,
-			&booking.Title,
 			&booking.Status,
-			&booking.Description,
 			&booking.BookedAt,
 			&booking.StartAt,
+			&firstname,
+			&lastname,
+			&booking.Location,
 		); err != nil {
 			return nil, err
 		}
+		booking.Provider = strings.TrimSpace(firstname.String + " " + lastname.String)
 		bookings = append(bookings, &booking)
 	}
 	if err := rows.Err(); err != nil {
@@ -499,6 +548,38 @@ func (s *BookingService) CreateBooking(ctx context.Context, booking *model.Booki
 		return err
 	}
 	return tx.Commit()
+}
+
+// createBooking creates a new booking.
+func createBooking(ctx context.Context, tx *Tx, booking *model.Booking) error {
+	booking.Status = statusPending
+
+	query := `
+	INSERT INTO bookings (
+		booking_id,
+		status,
+		start_date,
+		client_id,
+		provider_id,
+		location_id,
+		service_id
+	) VALUES (?,?,?,?,?,?,?)
+	`
+
+	// Insert row into database.
+	_, err := tx.ExecContext(ctx, query,
+		booking.ID,
+		booking.Status,
+		booking.StartDate,
+		booking.ClientID,
+		booking.ProviderID,
+		booking.LocationID,
+		booking.ServiceID,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func createPhoto(ctx context.Context, tx *Tx, photo model.Photo) error {
@@ -531,73 +612,6 @@ func createBookingPhoto(ctx context.Context, tx *Tx, bp model.BookingPhoto) erro
 		return err
 	}
 	return nil
-}
-
-// createBooking creates a new booking.
-func createBooking(ctx context.Context, tx *Tx, booking *model.Booking) error {
-	booking.Status = statusPending
-
-	query := `
-	INSERT INTO bookings (
-		booking_id,
-		status,
-		start_date,
-		client_id,
-		provider_id,
-		location_id,
-		service_id
-	) VALUES (?,?,?,?,?,?,?)
-	`
-
-	// Insert row into database.
-	_, err := tx.ExecContext(ctx, query,
-		booking.ID,
-		booking.Status,
-		booking.StartDate,
-		booking.ClientID,
-		booking.ProviderID,
-		booking.LocationID,
-		booking.ServiceID,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	return nil
-}
-
-// findDials retrieves a list of matching dials. Also returns a total matching
-// count which may different from the number of results if filter.Limit is set.
-func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking, err error) {
-	booking := &app.Booking{}
-	// Execue query with limiting WHERE clause and LIMIT/OFFSET injected.
-	if err := tx.QueryRowContext(ctx, `
-		SELECT
-			b.booking_id,
-			b.title,
-			b.description,
-			b.status,
-			b.start_date,
-			b.client_id,
-			b.provider_id,
-			b.created_at
-		FROM
-			bookings b
-		LEFT JOIN services s ON s.service_id = b.service_id
-		WHERE
-			b.booking_id = ?
-		ORDER BY
-			b.start_date ASC
-		`,
-		id,
-	).Scan(&booking.ID, &booking.Title, &booking.Description, &booking.Status, &booking.StartAt, &booking.Client.UserID, &booking.Provider.UserID, &booking.BookedAt); err != nil {
-		if err == sql.ErrNoRows {
-			return booking, nil
-		}
-		return nil, err
-	}
-
-	return booking, nil
 }
 
 type BidService struct {

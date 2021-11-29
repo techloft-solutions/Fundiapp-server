@@ -155,7 +155,7 @@ func (s *Server) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 	err = s.UsrSvc.CreateUser(r.Context(), &user)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		if err = handleDuplicateEntry(w, err); err != nil {
+		if err = handleMysqlErrors(w, err); err != nil {
 			handleError(w, "something went wrong", http.StatusInternalServerError)
 		}
 		return

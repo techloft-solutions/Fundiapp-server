@@ -1,9 +1,10 @@
 CREATE TABLE services(
     id INT(20) PRIMARY KEY AUTO_INCREMENT,
-    user_id VARCHAR(255) NOT NULL,
+    -- user_id VARCHAR(255) NOT NULL,
     provider_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     price INTEGER,
+    description TEXT,
     currency VARCHAR(255),
     price_unit VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

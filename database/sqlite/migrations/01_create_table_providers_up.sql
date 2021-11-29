@@ -11,7 +11,9 @@ CREATE TABLE providers(
     rate_per_hour VARCHAR(255),
     rate_per_unit VARCHAR(255),
     currency VARCHAR(255) DEFAULT 'KSh',
+    category_id VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME DEFAULT NULL
+    deleted_at DATETIME DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );

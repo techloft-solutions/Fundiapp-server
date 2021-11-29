@@ -1,13 +1,11 @@
 package server
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 
-	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
 	"github.com/go-sql-driver/mysql"
@@ -235,7 +233,7 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 	err = s.UsrSvc.CreateProvider(r.Context(), &provider)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		if err = handleDuplicateEntry(w, err); err != nil {
+		if err = handleMysqlErrors(w, err); err != nil {
 			handleError(w, "something went wrong", http.StatusInternalServerError)
 		}
 		return
@@ -261,13 +259,17 @@ func (s *Server) handleProviderReviews(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, reviews)
 }
 
-func handleDuplicateEntry(w http.ResponseWriter, err error) error {
+func handleMysqlErrors(w http.ResponseWriter, err error) error {
 	me, ok := err.(*mysql.MySQLError)
 	if !ok {
 		return err
 	}
 	if me.Number == 1062 {
-		handleError(w, "record already exists", http.StatusConflict)
+		handleError(w, "duplicate entry", http.StatusConflict)
+		return nil
+	}
+	if me.Number == 1452 {
+		handleError(w, "foreign key constraint fail", http.StatusNotFound)
 		return nil
 	}
 	return err
@@ -341,6 +343,7 @@ func updateFirebaseUserData(ctx context.Context, profile model.Profile) error {
 	return err
 }
 */
+/*
 func saveFirebaseUserToProfile(ctx context.Context, profile *app.Profile) {
 	firebaseUser := retrieveFirebaseUserData(ctx, profile.UserID)
 	if firebaseUser != nil {
@@ -351,3 +354,4 @@ func saveFirebaseUserToProfile(ctx context.Context, profile *app.Profile) {
 		profile.EmailVerified = firebaseUser.EmailVerified
 	}
 }
+*/

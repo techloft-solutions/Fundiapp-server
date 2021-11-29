@@ -1,21 +1,17 @@
 package server
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/auth"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"google.golang.org/api/option"
 )
 
 func (s *Server) handleBookingByID(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +25,10 @@ func (s *Server) handleBookingByID(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.BkSvc.FindBookingByID(r.Context(), id)
 	if err != nil {
 		log.Println(err)
+		if err == sql.ErrNoRows {
+			handleError(w, "Booking not found", http.StatusNotFound)
+			return
+		}
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
@@ -43,20 +43,14 @@ func (s *Server) handleBookingByID(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleBookingList(w http.ResponseWriter, r *http.Request) {
 	// Fetch dials from database.
-	resp, err := s.BkSvc.FindBookings(r.Context())
+	booking, err := s.BkSvc.FindBookings(r.Context())
 	if err != nil {
 		log.Println(err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
+	handleSuccess(w, booking)
 }
 
 func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +100,9 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 	err = s.BkSvc.CreateBooking(r.Context(), &booking)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		if err = handleMysqlErrors(w, err); err != nil {
+			handleError(w, "something went wrong", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -127,9 +123,10 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 
 		handleSuccess(w, res)
 	*/
-	handleSuccessMsgWithRes(w, "Booking:", booking)
+	handleSuccessMsgWithRes(w, "Booking created successfully", booking)
 }
 
+/*
 func retrieveFirebaseUserData(ctx context.Context, uid string) *auth.UserRecord {
 	opt := option.WithCredentialsFile("keys/hudumaapp-firebase-adminsdk-jtet8-7370576c3f.json")
 	app, err := firebase.NewApp(ctx, nil, opt)
@@ -148,7 +145,7 @@ func retrieveFirebaseUserData(ctx context.Context, uid string) *auth.UserRecord 
 	}
 	return user
 }
-
+*/
 func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	var request model.Request
 	request.ID = uuid.New()
@@ -181,7 +178,6 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 		//urgent := r.PostFormValue("urgent")
 		request.LocationID = r.PostFormValue("location_id")
 	*/
-	request.Type = "REQUEST"
 
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
