@@ -115,10 +115,11 @@ type Portfolio struct {
 }
 
 type Category struct {
-	Name        string `valid:"required"`
-	Description *string
-	ParentID    *int
-	Profession  *string
+	Name        string  `json:"name" valid:"required"`
+	Description *string `json:"description"`
+	ParentID    *string `json:"parent_id"`
+	Profession  *string `json:"profession"`
+	IconURL     string  `json:"icon_url" valid:"required"`
 }
 
 type ProviderProfession struct {

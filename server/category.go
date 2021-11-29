@@ -16,7 +16,7 @@ func (s *Server) handleCategoriesList(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.CatSvc.ListCategories(r.Context())
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -29,7 +29,9 @@ func (s *Server) handleCategoryCreate(w http.ResponseWriter, r *http.Request) {
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "error parsing form values", http.StatusInternalServerError)
+		if err = handleMysqlErrors(w, err); err != nil {
+			handleError(w, "something went wrong", http.StatusInternalServerError)
+		}
 		return
 	}
 

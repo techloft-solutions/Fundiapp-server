@@ -21,6 +21,7 @@ type Category struct {
 	ID       int     `json:"id"`
 	Name     string  `json:"name"`
 	ParentID *string `json:"parent_id"`
+	IconURL  string  `json:"icon_url"`
 }
 
 type Provider struct {

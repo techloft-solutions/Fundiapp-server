@@ -36,7 +36,8 @@ func retrieveCategories(ctx context.Context, tx *Tx) ([]*app.Category, error) {
 		SELECT 
 		    id,
 			name,
-			parent_id
+			parent_id,
+			icon_url
 		FROM categories
 		`,
 	)
@@ -53,6 +54,7 @@ func retrieveCategories(ctx context.Context, tx *Tx) ([]*app.Category, error) {
 			&category.ID,
 			&category.Name,
 			&category.ParentID,
+			&category.IconURL,
 		); err != nil {
 			return nil, err
 		}
@@ -85,8 +87,9 @@ func createCategory(ctx context.Context, tx *Tx, category *model.Category) error
 		name,
 		profession,
 		parent_id,
-		description
-	) VALUES (?, ?, ?, ?)
+		description,
+		icon_url
+	) VALUES (?, ?, ?, ?, ?)
 	`
 
 	// Insert row into database.
@@ -95,6 +98,7 @@ func createCategory(ctx context.Context, tx *Tx, category *model.Category) error
 		category.Profession,
 		category.ParentID,
 		category.Description,
+		category.IconURL,
 	)
 	if err != nil {
 		return err

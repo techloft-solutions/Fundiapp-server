@@ -50,6 +50,11 @@ ServiceRequest:
 - description
 - customer
 
+Service:
+- name
+- price
+- description
+- duration
 
 
 
