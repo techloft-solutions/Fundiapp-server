@@ -131,6 +131,19 @@ func (s *Server) handleLocationCreate(w http.ResponseWriter, r *http.Request) {
 	handleSuccessMsgWithRes(w, "Location created successfuly", location)
 }
 
+func (s *Server) handleLocationDelete(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	err := s.LocSvc.RemoveLocation(r.Context(), id)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccessMsg(w, "Location deleted successfuly")
+}
+
 func (s *Server) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	jsonStr, err := json.Marshal(allFormValues(r))

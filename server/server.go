@@ -74,6 +74,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	// Locations
 	r.HandleFunc("/locations", s.handleMyLocations).Methods("GET")
 	r.HandleFunc("/locations", s.handleLocationCreate).Methods("POST")
+	r.HandleFunc("/locations/{id}", s.handleLocationDelete).Methods("DELETE")
 	// Categories
 	r.HandleFunc("/categories", s.handleCategoriesList).Methods("GET")
 	r.HandleFunc("/categories", s.handleCategoryCreate).Methods("POST")

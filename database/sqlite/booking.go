@@ -274,6 +274,29 @@ func createLocation(ctx context.Context, tx *Tx, location *model.Location) error
 	return nil
 }
 
+func (s *LocationService) RemoveLocation(ctx context.Context, locationID string) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := removeLocation(ctx, tx, locationID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func removeLocation(ctx context.Context, tx *Tx, locationID string) error {
+	_, err := tx.ExecContext(ctx, `
+	DELETE FROM locations WHERE location_id = ?
+	`, locationID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type TransactionService struct {
 	db *DB
 }

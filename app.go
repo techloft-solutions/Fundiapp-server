@@ -145,4 +145,5 @@ type LocationService interface {
 	CreateLocation(context.Context, *model.Location) error
 	//FindLocationByID(context.Context, uuid.UUID) (*Location, error)
 	ListMyLocations(context.Context, string) ([]*Location, error)
+	RemoveLocation(context.Context, string) error
 }
