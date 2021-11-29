@@ -173,7 +173,7 @@ func getProviderByUserID(ctx context.Context, tx *Tx, userId string) (*app.Provi
 			users.email,
 			users.photo_url,
 			providers.bio,
-			providers.profession,
+			categories.name AS profession,
 			providers.ratings_average,
 			providers.reviews_count,
 			providers.services_count,
@@ -182,6 +182,7 @@ func getProviderByUserID(ctx context.Context, tx *Tx, userId string) (*app.Provi
 		FROM providers
 		LEFT JOIN users ON users.user_id = providers.user_id
 		LEFT JOIN locations ON locations.location_id = users.location_id
+		LEFT JOIN categories ON categories.id = providers.category_id
 		WHERE providers.user_id = ?
 	`, userId).Scan(
 		&provider.ID,
@@ -229,7 +230,7 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 			users.first_name,
 			users.last_name,
 			providers.bio,
-			providers.profession,
+			categories.name AS profession,
 			providers.ratings_average,
 			providers.reviews_count,
 			providers.services_count,
@@ -238,6 +239,7 @@ func getProviderProfileByID(ctx context.Context, tx *Tx, id string) (*app.Provid
 		FROM providers
 		LEFT JOIN users ON users.user_id = providers.user_id
 		LEFT JOIN locations ON locations.location_id = users.location_id
+		LEFT JOIN categories ON categories.id = providers.category_id
 		WHERE providers.provider_id = ?
 	`, id).Scan(
 		&profile.ID,
@@ -322,7 +324,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 		    providers.provider_id,
 			users.user_id,
 			CONCAT(users.first_name, ' ', users.last_name) AS full_name,
-			providers.profession,
+			categories.name AS profession,
 			providers.ratings_average,
 			providers.reviews_count,
 			providers.jobs_count,
@@ -331,6 +333,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 			users.photo_url
 		FROM providers
 		INNER JOIN users ON users.user_id = providers.user_id
+		LEFT JOIN categories ON categories.id = providers.category_id
 		`,
 	)
 	if err != nil {

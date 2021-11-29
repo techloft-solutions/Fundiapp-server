@@ -2,7 +2,6 @@ CREATE TABLE providers(
     provider_id VARCHAR(255) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL UNIQUE,
     bio TEXT,
-    profession VARCHAR(255),
     ratings_average INT(11) DEFAULT 0,
     reviews_count INT(11) DEFAULT 0,
     services_count INT(11) DEFAULT 0,
@@ -11,9 +10,12 @@ CREATE TABLE providers(
     rate_per_hour VARCHAR(255),
     rate_per_unit VARCHAR(255),
     currency VARCHAR(255) DEFAULT 'KSh',
-    category_id VARCHAR(255),
+    category_id INT(20),
+    industry_id INT(20),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     deleted_at DATETIME DEFAULT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    FOREIGN KEY (industry_id) REFERENCES industries(id)
 );

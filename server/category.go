@@ -16,14 +16,11 @@ func (s *Server) handleCategoriesList(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var categories []*app.Category
 	parent_id := r.URL.Query().Get("parent_id")
-	log.Println("[DEBUG] parent_id: ", parent_id)
 	// Fetch categories from database.
 	switch {
 	case parent_id != "":
-		log.Println("[DEBUG] parent_id set")
 		categories, err = s.CatSvc.ListCategoriesByParentID(r.Context(), parent_id)
 	default:
-		log.Println("[DEBUG] parent_id not set")
 		categories, err = s.CatSvc.ListCategories(r.Context())
 	}
 	if err != nil {

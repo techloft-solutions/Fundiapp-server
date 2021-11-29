@@ -141,7 +141,7 @@ func createCategory(ctx context.Context, tx *Tx, category *model.Category) error
 		parent_id,
 		description,
 		icon_url
-	) VALUES (?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?)
 	`
 
 	// Insert row into database.
