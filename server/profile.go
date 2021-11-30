@@ -251,18 +251,27 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleProviderReviews(w http.ResponseWriter, r *http.Request) {
 	providerId := mux.Vars(r)["id"]
 
-	reviews, err := s.RevSvc.FindReviewsByProviderID(r.Context(), providerId)
+	reviews, err := s.RevSvc.ListReviewsByProviderID(r.Context(), providerId)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		if err == sql.ErrNoRows {
-			handleError(w, "reviews not found", http.StatusNotFound)
-			return
-		}
 		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 
 	handleSuccess(w, reviews)
+}
+
+func (s *Server) handleProviderServices(w http.ResponseWriter, r *http.Request) {
+	providerId := mux.Vars(r)["id"]
+
+	services, err := s.UsrSvc.ListServicesByProviderID(r.Context(), providerId)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, services)
 }
 
 func handleMysqlErrors(w http.ResponseWriter, err error) error {

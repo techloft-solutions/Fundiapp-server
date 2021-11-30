@@ -501,7 +501,7 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 		return nil, err
 	}
 
-	booking.Title = booking.Service.Name.String
+	booking.Title = booking.Service.Name
 
 	return booking, nil
 }

@@ -109,6 +109,7 @@ type UserService interface {
 	CreateService(context.Context, *model.Service) error
 	//FindServiceByID(context.Context, string) (*Service, error)
 	ListMyServices(context.Context, string) ([]*Service, error)
+	ListServicesByProviderID(context.Context, string) ([]*Service, error)
 }
 
 type ClientService interface {
@@ -119,7 +120,7 @@ type ClientService interface {
 type ReviewService interface {
 	//FindReviews(context.Context) ([]*Review, error)
 	CreateReview(context.Context, *model.Review) error
-	FindReviewsByProviderID(context.Context, string) ([]*Review, error)
+	ListReviewsByProviderID(context.Context, string) ([]*Review, error)
 }
 
 type PortfolioService interface {

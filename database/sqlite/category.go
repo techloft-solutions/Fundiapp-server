@@ -307,7 +307,7 @@ func createReview(ctx context.Context, tx *Tx, review *model.Review) error {
 	return nil
 }
 
-func (s *ReviewService) FindReviewsByProviderID(ctx context.Context, providerId string) ([]*app.Review, error) {
+func (s *ReviewService) ListReviewsByProviderID(ctx context.Context, providerId string) ([]*app.Review, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -423,9 +423,24 @@ func (s *UserService) ListMyServices(ctx context.Context, userId string) ([]*app
 	return services, tx.Commit()
 }
 
+func (s *UserService) ListServicesByProviderID(ctx context.Context, providerId string) ([]*app.Service, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	services, err := getServicesByProviderID(ctx, tx, providerId)
+	if err != nil {
+		return nil, err
+	}
+	return services, tx.Commit()
+}
+
 func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]*app.Service, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
+			id,
 			name,
 			price,
 			currency,
@@ -440,6 +455,7 @@ func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]
 	for rows.Next() {
 		var service app.Service
 		if err := rows.Scan(
+			&service.ID,
 			&service.Name,
 			&service.Rate.Price,
 			&service.Rate.Currency,
@@ -459,13 +475,14 @@ func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]
 func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Service, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
+			id,
 			name,
 			price,
 			currency,
 			price_unit
 		FROM services
 		WHERE provider_id IN (
-			SELECT provider_id FROM users WHERE id = ?
+			SELECT provider_id FROM users WHERE user_id = ?
 		)
 	`, userId)
 	if err != nil {
@@ -476,6 +493,7 @@ func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Ser
 	for rows.Next() {
 		var service app.Service
 		if err := rows.Scan(
+			&service.ID,
 			&service.Name,
 			&service.Rate.Price,
 			&service.Rate.Currency,

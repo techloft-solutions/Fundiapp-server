@@ -1,7 +1,6 @@
 package app
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -73,8 +72,8 @@ type Location struct {
 }
 
 type Service struct {
-	ID   uuid.UUID      `json:"id"`
-	Name sql.NullString `json:"name"`
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 	Rate `json:"rate"`
 }
 
