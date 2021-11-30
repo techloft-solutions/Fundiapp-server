@@ -64,7 +64,7 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 		request.Urgent,
 		true,
 	); err != nil {
-		log.Println("failed inserting into db:", err)
+		log.Println("failed inserting bookings into db:", err)
 		return err
 	}
 
@@ -84,7 +84,10 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 				BookingID: request.ID,
 				PhotoID:   photo.ID,
 			}
-			createBookingPhoto(ctx, tx, bookingPhoto)
+			err = createBookingPhoto(ctx, tx, bookingPhoto)
+			if err != nil {
+				log.Println("failed creating booking photo:", err)
+			}
 		}
 	}
 	return nil

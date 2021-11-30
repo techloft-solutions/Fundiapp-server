@@ -381,6 +381,7 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 			p.last_name,
 			p.email,
 			p.photo_url,
+			locations.location_id,
 			locations.address,
 			p.verified
 		FROM users as p
@@ -392,7 +393,8 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 		&profile.LastName,
 		&profile.Email,
 		&profile.PhotoUrl,
-		&profile.Location,
+		&profile.Location.ID,
+		&profile.Location.Address,
 		&profile.Verified,
 	)
 	if err != nil {

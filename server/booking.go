@@ -154,6 +154,7 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	userID, err := middlewares.UserIDFromContext(r.Context())
 	// Return an error if the user is not currently logged in.
 	if err != nil {
+		log.Println("[DEBUG] User not logged in", err)
 		handleUnathorised(w)
 		return
 	}
@@ -211,7 +212,7 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	err = s.ReqSvc.CreateRequest(r.Context(), &request)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleUnathorised(w)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
 

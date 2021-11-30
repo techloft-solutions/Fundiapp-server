@@ -185,6 +185,7 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 	userID, err := middlewares.UserIDFromContext(r.Context())
 	// Return an error if the user is not currently logged in.
 	if err != nil {
+		log.Println("User not logged in or does not exist", err)
 		handleUnathorised(w)
 		return
 	}
@@ -194,7 +195,7 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
-			handleUnathorised(w)
+			handleError(w, "User is not a provider", http.StatusUnauthorized)
 			return
 		}
 		handleError(w, "something went wrong", http.StatusInternalServerError)
