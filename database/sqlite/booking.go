@@ -201,7 +201,7 @@ func (s *LocationService) ListMyLocations(ctx context.Context, userId string) ([
 }
 
 func getLocationsByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Location, error) {
-	var defaultLocation string
+	var defaultLocation sql.NullString
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
 			locations.location_id,
@@ -233,7 +233,7 @@ func getLocationsByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Lo
 			return nil, err
 		}
 		// mark default location
-		if location.ID == defaultLocation {
+		if location.ID == defaultLocation.String {
 			location.Default = true
 		} else {
 			location.Default = false
