@@ -104,6 +104,38 @@ func (s *RequestService) ListRequests(ctx context.Context, userId app.UserID) ([
 	return requests, tx.Commit()
 }
 
+func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]*app.Request, error) {
+	requests := []*app.Request{}
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			booking_id,
+			title,
+			status,
+			start_date,
+			created_at
+		FROM bookings
+		WHERE client_id = ?
+	`, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		request := &app.Request{}
+		if err := rows.Scan(
+			&request.ID,
+			&request.Title,
+			&request.Status,
+			&request.Start,
+			&request.Created,
+		); err != nil {
+			return nil, err
+		}
+		requests = append(requests, request)
+	}
+	return requests, nil
+}
+
 func (s *RequestService) FindRequestByID(ctx context.Context, id uuid.UUID) (*app.RequestDetail, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -144,38 +176,6 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 		return nil, err
 	}
 	return request, nil
-}
-
-func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]*app.Request, error) {
-	requests := []*app.Request{}
-	rows, err := tx.QueryContext(ctx, `
-		SELECT
-			booking_id,
-			title,
-			status,
-			start_date,
-			created_at
-		FROM bookings
-		WHERE client_id = ?
-	`, userId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		request := &app.Request{}
-		if err := rows.Scan(
-			&request.ID,
-			&request.Title,
-			&request.Status,
-			&request.Start,
-			&request.Created,
-		); err != nil {
-			return nil, err
-		}
-		requests = append(requests, request)
-	}
-	return requests, nil
 }
 
 type LocationService struct {

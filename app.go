@@ -99,6 +99,7 @@ type UserService interface {
 	FindProviderByID(context.Context, string) (*Provider, error)
 	FindProviderByUserID(context.Context, string) (*Provider, error)
 	ListProviders(context.Context) ([]*ProviderBrief, error)
+	FilterProviders(context.Context, model.ProviderFilter) ([]*ProviderBrief, error)
 	UpdateProvider(context.Context, *model.Provider) error
 	// User profile
 	FindProfileByUserID(context.Context, string) (*Profile, error)

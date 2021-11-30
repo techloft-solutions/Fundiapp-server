@@ -43,6 +43,8 @@ type Provider struct {
 	Bio        *string `json:"bio"`
 	Profession *string `json:"profession"`
 	Rate
+	CategoryID *string `json:"category_id"`
+	IndustryID *string `json:"industry_id"`
 }
 
 type Service struct {
@@ -201,4 +203,10 @@ type Profile struct {
 type Schedule struct {
 	StartTime string
 	EndTime   string
+}
+
+// DialFilter represents a filter used on service providers.
+type ProviderFilter struct {
+	CategoryID string `json:"category_id"`
+	IndustryID string `json:"industry_id"`
 }

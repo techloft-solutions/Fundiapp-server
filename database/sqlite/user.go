@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"strings"
 
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
@@ -323,6 +324,21 @@ func (s *UserService) ListProviders(ctx context.Context) ([]*app.ProviderBrief, 
 	return providers, nil
 }
 
+func (s *UserService) FilterProviders(ctx context.Context, filter model.ProviderFilter) ([]*app.ProviderBrief, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	providers, err := filterProviders(ctx, tx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return providers, nil
+}
+
 func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 
 	rows, err := tx.QueryContext(ctx, `
@@ -489,11 +505,13 @@ func updateProvider(ctx context.Context, tx *Tx, provider *model.Provider) error
 		UPDATE providers
 		SET
 			bio = COALESCE(?, bio),
-			profession = COALESCE(?, profession)
+			category_id = COALESCE(?, category_id),
+			industry_id = COALESCE(?, industry_id)
 		WHERE user_id = ? 
 	`,
 		provider.Bio,
-		provider.Profession,
+		provider.CategoryID,
+		provider.IndustryID,
 		provider.UserID,
 	)
 	if err != nil {
@@ -664,4 +682,72 @@ func validateUserAsProvider(ctx context.Context, tx *Tx, phone string, password 
 		return err
 	}
 	return nil
+}
+
+// findProviders retrieves a list of matching dials. Also returns a total matching
+// count which may different from the number of results if filter.Limit is set.
+func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (_ []*app.ProviderBrief, err error) {
+	// Build WHERE clause. Each part of the WHERE clause is AND-ed together.
+	// Values are appended to an arg list to avoid SQL injection.
+	where, args := []string{"1 = 1"}, []interface{}{}
+	if v := filter.IndustryID; v != "" {
+		where, args = append(where, "industry_id = ?"), append(args, v)
+	}
+
+	// Limit to dials user is a member of unless searching by invite code.
+	if v := filter.CategoryID; v != "" {
+		where, args = append(where, "category_id = ?"), append(args, v)
+	}
+
+	// Execue query with limiting WHERE clause and LIMIT/OFFSET injected.
+	rows, err := tx.QueryContext(ctx, `
+	SELECT 
+			providers.provider_id,
+			users.user_id,
+			CONCAT(users.first_name, ' ', users.last_name) AS full_name,
+			categories.name AS profession,
+			providers.ratings_average,
+			providers.reviews_count,
+			providers.jobs_count,
+			providers.rate_per_hour,
+			providers.currency,
+			users.photo_url
+		FROM providers
+		INNER JOIN users ON users.user_id = providers.user_id
+		LEFT JOIN categories ON categories.id = providers.category_id
+		WHERE `+strings.Join(where, " AND ")+`
+		ORDER BY providers.updated_at ASC
+		`,
+		args...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate over rows and deserialize into Dial objects.
+	providers := make([]*app.ProviderBrief, 0)
+	for rows.Next() {
+		var provider app.ProviderBrief
+		if err := rows.Scan(
+			&provider.ID,
+			&provider.UserID,
+			&provider.Name,
+			&provider.Profession,
+			&provider.Rating,
+			&provider.Reviews,
+			&provider.Jobs,
+			&provider.Rate.Price,
+			&provider.Currency,
+			&provider.Photo,
+		); err != nil {
+			return nil, err
+		}
+		providers = append(providers, &provider)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return providers, nil
 }
