@@ -74,14 +74,28 @@ func (s *CategoryService) ListCategoriesByParentID(ctx context.Context, parentID
 	}
 	defer tx.Rollback()
 
-	locations, err := retrieveCategoriesByParentID(ctx, tx, parentID)
+	locations, err := retrieveCategoriesByCriteria(ctx, tx, "parent_id", parentID)
 	if err != nil {
 		return nil, err
 	}
 	return locations, tx.Commit()
 }
 
-func retrieveCategoriesByParentID(ctx context.Context, tx *Tx, parentID string) ([]*app.Category, error) {
+func (s *CategoryService) ListCategoriesByIndustryID(ctx context.Context, industryID string) ([]*app.Category, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	locations, err := retrieveCategoriesByCriteria(ctx, tx, "industry_id", industryID)
+	if err != nil {
+		return nil, err
+	}
+	return locations, tx.Commit()
+}
+
+func retrieveCategoriesByCriteria(ctx context.Context, tx *Tx, haystack string, needle string) ([]*app.Category, error) {
 
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 
@@ -90,16 +104,15 @@ func retrieveCategoriesByParentID(ctx context.Context, tx *Tx, parentID string) 
 			parent_id,
 			icon_url
 		FROM categories
-		WHERE parent_id = ?
+		WHERE `+haystack+` = ?
 		`,
-		parentID,
+		needle,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	// Iterate over rows and deserialize into Dial objects.
 	categories := make([]*app.Category, 0)
 	for rows.Next() {
 		var category app.Category

@@ -77,6 +77,7 @@ type CategoryService interface {
 	CreateCategory(context.Context, *model.Category) error
 	ListCategories(context.Context) ([]*Category, error)
 	ListCategoriesByParentID(context.Context, string) ([]*Category, error)
+	ListCategoriesByIndustryID(context.Context, string) ([]*Category, error)
 }
 
 type IndustryService interface {

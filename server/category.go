@@ -16,10 +16,13 @@ func (s *Server) handleCategoriesList(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var categories []*app.Category
 	parent_id := r.URL.Query().Get("parent_id")
+	industry_id := r.URL.Query().Get("industry_id")
 	// Fetch categories from database.
 	switch {
 	case parent_id != "":
 		categories, err = s.CatSvc.ListCategoriesByParentID(r.Context(), parent_id)
+	case industry_id != "":
+		categories, err = s.CatSvc.ListCategoriesByIndustryID(r.Context(), industry_id)
 	default:
 		categories, err = s.CatSvc.ListCategories(r.Context())
 	}

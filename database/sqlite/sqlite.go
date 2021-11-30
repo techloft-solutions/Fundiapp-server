@@ -23,6 +23,9 @@ const (
 //go:embed migrations/*.sql
 var migrationFS embed.FS
 
+//go:embed seeds/*.sql
+var seedFS embed.FS
+
 type DB struct {
 	db     *sql.DB
 	ctx    context.Context // background context
@@ -78,6 +81,11 @@ func (db *DB) Open() (err error) {
 	if err := db.migrate(); err != nil {
 		return fmt.Errorf("migrate: %w", err)
 	}
+	time.Sleep(1 * time.Second)
+
+	if err := db.seed(); err != nil {
+		log.Println("seeding error:", err)
+	}
 
 	return nil
 }
@@ -107,6 +115,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 //
 // This is a destructive operation and should only be used for testing.
 func (db *DB) drop() error {
+	log.Println("dropping database tables")
 	// Read drop files from our embedded file system.
 	names, err := fs.Glob(migrationFS, "migrations/*_down.sql")
 	if err != nil {
@@ -114,12 +123,24 @@ func (db *DB) drop() error {
 	}
 	sort.Strings(names)
 
+	// disable foreign key checks
+	if _, err := db.db.Exec(`SET foreign_key_checks = 0;`); err != nil {
+		log.Println("disable foreign key checks:", err)
+	}
+
 	// Loop over all migration files and execute them in order.
 	for _, name := range names {
 		if err := db.dropFile(name); err != nil {
-			return fmt.Errorf("migration error: name=%q err=%w", name, err)
+			return fmt.Errorf("dropping error: name=%q err=%w", name, err)
 		}
 	}
+
+	// enable foreign key checks
+	if _, err := db.db.Exec(`SET foreign_key_checks = 1;`); err != nil {
+		log.Println("enable foreign key checks:", err)
+	}
+	log.Println("tables dropped!")
+
 	return nil
 }
 
@@ -148,11 +169,11 @@ func (db *DB) dropFile(name string) error {
 // is not re-executed. Migrations run in a transaction to prevent partial
 // migrations.
 func (db *DB) migrate() error {
-	log.Println("migrating database")
+	log.Println("migrating database...")
+
 	if os.Getenv("APP_ENV") != "production" || os.Getenv("DB_RESET") == "true" {
-		log.Println("dropping database tables")
 		if err := db.drop(); err != nil {
-			log.Println("drop:", err)
+			log.Println(err)
 		}
 	}
 
@@ -175,6 +196,7 @@ func (db *DB) migrate() error {
 			return fmt.Errorf("migration error: name=%q err=%w", name, err)
 		}
 	}
+	log.Println("migrations DONE!")
 	return nil
 }
 
@@ -204,6 +226,42 @@ func (db *DB) migrateFile(name string) error {
 
 	// Insert record into migrations to prevent re-running migration.
 	if _, err := tx.Exec(`INSERT INTO migrations (name) VALUES (?)`, name); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (db *DB) seed() error {
+	log.Println("seeding database...")
+
+	names, err := fs.Glob(seedFS, "seeds/*_seed.sql")
+	if err != nil {
+		return err
+	}
+	sort.Strings(names)
+
+	// Loop over all seed files and execute them in order.
+	for _, name := range names {
+		if err := db.seedFile(name); err != nil {
+			return fmt.Errorf("seeding error: name=%q err=%w", name, err)
+		}
+	}
+	log.Println("seeding DONE!")
+	return nil
+}
+
+func (db *DB) seedFile(name string) error {
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Read and execute seed file.
+	if buf, err := fs.ReadFile(seedFS, name); err != nil {
+		return err
+	} else if _, err := tx.Exec(string(buf)); err != nil {
 		return err
 	}
 

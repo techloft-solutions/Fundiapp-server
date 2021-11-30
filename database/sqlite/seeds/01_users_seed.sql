@@ -1,0 +1,67 @@
+INSERT INTO `users`(
+    `username`,
+    `phone`,
+    `password`,
+    `is_provider`,
+    `user_id`,
+    `first_name`,
+    `last_name`,
+    `email`,
+    `photo_url`,
+    `location_id`,
+    `status`,
+    `verified`
+) VALUES(
+    'andrw',
+    '+254123456789',
+    '123456',
+    0,
+    '8o0LYQoCdygx5shO5mo5ILeVVWU2',
+    'anthony',
+    'nderitu',
+    'antonde@gmail.com',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Wikipidia-profile-photo.jpg/200px-Wikipidia-profile-photo.jpg',
+    NULL,
+    'active',
+    0
+),(
+    'marya',
+    '+254712345678',
+    'pass2021',
+    1,
+    'BEfKrgwHuFWH5zA9H9vDEhBPc0o2',
+    'mary',
+    'samantha',
+    'marysam@yahoo.com',
+    'https://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_630,w_1200,f_auto,q_auto/1158391/abdoulaye-barry_q2vj5b.jpg',
+    NULL,
+    'active',
+    1
+),(
+    'user',
+    '+254711112222',
+    'WYpF2vhVYCKlxILYZaleA==',
+    0,
+    'SCXNeVAurJb5QswfKpBB1hsKlab2',
+    NULL,
+    NULl,
+    NULL,
+    'http://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200',
+    NULL,
+    'active',
+    0
+),(
+    'provider',
+    '+254711111111',
+    'WYpF2vhVYCKlxILYZaleA==',
+    1,
+    'vNoxtSiNWfYcxSbpW7mawC1h5m42',
+    NULL,
+    NULL,
+    NULL,
+    'http://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200',
+    NULL,
+    'active',
+    0
+);
+
