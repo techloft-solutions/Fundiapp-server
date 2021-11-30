@@ -40,7 +40,7 @@ INSERT INTO `users`(
 ),(
     'user',
     '+254711112222',
-    'WYpF2vhVYCKlxILYZaleA==',
+    '+WYpF2vhVYCKlxILYZaleA==',
     0,
     'SCXNeVAurJb5QswfKpBB1hsKlab2',
     NULL,
@@ -53,7 +53,7 @@ INSERT INTO `users`(
 ),(
     'provider',
     '+254711111111',
-    'WYpF2vhVYCKlxILYZaleA==',
+    '+WYpF2vhVYCKlxILYZaleA==',
     1,
     'vNoxtSiNWfYcxSbpW7mawC1h5m42',
     NULL,
