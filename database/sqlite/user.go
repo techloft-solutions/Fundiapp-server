@@ -154,7 +154,7 @@ func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (
 	}
 	defer tx.Rollback()
 
-	provider, err := getProviderByUserID(ctx, tx, userId)
+	provider, err := getProviderByCriteria(ctx, tx, "user_id", userId)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (
 	return provider, tx.Commit()
 }
 
-func getProviderByUserID(ctx context.Context, tx *Tx, userId string) (*app.Provider, error) {
+func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle string) (*app.Provider, error) {
 	provider := &app.Provider{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
@@ -190,8 +190,8 @@ func getProviderByUserID(ctx context.Context, tx *Tx, userId string) (*app.Provi
 		LEFT JOIN users ON users.user_id = providers.user_id
 		LEFT JOIN locations ON locations.location_id = users.location_id
 		LEFT JOIN categories ON categories.id = providers.category_id
-		WHERE providers.user_id = ?
-	`, userId).Scan(
+		WHERE providers.`+haystack+` = ?
+	`, needle).Scan(
 		&provider.ID,
 		&provider.UserID,
 		&provider.Username,
@@ -221,50 +221,18 @@ func (s *UserService) FindProviderByID(ctx context.Context, id string) (*app.Pro
 	}
 	defer tx.Rollback()
 
-	profile, err := getProviderByID(ctx, tx, id)
+	provider, err := getProviderByCriteria(ctx, tx, "provider_id", id)
 	if err != nil {
 		return nil, err
 	}
-	return profile, tx.Commit()
-}
 
-func getProviderByID(ctx context.Context, tx *Tx, id string) (*app.Provider, error) {
-	profile := &app.Provider{}
-	err := tx.QueryRowContext(ctx, `
-		SELECT
-			providers.provider_id,
-			providers.user_id,
-			users.first_name,
-			users.last_name,
-			providers.bio,
-			categories.name AS profession,
-			providers.ratings_average,
-			providers.reviews_count,
-			providers.services_count,
-			providers.portfolio_count,
-			locations.name
-		FROM providers
-		INNER JOIN users ON users.user_id = providers.user_id
-		LEFT JOIN locations ON locations.location_id = users.location_id
-		LEFT JOIN categories ON categories.id = providers.category_id
-		WHERE providers.provider_id = ?
-	`, id).Scan(
-		&profile.ID,
-		&profile.UserID,
-		&profile.FirstName,
-		&profile.LastName,
-		&profile.Bio,
-		&profile.Profession,
-		&profile.AvgRating,
-		&profile.Stats.Reviews,
-		&profile.Stats.Services,
-		&profile.Stats.Portfolios,
-		&profile.Location,
-	)
+	service, err := getServicesByProviderID(ctx, tx, provider.ID)
 	if err != nil {
 		return nil, err
 	}
-	return profile, nil
+	provider.Services = service
+
+	return provider, tx.Commit()
 }
 
 func (s *UserService) CreateProvider(ctx context.Context, provider *model.Provider) error {
