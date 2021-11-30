@@ -185,6 +185,7 @@ func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle 
 			providers.reviews_count,
 			providers.services_count,
 			providers.portfolio_count,
+			locations.location_id,
 			locations.name
 		FROM providers
 		LEFT JOIN users ON users.user_id = providers.user_id
@@ -206,7 +207,8 @@ func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle 
 		&provider.Stats.Reviews,
 		&provider.Stats.Services,
 		&provider.Stats.Portfolios,
-		&provider.Location,
+		&provider.Location.ID,
+		&provider.Location.Address,
 	)
 	if err != nil {
 		return nil, err
