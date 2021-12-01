@@ -78,6 +78,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/providers", s.handleProviderUpdate).Methods("PUT")
 	//r.HandleFunc("/providers/{id}/reviews", s.handleProviderReviews).Methods("GET")
 	r.HandleFunc("/providers/{id}/services", s.handleProviderServices).Methods("GET")
+	r.HandleFunc("/providers/{id}/portfolios", s.handleProviderPortfolios).Methods("GET")
 	// Locations
 	r.HandleFunc("/locations", s.handleMyLocations).Methods("GET")
 	r.HandleFunc("/locations", s.handleLocationCreate).Methods("POST")
@@ -110,7 +111,9 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	//r.HandleFunc("/bids", s.handleBidCreate).Methods("POST")
 	//r.HandleFunc("/bids", s.handleBidList).Methods("GET")
 	// Portfolios
-	//r.HandleFunc("/portfolios", s.handlePortfolioList).Methods("GET")
+	r.HandleFunc("/portfolios", s.handleMyPortfolio).Methods("GET")
+	r.HandleFunc("/portfolios", s.handlePortfolioCreate).Methods("POST")
+	r.HandleFunc("/portfolios/{id}", s.handlePortfolio).Methods("GET")
 	// Payments
 	//r.HandleFunc("/payments", s.handlePaymentCreate).Methods("POST")
 	//r.HandleFunc("/payments", s.handlePaymentList).Methods("GET")

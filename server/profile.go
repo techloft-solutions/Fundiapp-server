@@ -274,6 +274,19 @@ func (s *Server) handleProviderServices(w http.ResponseWriter, r *http.Request) 
 	handleSuccess(w, services)
 }
 
+func (s *Server) handleProviderPortfolios(w http.ResponseWriter, r *http.Request) {
+	providerId := mux.Vars(r)["id"]
+
+	portfolios, err := s.PfoSvc.ListPortfoliosByProviderId(r.Context(), providerId)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, portfolios)
+}
+
 func handleMysqlErrors(w http.ResponseWriter, err error) error {
 	me, ok := err.(*mysql.MySQLError)
 	if !ok {

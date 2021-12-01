@@ -104,17 +104,20 @@ type Request struct {
 
 type Photo struct {
 	ID          uuid.UUID `valid:"required"`
-	Owner       string    `valid:"required"`
+	OwnerID     string    `valid:"required"`
 	Url         string    `valid:"required"`
-	BookingID   uuid.UUID
-	PortfolioID uuid.UUID
+	BookingID   string    `valid:"uuid" json:",omitempty"`
+	PortfolioID string    `valid:"uuid" json:",omitempty"`
 }
 
 type Portfolio struct {
-	Model
-	Title     string
-	BookingID uuid.UUID
-	Photos    []string
+	ID        uuid.UUID
+	OwnerID   string
+	UserID    string
+	Title     string   `valid:"required" json:"title"`
+	BookingID *string  `valid:"uuid" json:",omitempty"`
+	ServiceID *string  `valid:"uuid" json:",omitempty"`
+	Photos    []string `valid:"required" json:"-"`
 }
 
 type Category struct {

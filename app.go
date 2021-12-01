@@ -127,7 +127,8 @@ type ReviewService interface {
 type PortfolioService interface {
 	CreatePortfolio(context.Context, *model.Portfolio) error
 	FindPortfolioByID(context.Context, uuid.UUID) (*Portfolio, error)
-	ListPortfoliosByUserId(context.Context, string) ([]*Portfolio, error)
+	ListPortfoliosByProviderId(context.Context, string) ([]*PortfolioBrief, error)
+	ListPortfoliosByUserId(context.Context, string) ([]*PortfolioBrief, error)
 }
 
 type RequestService interface {

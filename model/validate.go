@@ -81,3 +81,11 @@ func (i Industry) Validate() error {
 	}
 	return nil
 }
+
+func (p Portfolio) Validate() error {
+	_, err := govalidator.ValidateStruct(p)
+	if err != nil {
+		return err
+	}
+	return nil
+}

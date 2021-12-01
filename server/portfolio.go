@@ -43,32 +43,93 @@ func (s *Server) handlePortfolioList(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handlePortfolioCreate(w http.ResponseWriter, r *http.Request) {
 	var portfolio model.Portfolio
-	portfolio.Title = r.PostFormValue("title")
-	bookingId, err := uuid.Parse(r.PostFormValue("booking_id"))
-	if err != nil {
-		//handleError(w, app.Errorf(app.INVALID_ERR, "Invalid ID format"), 400)
-		return
-	}
-	portfolio.BookingID = bookingId
 
-	photoData := r.PostFormValue("photos")
-	var photos []string
-	err = json.Unmarshal([]byte(photoData), &photos)
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	// Return an error if the user is not currently logged in.
 	if err != nil {
-		panic(err)
-	}
-	portfolio.Photos = photos
-
-	portfolio.Validate(portfolio)
-
-	err = s.PfoSvc.CreatePortfolio(r.Context(), &portfolio)
-	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleUnathorised(w)
 		return
 	}
 
-	handleSuccess(w, nil)
+	portfolio.UserID = userID.String()
+
+	jsonStr, err := json.Marshal(allFormValues(r))
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err = handleMysqlErrors(w, err); err != nil {
+			handleError(w, "something went wrong", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if err := json.Unmarshal(jsonStr, &portfolio); err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "error parsing json string", http.StatusInternalServerError)
+		return
+	}
+
+	photoData := r.PostFormValue("photos")
+	portfolio.Photos, err = retrievePhotos(photoData)
+	if err != nil {
+		handleError(w, "photos: invalid json array value", http.StatusBadRequest)
+		return
+	}
+
+	err = portfolio.Validate()
+	if err != nil {
+		handleError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = s.PfoSvc.CreatePortfolio(r.Context(), &portfolio)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccessMsgWithRes(w, "Portfolio created successfully", portfolio)
+}
+
+func (s *Server) handleMyPortfolio(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID, err := middlewares.UserIDFromContext(r.Context())
+	// Return an error if the user is not currently logged in.
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+
+	resp, err := s.PfoSvc.ListPortfoliosByUserId(ctx, userID.String())
+	if err != nil {
+		log.Println(err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, resp)
+}
+
+func (s *Server) handlePortfolio(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		handleError(w, "Id is not a valid UUID", http.StatusBadRequest)
+		return
+	}
+
+	portfolio, err := s.PfoSvc.FindPortfolioByID(r.Context(), id)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		if err == sql.ErrNoRows {
+			handleError(w, "Portfolio not found", http.StatusNotFound)
+			return
+		}
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, portfolio)
 }
 
 func (s *Server) handleMyLocations(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +144,7 @@ func (s *Server) handleMyLocations(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := s.LocSvc.ListMyLocations(ctx, userID.String())
 	if err != nil {
-		log.Println(err)
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
@@ -357,4 +418,15 @@ func (s *Server) handleUserByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccess(w, usr)
+}
+
+func retrievePhotos(photoData string) ([]string, error) {
+	var photos []string
+	if photoData != "" {
+		err := json.Unmarshal([]byte(photoData), &photos)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return photos, nil
 }

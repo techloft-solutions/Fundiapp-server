@@ -148,17 +148,17 @@ type BookingBrief struct {
 }
 
 type Portfolio struct {
-	ID          uuid.UUID `json:"portfolio_id"`
-	Title       string    `json:"title"`
-	Status      string    `json:"status"`
-	Description string    `json:"descripton"`
-	Type        string    `json:"type"`
-	Photos      []string  `json:"photos"`
-	StartAt     string    `json:"start_tie"`
-	Category    string    `json:"category"`
-	Service     string    `json:"service"`
-	Provider    string    `json:"provider"`
-	BookingID   string    `json:"booking_id"`
+	ID         uuid.UUID `json:"portfolio_id"`
+	Title      string    `json:"title"`
+	Photos     []string  `json:"photos"`
+	Service    string    `json:"service,omitempty"`
+	ProviderID string    `json:"provider,omitempty"`
+	//BookingID  string    `json:"booking_id"`
+}
+
+type PortfolioBrief struct {
+	ID    uuid.UUID `json:"portfolio_id"`
+	Title string    `json:"title"`
 }
 
 type User struct {

@@ -64,6 +64,10 @@ func (db *DB) Open() (err error) {
 		return err
 	}
 
+	db.db.SetConnMaxLifetime(time.Minute * 5)
+	db.db.SetMaxOpenConns(25)
+	db.db.SetMaxIdleConns(25)
+
 	// Enable WAL. SQLite performs better with the WAL  because it allows
 	// multiple readers to operate while data is being written.
 	//if _, err := db.db.Exec(`PRAGMA journal_mode = wal;`); err != nil {

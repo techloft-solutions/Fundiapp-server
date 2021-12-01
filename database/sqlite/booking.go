@@ -72,9 +72,9 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 	if request.Photos != nil {
 		for _, photoUrl := range request.Photos {
 			photo := model.Photo{
-				Owner:     request.ClientID,
+				OwnerID:   request.ClientID,
 				Url:       photoUrl,
-				BookingID: request.ID,
+				BookingID: request.ID.String(),
 			}
 			err := createPhoto(ctx, tx, photo)
 			if err != nil {
@@ -643,7 +643,7 @@ func createPhoto(ctx context.Context, tx *Tx, photo model.Photo) error {
 		) VALUES (?,?,?,?,?)
 		`,
 		photo.ID,
-		photo.Owner,
+		photo.OwnerID,
 		photo.Url,
 		photo.BookingID,
 		photo.PortfolioID,

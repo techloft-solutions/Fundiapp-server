@@ -3,7 +3,6 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -32,17 +31,11 @@ func (s *Server) handleBookingByID(w http.ResponseWriter, r *http.Request) {
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
+
+	handleSuccess(w, resp)
 }
 
 func (s *Server) handleBookingList(w http.ResponseWriter, r *http.Request) {
-	// Fetch dials from database.
 	booking, err := s.BkSvc.FindBookings(r.Context())
 	if err != nil {
 		log.Println(err)
@@ -135,7 +128,6 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 
 	var photos []string
 	photoData := r.PostFormValue("photos")
-	fmt.Println("photodata:", photoData)
 	if photoData != "" {
 		err = json.Unmarshal([]byte(photoData), &photos)
 		if err != nil {
@@ -216,7 +208,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		handleError(w, "Id is not a valid UUID", http.StatusBadRequest)
 		return
 	}
-	// Fetch dials from database.
+
 	request, err := s.ReqSvc.FindRequestByID(r.Context(), id)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
@@ -227,7 +219,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
-	request.Status = "pending"
+	//request.Status = "pending"
 
 	handleSuccess(w, request)
 }
