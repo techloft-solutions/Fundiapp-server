@@ -52,7 +52,7 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 			status,
 			is_urgent,
 			is_request
-		) VALUES (?,?,?,?,?,?,?,?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 		request.ID,
 		request.ClientID,
@@ -72,21 +72,13 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 	if request.Photos != nil {
 		for _, photoUrl := range request.Photos {
 			photo := model.Photo{
-				Owner: request.ClientID,
-				Url:   photoUrl,
+				Owner:     request.ClientID,
+				Url:       photoUrl,
+				BookingID: request.ID,
 			}
-			photo.ID = uuid.New()
 			err := createPhoto(ctx, tx, photo)
 			if err != nil {
-				log.Println(err)
-			}
-			bookingPhoto := model.BookingPhoto{
-				BookingID: request.ID,
-				PhotoID:   photo.ID,
-			}
-			err = createBookingPhoto(ctx, tx, bookingPhoto)
-			if err != nil {
-				log.Println("failed creating booking photo:", err)
+				log.Println("failed creating photo:", err)
 			}
 		}
 	}
@@ -178,6 +170,28 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 	if err != nil {
 		return nil, err
 	}
+
+	// Get photos
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			photo_url
+		FROM photos
+		WHERE booking_id = ?
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var photo string
+		if err := rows.Scan(
+			&photo,
+		); err != nil {
+			return nil, err
+		}
+		request.Photos = append(request.Photos, photo)
+	}
+
 	return request, nil
 }
 
@@ -619,30 +633,20 @@ func createBooking(ctx context.Context, tx *Tx, booking *model.Booking) error {
 }
 
 func createPhoto(ctx context.Context, tx *Tx, photo model.Photo) error {
+	photo.ID = uuid.New()
 	_, err := tx.ExecContext(ctx, `INSERT INTO photos(
 		photo_id,
 		uploaded_by,
-		photo_url
-		) VALUES (?,?,?)
+		photo_url,
+		booking_id,
+		portfolio_id
+		) VALUES (?,?,?,?,?)
 		`,
 		photo.ID,
 		photo.Owner,
 		photo.Url,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func createBookingPhoto(ctx context.Context, tx *Tx, bp model.BookingPhoto) error {
-	_, err := tx.ExecContext(ctx, `INSERT INTO booking_photos(
-		photo_id,
-		booking_id
-		) VALUES (?,?)
-		`,
-		bp.PhotoID,
-		bp.BookingID,
+		photo.BookingID,
+		photo.PortfolioID,
 	)
 	if err != nil {
 		return err

@@ -91,30 +91,23 @@ type Booking struct {
 }
 
 type Request struct {
-	ID         uuid.UUID
-	Title      string   `valid:"required" json:"title"`
-	StartDate  string   `valid:"required, rfc3339" json:"start_date"`
-	Note       string   `valid:"required" json:"note"`
-	LocationID string   `valid:"required,uuid" json:"location_id"`
-	ClientID   string   `valid:"required" json:"client_id"`
-	Photos     []string `json:"photos"`
-	Status     string   `json:"status"`
-	Urgent     bool     `valid:"required" json:"urgent,string"`
+	ID         uuid.UUID `json:"request_id"`
+	Title      string    `valid:"required" json:"title"`
+	StartDate  string    `valid:"required, rfc3339WithoutZone" json:"start_date"`
+	Note       string    `valid:"required" json:"note"`
+	LocationID string    `valid:"required,uuid" json:"location_id"`
+	ClientID   string    `valid:"required" json:"client_id"`
+	Photos     []string  `json:"-"`
+	Status     string    `json:"status"`
+	Urgent     bool      `json:"urgent,string"`
 }
 
 type Photo struct {
-	Model
-	Owner string
-	Url   string
-}
-
-type BookingPhoto struct {
-	BookingID uuid.UUID
-	PhotoID   uuid.UUID
-}
-
-type PortfolioPhoto struct {
-	ID string
+	ID          uuid.UUID `valid:"required"`
+	Owner       string    `valid:"required"`
+	Url         string    `valid:"required"`
+	BookingID   uuid.UUID
+	PortfolioID uuid.UUID
 }
 
 type Portfolio struct {

@@ -3,13 +3,13 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
-	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -79,18 +79,7 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	booking.ClientID = userID.String()
-
-	/*
-		booking.Photos = photos
-		booking.Title = r.PostFormValue("title")
-		booking.StartDate = r.PostFormValue("start_date")
-		booking.Description = strOrNil(r.PostFormValue("description"))
-		booking.LocationID = r.PostFormValue("location_id")
-		booking.Status = r.PostFormValue("status")
-		booking.ProviderID = strOrNil(r.PostFormValue("provider_id"))
-		booking.ServiceID = r.PostFormValue("service_id")
-	*/
-
+	// validate
 	err = booking.Validate()
 	if err != nil {
 		handleError(w, err.Error(), http.StatusBadRequest)
@@ -106,23 +95,6 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		res := app.Booking{
-			ID:          booking.ID,
-			Title:       booking.Title,
-			Status:      booking.Status,
-			BookedAt:    booking.CreatedAt.String(),
-			StartAt:     booking.StartDate,
-			Description: booking.Description,
-			Photos:      booking.Photos,
-			Client:      app.Client{},
-			Location: app.Location{
-				ID: &booking.LocationID,
-			},
-		}
-
-		handleSuccess(w, res)
-	*/
 	handleSuccessMsgWithRes(w, "Booking created successfully", booking)
 }
 
@@ -160,46 +132,38 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	request.ClientID = userID.String()
-	/*
-		var photos []string
-		photoData := r.PostFormValue("photos")
-		fmt.Println("photodata:", photoData)
-		if photoData != "" {
-			err = json.Unmarshal([]byte(photoData), &photos)
-			if err != nil {
-				handleError(w, "photos: must input a valid photo value", http.StatusBadRequest)
-				return
-			}
+
+	var photos []string
+	photoData := r.PostFormValue("photos")
+	fmt.Println("photodata:", photoData)
+	if photoData != "" {
+		err = json.Unmarshal([]byte(photoData), &photos)
+		if err != nil {
+			handleError(w, "photos: invalid json array value", http.StatusBadRequest)
+			return
 		}
 		request.Photos = photos
-
-		request.Title = r.PostFormValue("title")
-		request.StartDate = r.PostFormValue("start_date")
-		request.Note = r.PostFormValue("note")
-		//urgent := r.PostFormValue("urgent")
-		request.LocationID = r.PostFormValue("location_id")
-	*/
+	}
 
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		log.Printf("Marshall error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "error parsing form values", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.Unmarshal(jsonStr, &request); err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		log.Printf("Unmarshal error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
-	urgent, err := govalidator.ToBoolean(r.PostFormValue("urgent"))
-	if err == nil {
-		request.Urgent = urgent
-	}
-
-	if request.Urgent {
-		request.StartDate = time.Now().Add(time.Hour * 24).Format(time.RFC3339)
+	// if start_date is not set, infer as urgent and set StartDate to 24 hours
+	if request.StartDate == "" {
+		if err == nil {
+			request.Urgent = true
+			request.StartDate = time.Now().Add(time.Hour * 24).Format("2006-01-02T15:04:05")
+		}
 	}
 
 	err = request.Validate()
@@ -255,9 +219,9 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	// Fetch dials from database.
 	request, err := s.ReqSvc.FindRequestByID(r.Context(), id)
 	if err != nil {
-		log.Println(err)
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err == sql.ErrNoRows {
-			handleError(w, "Profile not found", http.StatusNotFound)
+			handleError(w, "Request not found", http.StatusNotFound)
 			return
 		}
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
