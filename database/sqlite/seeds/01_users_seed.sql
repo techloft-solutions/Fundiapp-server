@@ -14,7 +14,7 @@ INSERT INTO `users`(
 ) VALUES(
     'andrw',
     '+254123456789',
-    '123456',
+    'WYpF2vhVYCKlxILYZaleA==',
     0,
     '8o0LYQoCdygx5shO5mo5ILeVVWU2',
     'anthony',
@@ -23,7 +23,7 @@ INSERT INTO `users`(
     'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Wikipidia-profile-photo.jpg/200px-Wikipidia-profile-photo.jpg',
     NULL,
     'active',
-    0
+    1
 ),(
     'marya',
     '+254712345678',
@@ -36,7 +36,7 @@ INSERT INTO `users`(
     'https://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_630,w_1200,f_auto,q_auto/1158391/abdoulaye-barry_q2vj5b.jpg',
     NULL,
     'active',
-    1
+    0
 ),(
     'user',
     '+254711112222',
