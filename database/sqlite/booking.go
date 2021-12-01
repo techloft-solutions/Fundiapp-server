@@ -47,10 +47,10 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 			client_id,
 			title,
 			description,
-			start_date,
+			start_at,
 			location_id,
 			status,
-			urgent,
+			is_urgent,
 			is_request
 		) VALUES (?,?,?,?,?,?,?,?)
 		`,
@@ -114,7 +114,7 @@ func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]*ap
 			booking_id,
 			title,
 			status,
-			start_date,
+			start_at,
 			created_at
 		FROM bookings
 		WHERE client_id = ?
@@ -162,7 +162,7 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 			description,
 			client_id,
 			status,
-			start_date,
+			start_at,
 			created_at
 		FROM bookings
 		WHERE booking_id = ?
@@ -478,7 +478,7 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 		SELECT
 			bookings.booking_id,
 			bookings.status,
-			bookings.start_date,
+			bookings.start_at,
 			bookings.client_id,
 			bookings.provider_id,
 			bookings.created_at,
@@ -489,7 +489,7 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 		WHERE
 			bookings.booking_id = ?
 		ORDER BY
-			bookings.start_date ASC
+			bookings.start_at ASC
 		`,
 		id,
 	).Scan(
@@ -529,7 +529,7 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 		    bookings.booking_id,
 			bookings.status,
 			bookings.created_at,
-			bookings.start_date,
+			bookings.start_at,
 			users.first_name,
 			users.last_name,
 			locations.name
@@ -537,7 +537,7 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 		LEFT JOIN providers ON bookings.provider_id = providers.provider_id
 		LEFT JOIN users ON providers.user_id = users.user_id
 		LEFT JOIN locations ON bookings.location_id = locations.location_id
-		ORDER BY start_date ASC
+		ORDER BY booking.start_at ASC
 		`,
 	)
 	if err != nil {
@@ -594,7 +594,7 @@ func createBooking(ctx context.Context, tx *Tx, booking *model.Booking) error {
 	INSERT INTO bookings (
 		booking_id,
 		status,
-		start_date,
+		start_at,
 		client_id,
 		provider_id,
 		location_id,

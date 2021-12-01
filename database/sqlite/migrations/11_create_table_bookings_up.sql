@@ -5,14 +5,16 @@ CREATE TABLE IF NOT EXISTS bookings (
     client_id VARCHAR(255) NOT NULL,
     provider_id VARCHAR(255),
     location_id VARCHAR(255) NOT NULL,
-    service_id VARCHAR(255),
-    start_date DATETIME NOT NULL,
+    service_id INT(20),
+    start_at DATETIME NOT NULL,
     status VARCHAR(255) NOT NULL,
-    urgent BOOLEAN DEFAULT FALSE,
+    is_urgent BOOLEAN DEFAULT FALSE,
     is_request BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (provider_id) REFERENCES providers(provider_id),
-    FOREIGN KEY (location_id) REFERENCES locations(location_id)
+    FOREIGN KEY (location_id) REFERENCES locations(location_id),
+    FOREIGN KEY (client_id) REFERENCES users(user_id),
+    FOREIGN KEY (service_id) REFERENCES services(id)
 );
