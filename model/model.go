@@ -164,9 +164,9 @@ type UserLocation struct {
 }
 
 type Bid struct {
-	BookingID uuid.UUID
-	BidderID  string
-	Price     int `valid:"required"`
+	BookingID string `valid:"required,uuid" json:"request_id"`
+	BidderID  string `valid:"required" json:"user_id"`
+	Amount    string `valid:"required" json:"amount"`
 }
 
 type Transaction struct {

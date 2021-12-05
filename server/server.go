@@ -99,17 +99,17 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/requests", s.handleRequestList).Methods("GET")
 	r.HandleFunc("/requests", s.handleRequestCreate).Methods("POST")
 	r.HandleFunc("/requests/{id}", s.handleRequest).Methods("GET")
-	r.HandleFunc("/requests/{id}/bids", s.handleBidCreate).Methods("POST")
-	//r.HandleFunc("/requests/{id}/bids", s.handleBidList).Methods("GET")
+	r.HandleFunc("/requests/{id}/bids", s.handleRequestBids).Methods("GET")
 	// Bookings
 	r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingCreate).Methods("POST")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingUpdate).Methods("PUT")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingDelete).Methods("DELETE")
-	// Bids
-	//r.HandleFunc("/bids", s.handleBidCreate).Methods("POST")
-	//r.HandleFunc("/bids", s.handleBidList).Methods("GET")
+	// Bids (Provider)
+	r.HandleFunc("/bids", s.handleBidCreate).Methods("POST")
+	r.HandleFunc("/bids", s.handleMyBids).Methods("GET")
+	//r.HandleFunc("/bids/{id}", s.handleCancelBid).Methods("DELETE")
 	// Portfolios
 	r.HandleFunc("/portfolios", s.handleMyPortfolio).Methods("GET")
 	r.HandleFunc("/portfolios", s.handlePortfolioCreate).Methods("POST")
@@ -120,4 +120,5 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	// Preferences
 	//r.HandleFunc("/preferences", s.handlePreferenceList).Methods("GET")
 	//r.HandleFunc("/preferences", s.handlePreferenceCreate).Methods("POST")
+	r.HandleFunc("/test", s.handleTest).Methods("GET")
 }

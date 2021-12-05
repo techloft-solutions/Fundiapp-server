@@ -138,7 +138,9 @@ type RequestService interface {
 }
 
 type BidService interface {
-	FindBids(context.Context) ([]*Bid, error)
+	ListMyBids(context.Context, string) ([]*Bid, error)
+	FindBidsByBookingID(context.Context, string) ([]*Bid, error)
+	FindBidsByRequestID(context.Context, string, string) ([]*Bid, error)
 	CreateBid(context.Context, *model.Bid) error
 }
 
