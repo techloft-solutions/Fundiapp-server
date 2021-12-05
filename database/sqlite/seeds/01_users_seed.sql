@@ -12,7 +12,7 @@ INSERT INTO `users`(
     `status`,
     `verified`
 ) VALUES(
-    'andrw',
+    'matthew',
     '+254123456789',
     'WYpF2vhVYCKlxILYZaleA==',
     0,
@@ -63,5 +63,17 @@ INSERT INTO `users`(
     NULL,
     'active',
     0
+),(
+    'andrw',
+    '+254719825151',
+    '123456',
+    1,
+    'P74RAdTTYPdA2Tcm75NjO9UuYcO2',
+    NULL,
+    NULL,
+    NULL,
+    'http://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200',
+    NULL,
+    'active',
+    0
 );
-
