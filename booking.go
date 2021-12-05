@@ -91,25 +91,41 @@ type Review struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type provider struct {
+	ID    uuid.UUID `json:"id"`
+	Name  string    `json:"name"`
+	Photo *string   `json:"photo_url"`
+}
+
 type Request struct {
-	ID      uuid.UUID `json:"request_id"`
-	Title   string
-	Status  string
-	Created string
-	Start   string
-	Bids    int
+	ID        uuid.UUID `json:"request_id"`
+	Title     string    `json:"title"`
+	Status    string    `json:"status"`
+	CreatedAt string    `json:"created"`
+	StartAt   string    `json:"start"`
+	Bids      int       `json:"bids"`
+	Provider  provider  `json:"provider"`
+}
+
+type location struct {
+	ID        string `json:"location_id"`
+	Latitude  string `json:"latitude"`
+	Longitude string `json:"longitude"`
+	Address   string `json:"address"`
 }
 
 type RequestDetail struct {
-	ID      uuid.UUID `json:"request_id"`
-	Title   string    `json:"title"`
-	Note    string    `json:"note"`
-	Status  string    `json:"status"`
-	Created string    `json:"created"`
-	Start   string    `json:"start"`
-	Bids    int       `json:"bids"`
-	Photos  []string  `json:"photos"`
-	Client  string    `json:"client"`
+	ID       uuid.UUID `json:"request_id"`
+	Title    string    `json:"title"`
+	Category string    `json:"category"`
+	Note     string    `json:"note"`
+	Status   string    `json:"status"`
+	Created  string    `json:"created"`
+	Start    string    `json:"start"`
+	Bids     int       `json:"bids"`
+	Photos   []string  `json:"photos"`
+	Location location  `json:"location"`
+	Client   string    `json:"client"`
 }
 
 type Client struct {

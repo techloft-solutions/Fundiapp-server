@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	app "github.com/andrwkng/hudumaapp"
@@ -196,16 +197,15 @@ func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.URL.Query().Get("filter") == "true" {
-		filter := model.RequestFilter{
-			Status:   r.URL.Query().Get("status"),
-			ClientID: userId.String(),
-		}
-
-		requests, err = s.ReqSvc.FilterRequests(r.Context(), filter)
-	} else {
-		requests, err = s.ReqSvc.ListRequests(r.Context(), userId)
+	filter := model.RequestFilter{
+		ClientID: userId.String(),
 	}
+
+	if r.URL.Query().Get("filter") == "true" {
+		filter.Status = r.URL.Query().Get("status")
+	}
+
+	requests, err = s.ReqSvc.FilterRequests(r.Context(), filter)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
@@ -310,6 +310,25 @@ func (s *Server) handleRequestBids(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccess(w, resp)
+}
+
+func (s *Server) handleAcceptBid(w http.ResponseWriter, r *http.Request) {
+	bidId, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		handleError(w, "Id is not a valid integer", http.StatusBadRequest)
+		return
+	}
+
+	// TODO: check if bid exists
+
+	err = s.BidSvc.AcceptBid(r.Context(), bidId)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccessMsg(w, "Bid accepted successfully")
 }
 
 func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {

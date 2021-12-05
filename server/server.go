@@ -99,6 +99,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/requests", s.handleRequestList).Methods("GET")
 	r.HandleFunc("/requests", s.handleRequestCreate).Methods("POST")
 	r.HandleFunc("/requests/{id}", s.handleRequest).Methods("GET")
+	//r.HandleFunc("/requests/{id}/cancel", s.handleRequestCancel).Methods("PUT")
 	r.HandleFunc("/requests/{id}/bids", s.handleRequestBids).Methods("GET")
 	// Bookings
 	r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
@@ -109,6 +110,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	// Bids (Provider)
 	r.HandleFunc("/bids", s.handleBidCreate).Methods("POST")
 	r.HandleFunc("/bids", s.handleMyBids).Methods("GET")
+	r.HandleFunc("/bids/{id}/accept", s.handleAcceptBid).Methods("PUT")
 	//r.HandleFunc("/bids/{id}", s.handleCancelBid).Methods("DELETE")
 	// Portfolios
 	r.HandleFunc("/portfolios", s.handleMyPortfolio).Methods("GET")

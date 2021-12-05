@@ -49,10 +49,11 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 			description,
 			start_at,
 			location_id,
+			category_id,
 			status,
 			is_urgent,
 			is_request
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?,?,?,?,?,?,?,?,?,?)
 		`,
 		request.ID,
 		request.ClientID,
@@ -60,6 +61,7 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 		request.Note,
 		request.StartDate,
 		request.LocationID,
+		request.CategoryID,
 		request.Status,
 		request.Urgent,
 		true,
@@ -121,8 +123,11 @@ func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]app
 			&request.ID,
 			&request.Title,
 			&request.Status,
-			&request.Start,
-			&request.Created,
+			&request.StartAt,
+			&request.CreatedAt,
+			&request.Provider.ID,
+			&request.Provider.Name,
+			&request.Provider.Photo,
 		); err != nil {
 			return nil, err
 		}
@@ -149,14 +154,20 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 	request := &app.RequestDetail{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
-			booking_id,
-			title,
-			description,
-			client_id,
-			status,
-			start_at,
-			created_at
+			bookings.booking_id,
+			bookings.title,
+			bookings.description,
+			bookings.client_id,
+			bookings.status,
+			bookings.start_at,
+			bookings.created_at,
+			categories.name,
+			locations.address,
+			locations.latitude, 
+			locations.longitude
 		FROM bookings
+		LEFT JOIN categories ON bookings.category_id = categories.id
+		LEFT JOIN locations ON bookings.location_id = locations.location_id
 		WHERE booking_id = ?
 	`, id).Scan(
 		&request.ID,
@@ -166,6 +177,10 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 		&request.Status,
 		&request.Start,
 		&request.Created,
+		&request.Category,
+		&request.Location.Address,
+		&request.Location.Latitude,
+		&request.Location.Longitude,
 	)
 	if err != nil {
 		return nil, err
@@ -838,6 +853,40 @@ func listBidsByCriteria(ctx context.Context, tx *Tx, userID string, haystack str
 	return bids, nil
 }
 
+func (s *BidService) AcceptBid(ctx context.Context, bidID int) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = acceptBid(ctx, tx, bidID)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func acceptBid(ctx context.Context, tx *Tx, bidID int) error {
+	result, err := tx.ExecContext(ctx, `
+		UPDATE bids
+		SET accepted = TRUE
+		WHERE id = ?
+		`,
+		bidID,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
 func (s *RequestService) FilterRequests(ctx context.Context, filter model.RequestFilter) ([]app.Request, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -862,18 +911,25 @@ func filterRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ 
 		args = append(args, v)
 	}
 	if v := filter.Status; v != "" {
-		where, args = append(where, "status = ?"), append(args, v)
+		where, args = append(where, "bookings.status = ?"), append(args, v)
 	}
 
 	requests := []app.Request{}
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
-			booking_id,
-			title,
-			status,
-			start_at,
-			created_at
+			bookings.booking_id,
+			bookings.title,
+			bookings.status,
+			bookings.start_at,
+			bookings.created_at,
+			bookings.provider_id,
+			CONCAT_WS(' ', users.first_name, users.last_name) AS provider_name,
+			users.photo_url as provider_photo,
+			(SELECT COUNT(*) FROM bids WHERE bids.booking_id = bookings.booking_id) AS bids_count
 		FROM bookings
+		LEFT JOIN providers ON providers.provider_id = bookings.provider_id
+		LEFT JOIN users ON users.user_id = providers.user_id
+		LEFT JOIN bids ON bids.booking_id = bookings.booking_id
 		WHERE `+strings.Join(where, " AND ")+`
 	`, args...)
 	if err != nil {
@@ -886,8 +942,12 @@ func filterRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ 
 			&request.ID,
 			&request.Title,
 			&request.Status,
-			&request.Start,
-			&request.Created,
+			&request.StartAt,
+			&request.CreatedAt,
+			&request.Provider.ID,
+			&request.Provider.Name,
+			&request.Provider.Photo,
+			&request.Bids,
 		); err != nil {
 			return nil, err
 		}

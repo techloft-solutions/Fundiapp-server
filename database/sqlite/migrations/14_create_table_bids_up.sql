@@ -3,6 +3,7 @@ CREATE TABLE `bids` (
   `provider_id` VARCHAR(255) NOT NULL,
   `booking_id` VARCHAR(255) NOT NULL,
   `amount` INTEGER NOT NULL,
+  `accepted` BOOLEAN,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`provider_id`) REFERENCES `providers` (`provider_id`),

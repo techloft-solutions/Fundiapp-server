@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     client_id VARCHAR(255) NOT NULL,
     provider_id VARCHAR(255),
     location_id VARCHAR(255) NOT NULL,
+    category_id INT(20),
     service_id INT(20),
     start_at DATETIME NOT NULL,
     status VARCHAR(255) NOT NULL,
@@ -16,5 +17,6 @@ CREATE TABLE IF NOT EXISTS bookings (
     FOREIGN KEY (provider_id) REFERENCES providers(provider_id),
     FOREIGN KEY (location_id) REFERENCES locations(location_id),
     FOREIGN KEY (client_id) REFERENCES users(user_id),
-    FOREIGN KEY (service_id) REFERENCES services(id)
+    FOREIGN KEY (service_id) REFERENCES services(id),
+    FOREIGN KEY (category_id) REFERENCES categories(id)
 );
