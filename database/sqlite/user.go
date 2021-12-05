@@ -314,7 +314,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 
 		    providers.provider_id,
-			CONCAT(users.first_name, ' ', users.last_name) AS full_name,
+			CONCAT_WS(' ', users.first_name, users.last_name) AS full_name,
 			categories.name AS profession,
 			providers.ratings_average,
 			providers.reviews_count,
@@ -671,7 +671,7 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 	rows, err := tx.QueryContext(ctx, `
 	SELECT 
 			providers.provider_id,
-			CONCAT(users.first_name, ' ', users.last_name) AS full_name,
+			CONCAT_WS(' ', users.first_name, users.last_name) AS full_name,
 			categories.name AS profession,
 			providers.ratings_average,
 			providers.reviews_count,
