@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
 	"github.com/google/uuid"
@@ -186,19 +187,32 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var requests []app.Request
+
 	userId, err := middlewares.UserIDFromContext(r.Context())
 	if err != nil {
 		handleUnathorised(w)
 		return
 	}
-	resp, err := s.ReqSvc.ListRequests(r.Context(), userId)
+
+	if r.URL.Query().Get("filter") == "true" {
+		filter := model.RequestFilter{
+			Status:   r.URL.Query().Get("status"),
+			ClientID: userId.String(),
+		}
+
+		requests, err = s.ReqSvc.FilterRequests(r.Context(), filter)
+	} else {
+		requests, err = s.ReqSvc.ListRequests(r.Context(), userId)
+	}
 	if err != nil {
-		log.Println(err)
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	handleSuccess(w, resp)
+	handleSuccess(w, requests)
 }
 
 func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {

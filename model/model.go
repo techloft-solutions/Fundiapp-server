@@ -201,8 +201,13 @@ type Schedule struct {
 	EndTime   string
 }
 
-// DialFilter represents a filter used on service providers.
+// ProviderFilter represents a filter used on service providers.
 type ProviderFilter struct {
 	CategoryID string `json:"category_id"`
 	IndustryID string `json:"industry_id"`
+}
+
+type RequestFilter struct {
+	Status   string
+	ClientID string
 }

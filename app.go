@@ -133,8 +133,9 @@ type PortfolioService interface {
 
 type RequestService interface {
 	FindRequestByID(context.Context, uuid.UUID) (*RequestDetail, error)
-	ListRequests(context.Context, UserID) ([]*Request, error)
+	ListRequests(context.Context, UserID) ([]Request, error)
 	CreateRequest(context.Context, *model.Request) error
+	FilterRequests(context.Context, model.RequestFilter) ([]Request, error)
 }
 
 type BidService interface {

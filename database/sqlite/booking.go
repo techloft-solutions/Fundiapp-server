@@ -85,7 +85,7 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 	return nil
 }
 
-func (s *RequestService) ListRequests(ctx context.Context, userId app.UserID) ([]*app.Request, error) {
+func (s *RequestService) ListRequests(ctx context.Context, userId app.UserID) ([]app.Request, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -99,8 +99,8 @@ func (s *RequestService) ListRequests(ctx context.Context, userId app.UserID) ([
 	return requests, tx.Commit()
 }
 
-func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]*app.Request, error) {
-	requests := []*app.Request{}
+func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]app.Request, error) {
+	requests := []app.Request{}
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
 			booking_id,
@@ -116,7 +116,7 @@ func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]*ap
 	}
 	defer rows.Close()
 	for rows.Next() {
-		request := &app.Request{}
+		request := app.Request{}
 		if err := rows.Scan(
 			&request.ID,
 			&request.Title,
@@ -836,4 +836,62 @@ func listBidsByCriteria(ctx context.Context, tx *Tx, userID string, haystack str
 	}
 
 	return bids, nil
+}
+
+func (s *RequestService) FilterRequests(ctx context.Context, filter model.RequestFilter) ([]app.Request, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	requests, err := filterRequests(ctx, tx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
+func filterRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ []app.Request, err error) {
+	// Build WHERE clause. Each part of the WHERE clause is AND-ed together.
+	// Values are appended to an arg list to avoid SQL injection.
+	where, args := []string{"1 = 1"}, []interface{}{}
+	if v := filter.ClientID; v != "" {
+		where = append(where, "client_id = ?")
+		args = append(args, v)
+	}
+	if v := filter.Status; v != "" {
+		where, args = append(where, "status = ?"), append(args, v)
+	}
+
+	requests := []app.Request{}
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			booking_id,
+			title,
+			status,
+			start_at,
+			created_at
+		FROM bookings
+		WHERE `+strings.Join(where, " AND ")+`
+	`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		request := app.Request{}
+		if err := rows.Scan(
+			&request.ID,
+			&request.Title,
+			&request.Status,
+			&request.Start,
+			&request.Created,
+		); err != nil {
+			return nil, err
+		}
+		requests = append(requests, request)
+	}
+	return requests, nil
 }
