@@ -26,6 +26,11 @@ var migrationFS embed.FS
 //go:embed seeds/*.sql
 var seedFS embed.FS
 
+type Criteria struct {
+	Needle   string
+	Haystack string
+}
+
 type DB struct {
 	db     *sql.DB
 	ctx    context.Context // background context

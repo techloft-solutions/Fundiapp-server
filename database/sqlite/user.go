@@ -697,7 +697,6 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 	}
 	defer rows.Close()
 
-	// Iterate over rows and deserialize into Dial objects.
 	providers := make([]*app.ProviderBrief, 0)
 	for rows.Next() {
 		var provider app.ProviderBrief

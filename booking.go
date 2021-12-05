@@ -45,7 +45,7 @@ type Provider struct {
 type ProviderBrief struct {
 	ID         uuid.UUID `json:"provder_id"`
 	UserID     string    `json:"user_id"`
-	Name       *string   `json:"name"`
+	Name       string    `json:"name"`
 	Profession *string   `json:"profession"`
 	Rate       `json:"rate"`
 	Jobs       int     `json:"num_jobs"`
@@ -186,7 +186,22 @@ type Profile struct {
 	Verified      bool          `json:"verified"`
 }
 
-type Bid struct{}
+type Bid struct {
+	ID        int           `json:"bid_id"`
+	BookingID uuid.UUID     `json:"request_id"`
+	Provider  ProviderBrief `json:"bidder"`
+	Amount    int           `json:"amount"`
+	Date      string        `json:"date"`
+}
+
+type BidBrief struct {
+	ID         int       `json:"bid_id"`
+	BookingID  uuid.UUID `json:"request_id"`
+	ProviderID string    `json:"provider_id"`
+	Bidder     string    `json:"bidder"`
+	Amount     int       `json:"amount"`
+	Date       string    `json:"date"`
+}
 
 type Transaction struct {
 	Code      string

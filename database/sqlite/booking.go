@@ -551,7 +551,6 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 		LEFT JOIN providers ON bookings.provider_id = providers.provider_id
 		LEFT JOIN users ON providers.user_id = users.user_id
 		LEFT JOIN locations ON bookings.location_id = locations.location_id
-		ORDER BY booking.start_at ASC
 		`,
 	)
 	if err != nil {
@@ -562,7 +561,6 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 	var firstname sql.NullString
 	var lastname sql.NullString
 
-	// Iterate over rows and deserialize into Dial objects.
 	bookings := make([]*app.BookingBrief, 0)
 	for rows.Next() {
 		var booking app.BookingBrief
@@ -662,7 +660,7 @@ func NewBidService(db *DB) *BidService {
 	return &BidService{db}
 }
 
-func (s *BidService) Create(ctx context.Context, bid *model.Bid) error {
+func (s *BidService) CreateBid(ctx context.Context, bid *model.Bid) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -680,15 +678,162 @@ func createBid(ctx context.Context, tx *Tx, bid *model.Bid) error {
 		INSERT INTO bids (
 			booking_id,
 			provider_id,
-			price,
-		) VALUES (?, ?, ?)
+			amount
+		) VALUES (?, (SELECT provider_id FROM providers WHERE user_id = ?), ?)
 		`,
 		bid.BookingID,
 		bid.BidderID,
-		bid.Price,
+		bid.Amount,
 	)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *BidService) FindBidsByBookingID(ctx context.Context, bookingID string) ([]*app.Bid, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	bids, err := listBids(ctx, tx, bookingID)
+	if err != nil {
+		return nil, err
+	}
+	return bids, tx.Commit()
+}
+
+func listBids(ctx context.Context, tx *Tx, bookingID string) ([]*app.Bid, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT 
+			bids.id,
+			bids.booking_id,
+			bids.provider_id,
+			bids.amount,
+			bids.updated_at,
+			users.first_name,
+			users.last_name
+		FROM bids
+		LEFT JOIN providers ON bids.provider_id = providers.provider_id
+		LEFT JOIN users ON providers.user_id = users.user_id
+		WHERE bids.booking_id = ?
+		`,
+		bookingID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var firstname sql.NullString
+	var lastname sql.NullString
+
+	bids := make([]*app.Bid, 0)
+	for rows.Next() {
+		var bid app.Bid
+		if err := rows.Scan(
+			&bid.ID,
+			&bid.BookingID,
+			&bid.Provider.ID,
+			&bid.Amount,
+			&bid.Date,
+			&firstname,
+			&lastname,
+		); err != nil {
+			return nil, err
+		}
+		bid.Provider.Name = strings.TrimSpace(firstname.String + " " + lastname.String)
+		bids = append(bids, &bid)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bids, nil
+}
+
+func (s *BidService) ListMyBids(ctx context.Context, userID string) ([]*app.Bid, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	bids, err := listBidsByCriteria(ctx, tx, userID, "1", "1")
+	if err != nil {
+		return nil, err
+	}
+	return bids, tx.Commit()
+}
+
+func (s *BidService) FindBidsByRequestID(ctx context.Context, userID string, requestID string) ([]*app.Bid, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	bids, err := listBidsByCriteria(ctx, tx, userID, "booking_id", requestID)
+	if err != nil {
+		return nil, err
+	}
+	return bids, tx.Commit()
+}
+
+func listBidsByCriteria(ctx context.Context, tx *Tx, userID string, haystack string, needle string) ([]*app.Bid, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT 
+		bids.id,
+		bids.booking_id,
+		bids.amount,
+		bids.updated_at,
+		bids.provider_id,
+		users.first_name,
+		users.last_name,
+		users.photo_url,
+		providers.ratings_average,
+		providers.reviews_count
+	FROM bids
+	LEFT JOIN providers ON bids.provider_id = providers.provider_id
+	LEFT JOIN users ON providers.user_id = users.user_id
+	WHERE bids.provider_id = (SELECT provider_id FROM providers WHERE user_id = ?)
+	AND `+haystack+` = ?
+	`,
+		userID, needle,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	bids := make([]*app.Bid, 0)
+	for rows.Next() {
+		var firstname sql.NullString
+		var lastname sql.NullString
+		var bid app.Bid
+		if err := rows.Scan(
+			&bid.ID,
+			&bid.BookingID,
+			&bid.Amount,
+			&bid.Date,
+			&bid.Provider.ID,
+			&firstname,
+			&lastname,
+			&bid.Provider.Photo,
+			&bid.Provider.Rating,
+			&bid.Provider.Reviews,
+		); err != nil {
+			return nil, err
+		}
+		bid.Provider.Name = strings.TrimSpace(firstname.String + " " + lastname.String)
+		bids = append(bids, &bid)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bids, nil
 }

@@ -119,7 +119,6 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	userID, err := middlewares.UserIDFromContext(r.Context())
 	// Return an error if the user is not currently logged in.
 	if err != nil {
-		log.Println("[DEBUG] User not logged in", err)
 		handleUnathorised(w)
 		return
 	}
@@ -260,5 +259,45 @@ func (s *Server) handleBidCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleSuccessMsgWithRes(w, "Service created successfully", bid)
+	handleSuccessMsgWithRes(w, "Booking created successfully", bid)
+}
+
+func (s *Server) handleMyBids(w http.ResponseWriter, r *http.Request) {
+	userId, err := middlewares.UserIDFromContext(r.Context())
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+
+	resp, err := s.BidSvc.ListMyBids(r.Context(), userId.String())
+	if err != nil {
+		log.Println(err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, resp)
+}
+
+func (s *Server) handleRequestBids(w http.ResponseWriter, r *http.Request) {
+	requestId := mux.Vars(r)["id"]
+
+	userId, err := middlewares.UserIDFromContext(r.Context())
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+
+	resp, err := s.BidSvc.FindBidsByRequestID(r.Context(), userId.String(), requestId)
+	if err != nil {
+		log.Println(err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, resp)
+}
+
+func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
+	handleSuccess(w, "test")
 }

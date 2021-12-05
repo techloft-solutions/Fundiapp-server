@@ -308,14 +308,12 @@ func (s *Server) handleProviderList(w http.ResponseWriter, r *http.Request) {
 	var providers []*app.ProviderBrief
 
 	if r.URL.Query().Get("filter") == "true" {
-		log.Println("[DEBUG] filter:", r.URL.Query().Get("filter"))
 		var filter model.ProviderFilter
 		filter.CategoryID = r.URL.Query().Get("category_id")
 		filter.IndustryID = r.URL.Query().Get("industry_id")
 
 		providers, err = s.UsrSvc.FilterProviders(r.Context(), filter)
 	} else {
-		log.Println("[DEBUG] No filter")
 		providers, err = s.UsrSvc.ListProviders(r.Context())
 	}
 	if err != nil {

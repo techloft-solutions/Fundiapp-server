@@ -46,7 +46,6 @@ func retrieveCategories(ctx context.Context, tx *Tx) ([]*app.Category, error) {
 	}
 	defer rows.Close()
 
-	// Iterate over rows and deserialize into Dial objects.
 	categories := make([]*app.Category, 0)
 	for rows.Next() {
 		var category app.Category
@@ -244,7 +243,6 @@ func retrieveIndustries(ctx context.Context, tx *Tx) ([]*app.Industry, error) {
 	}
 	defer rows.Close()
 
-	// Iterate over rows and deserialize into Dial objects.
 	industries := make([]*app.Industry, 0)
 	for rows.Next() {
 		var industry app.Industry
@@ -356,7 +354,6 @@ func getReviewsByProviderID(ctx context.Context, tx *Tx, providerId string) ([]*
 	}
 	defer rows.Close()
 
-	// Iterate over rows and deserialize into Dial objects.
 	reviews := make([]*app.Review, 0)
 	for rows.Next() {
 		var review app.Review
