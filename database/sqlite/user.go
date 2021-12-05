@@ -314,7 +314,6 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 
 		    providers.provider_id,
-			users.user_id,
 			CONCAT(users.first_name, ' ', users.last_name) AS full_name,
 			categories.name AS profession,
 			providers.ratings_average,
@@ -326,6 +325,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 		FROM providers
 		INNER JOIN users ON users.user_id = providers.user_id
 		LEFT JOIN categories ON categories.id = providers.category_id
+		WHERE users.verified = 1
 		`,
 	)
 	if err != nil {
@@ -338,7 +338,6 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 		var provider app.ProviderBrief
 		if err := rows.Scan(
 			&provider.ID,
-			&provider.UserID,
 			&provider.Name,
 			&provider.Profession,
 			&provider.Rating,
@@ -656,8 +655,6 @@ func validateUserAsProvider(ctx context.Context, tx *Tx, phone string, password 
 	return nil
 }
 
-// findProviders retrieves a list of matching dials. Also returns a total matching
-// count which may different from the number of results if filter.Limit is set.
 func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (_ []*app.ProviderBrief, err error) {
 	// Build WHERE clause. Each part of the WHERE clause is AND-ed together.
 	// Values are appended to an arg list to avoid SQL injection.
@@ -666,7 +663,6 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 		where, args = append(where, "industry_id = ?"), append(args, v)
 	}
 
-	// Limit to dials user is a member of unless searching by invite code.
 	if v := filter.CategoryID; v != "" {
 		where, args = append(where, "category_id = ?"), append(args, v)
 	}
@@ -675,7 +671,6 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 	rows, err := tx.QueryContext(ctx, `
 	SELECT 
 			providers.provider_id,
-			users.user_id,
 			CONCAT(users.first_name, ' ', users.last_name) AS full_name,
 			categories.name AS profession,
 			providers.ratings_average,
@@ -688,6 +683,7 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 		INNER JOIN users ON users.user_id = providers.user_id
 		LEFT JOIN categories ON categories.id = providers.category_id
 		WHERE `+strings.Join(where, " AND ")+`
+		AND providers.is_verfied = true
 		ORDER BY providers.updated_at ASC
 		`,
 		args...,
@@ -702,7 +698,6 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 		var provider app.ProviderBrief
 		if err := rows.Scan(
 			&provider.ID,
-			&provider.UserID,
 			&provider.Name,
 			&provider.Profession,
 			&provider.Rating,

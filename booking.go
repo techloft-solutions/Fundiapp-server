@@ -44,7 +44,6 @@ type Provider struct {
 
 type ProviderBrief struct {
 	ID         uuid.UUID `json:"provder_id"`
-	UserID     string    `json:"user_id"`
 	Name       string    `json:"name"`
 	Profession *string   `json:"profession"`
 	Rate       `json:"rate"`
