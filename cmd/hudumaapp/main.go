@@ -60,6 +60,7 @@ func main() {
 	server.UsrSvc = sqlite.NewUserService(db)
 	server.RevSvc = sqlite.NewReviewService(db)
 	server.IndSvc = sqlite.NewIndustryService(db)
+	server.SrchSvc = sqlite.NewSearchService(db)
 
 	log.Fatal(server.Start())
 

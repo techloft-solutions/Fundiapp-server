@@ -14,15 +14,16 @@ type Server struct {
 	server *http.Server
 	router *mux.Router
 	//ln     net.Listener
-	BkSvc  app.BookingService
-	CatSvc app.CategoryService
-	PfoSvc app.PortfolioService
-	LocSvc app.LocationService
-	BidSvc app.BidService
-	ReqSvc app.RequestService
-	UsrSvc app.UserService
-	RevSvc app.ReviewService
-	IndSvc app.IndustryService
+	BkSvc   app.BookingService
+	CatSvc  app.CategoryService
+	PfoSvc  app.PortfolioService
+	LocSvc  app.LocationService
+	BidSvc  app.BidService
+	ReqSvc  app.RequestService
+	UsrSvc  app.UserService
+	RevSvc  app.ReviewService
+	IndSvc  app.IndustryService
+	SrchSvc app.SearchService
 }
 
 func New() *Server {
@@ -116,6 +117,8 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/portfolios", s.handleMyPortfolio).Methods("GET")
 	r.HandleFunc("/portfolios", s.handlePortfolioCreate).Methods("POST")
 	r.HandleFunc("/portfolios/{id}", s.handlePortfolio).Methods("GET")
+	// Search
+	r.HandleFunc("/search", s.handleSearch).Methods("GET")
 	// Payments
 	//r.HandleFunc("/payments", s.handlePaymentCreate).Methods("POST")
 	//r.HandleFunc("/payments", s.handlePaymentList).Methods("GET")

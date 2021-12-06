@@ -10,6 +10,11 @@ type Appointment struct {
 	StartTime time.Time `json:"start_time"`
 }
 
+type price struct {
+	Amount   int
+	Currency string
+}
+
 type Rate struct {
 	Price    *string `json:"price"`
 	Currency *string `json:"currency"`
@@ -37,9 +42,8 @@ type Provider struct {
 	//Professions []string `json:"professons"`
 	AvgRating float32 `json:"rating"`
 	Stats     Stats   `json:"stats"`
-	//distanceKM int `json:"distance`
-	Rate     `json:"rate"`
-	Services []*Service `json:"services"`
+	Rate      `json:"rate"`
+	Services  []*Service `json:"services"`
 }
 
 type ProviderBrief struct {
@@ -51,7 +55,15 @@ type ProviderBrief struct {
 	Rating     float32 `json:"avg_rating"`
 	Reviews    int     `json:"num_reviews"`
 	Photo      *string `json:"photo_url"`
-	Distance   string  `json:"distance"`
+}
+
+type SearchResult struct {
+	ID   uuid.UUID `json:"provder_id"`
+	Name string    `json:"name"`
+	//Rating   float32   `json:"avg_rating"`
+	//Reviews  int       `json:"num_reviews"`
+	Photo    *string `json:"photo_url"`
+	Distance *string `json:"distance"`
 }
 
 type Stats struct {

@@ -234,7 +234,6 @@ func (s *Server) handleProviderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	provider.UserID = userID.String()
-	provider.Type = "provider"
 
 	err = s.UsrSvc.CreateProvider(r.Context(), &provider)
 	if err != nil {

@@ -170,6 +170,12 @@ type Bid struct {
 	Amount    string `valid:"required" json:"amount"`
 }
 
+type Search struct {
+	Query     string
+	Latitude  string `valid:",latitude"`
+	Longitude string `valid:",longitude"`
+}
+
 type Transaction struct {
 	Model
 	Code       string
@@ -193,7 +199,6 @@ type Profile struct {
 	PhotoUrl   *string `valid:"url" json:"photo_url,omitempty"`
 	LocationID *string `json:"location_id,omitempty"`
 	Status     *string `json:"status,omitempty"`
-	Type       string  `valid:"required,omitempty"`
 	Verified   bool
 }
 

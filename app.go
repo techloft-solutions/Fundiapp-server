@@ -151,3 +151,7 @@ type LocationService interface {
 	ListMyLocations(context.Context, string) ([]*Location, error)
 	RemoveLocation(context.Context, string) error
 }
+
+type SearchService interface {
+	SearchByQuery(context.Context, model.Search) ([]SearchResult, error)
+}

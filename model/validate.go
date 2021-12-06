@@ -89,3 +89,11 @@ func (p Portfolio) Validate() error {
 	}
 	return nil
 }
+
+func (s Search) Validate() error {
+	_, err := govalidator.ValidateStruct(s)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -19,12 +19,6 @@ func NewUserService(db *DB) *UserService {
 	return &UserService{db: db}
 }
 
-//func (s *UserService) CreateProvider(ctx context.Context, booking *model.Provider) error {}
-
-//func (s *UserService) CreateClient(ctx context.Context, booking *model.Client) error {}
-
-//func (s *UserService) FindClientByID(ctx context.Context, booking *model.Client) error {}
-
 func (s *UserService) CreateUser(ctx context.Context, user *model.User) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -247,11 +241,7 @@ func (s *UserService) CreateProvider(ctx context.Context, provider *model.Provid
 	if err := createProvider(ctx, tx, provider); err != nil {
 		return err
 	}
-	/*
-		if err := createProfile(ctx, tx, &provider.Profile); err != nil {
-			return err
-		}
-	*/
+
 	return tx.Commit()
 }
 
@@ -325,7 +315,6 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 		FROM providers
 		INNER JOIN users ON users.user_id = providers.user_id
 		LEFT JOIN categories ON categories.id = providers.category_id
-		WHERE users.verified = 1
 		`,
 	)
 	if err != nil {
@@ -369,6 +358,7 @@ func (s *UserService) FindProfileByUserID(ctx context.Context, userId string) (*
 	if err != nil {
 		return nil, err
 	}
+
 	return profile, tx.Commit()
 }
 

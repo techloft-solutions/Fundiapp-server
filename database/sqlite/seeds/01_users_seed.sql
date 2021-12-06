@@ -34,7 +34,7 @@ INSERT INTO `users`(
     'samantha',
     'marysam@yahoo.com',
     'https://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_630,w_1200,f_auto,q_auto/1158391/abdoulaye-barry_q2vj5b.jpg',
-    NULL,
+    '0caea1b4-3bd6-49e4-a3e7-204dc20e19c0',
     'active',
     0
 ),(

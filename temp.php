@@ -9,8 +9,9 @@ string str
 service svc
 funciton func
 variable var
-bookingservice bksvc
-portfolioservice pfosvc
-locationservice lcsvc
-interface iface
+booking bkng
+portfolio pfo
+location loc
+interface intf
 resource res
+search srch
