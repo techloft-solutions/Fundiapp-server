@@ -97,7 +97,7 @@ type Request struct {
 	Note       string    `valid:"required" json:"note"`
 	LocationID string    `valid:"required,uuid" json:"location_id"`
 	ClientID   string    `valid:"required" json:"client_id"`
-	CategoryID string    `json:"category_id"`
+	CategoryID *string   `json:"category_id"`
 	Photos     []string  `json:"-"`
 	Status     string    `json:"status"`
 	Urgent     bool      `json:"urgent,string"`
