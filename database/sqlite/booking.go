@@ -49,11 +49,10 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 			description,
 			start_at,
 			location_id,
-			category_id,
 			status,
 			is_urgent,
 			is_request
-		) VALUES (?,?,?,?,?,?,?,?,?,?)
+		) VALUES (?,?,?,?,?,?,?,?,?)
 		`,
 		request.ID,
 		request.ClientID,
@@ -61,7 +60,6 @@ func createRequest(ctx context.Context, tx *Tx, request *model.Request) error {
 		request.Note,
 		request.StartDate,
 		request.LocationID,
-		request.CategoryID,
 		request.Status,
 		request.Urgent,
 		true,
