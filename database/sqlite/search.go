@@ -81,6 +81,7 @@ func searchByQuery(ctx context.Context, tx *Tx, search model.Search) ([]app.Sear
 			return nil, err
 		}
 		// get distance info
+		var distance float64
 		if search.Latitude != "" && search.Longitude != "" {
 			searchLat, err := strconv.ParseFloat(search.Latitude, 64)
 			if err != nil {
@@ -91,8 +92,17 @@ func searchByQuery(ctx context.Context, tx *Tx, search model.Search) ([]app.Sear
 				return nil, err
 			}
 			if latitude != nil && longitude != nil {
-				distanceStr := calculateDistance(searchLat, searchLong, *latitude, *longitude)
+				distance = calculateDistance(searchLat, searchLong, *latitude, *longitude)
+				distanceStr := fmt.Sprintf("%.1f %s", distance, "Km")
 				result.Distance = &distanceStr
+			}
+		}
+
+		searchDistance, _ := strconv.ParseFloat(search.Distance, 64)
+		// if search distance is less than result distance dont include result in results
+		if searchDistance != 0 {
+			if distance > searchDistance {
+				continue
 			}
 		}
 
@@ -106,7 +116,7 @@ func searchByQuery(ctx context.Context, tx *Tx, search model.Search) ([]app.Sear
 }
 
 // calculateDistance calculates the distance between two points in km
-func calculateDistance(lat1, lon1, lat2, lon2 float64) string {
+func calculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	// convert to radians
 	// must cast radius as float to multiply later
 	var la1, lo1, la2, lo2, r float64
@@ -115,12 +125,12 @@ func calculateDistance(lat1, lon1, lat2, lon2 float64) string {
 	la2 = lat2 * math.Pi / 180
 	lo2 = lon2 * math.Pi / 180
 
-	r = 6378100 // Earth radius in METERS
+	r = 6371 // Earth radius in KM
 
 	// calculate
 	h := hsin(la2-la1) + math.Cos(la1)*math.Cos(la2)*hsin(lo2-lo1)
 
-	return fmt.Sprint(2*r*math.Asin(math.Sqrt(h)), " Km")
+	return 2 * r * math.Asin(math.Sqrt(h))
 }
 
 // haversin(θ) function

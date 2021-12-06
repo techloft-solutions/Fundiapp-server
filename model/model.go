@@ -174,6 +174,7 @@ type Search struct {
 	Query     string
 	Latitude  string `valid:",latitude"`
 	Longitude string `valid:",longitude"`
+	Distance  string
 }
 
 type Transaction struct {

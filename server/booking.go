@@ -215,6 +215,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.Query().Get("q"),
 			Latitude:  r.URL.Query().Get("latitude"),
 			Longitude: r.URL.Query().Get("longitude"),
+			Distance:  r.URL.Query().Get("distance"),
 		}
 
 		// validate
