@@ -201,8 +201,8 @@ func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle 
 		&provider.Stats.Reviews,
 		&provider.Stats.Services,
 		&provider.Stats.Portfolios,
-		&provider.Location.ID,
-		&provider.Location.Address,
+		&provider.LocationID,
+		&provider.Address,
 	)
 	if err != nil {
 		return nil, err
@@ -384,8 +384,8 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 		&profile.LastName,
 		&profile.Email,
 		&profile.PhotoUrl,
-		&profile.Location.ID,
-		&profile.Location.Address,
+		&profile.LocationID,
+		&profile.Address,
 		&profile.Verified,
 	)
 	if err != nil {

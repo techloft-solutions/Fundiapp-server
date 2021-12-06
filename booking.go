@@ -82,11 +82,6 @@ type Location struct {
 	Default   bool    `json:"default"`
 }
 
-type LocationBrief struct {
-	ID      *string `json:"id"`
-	Address *string `json:"address"`
-}
-
 type Service struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
@@ -207,10 +202,11 @@ type Profile struct {
 	// Username  *string `json:"display_name"`
 	// Email     *string `json:"email"`
 	// Phone     *string `json:"phone"`
-	Location      LocationBrief `json:"location"`
-	PhotoUrl      *string       `json:"photo_url"`
-	EmailVerified bool          `json:"email_verified"`
-	Verified      bool          `json:"verified"`
+	LocationID    *string `json:"location_id"`
+	Address       *string `json:"location_address"`
+	PhotoUrl      *string `json:"photo_url"`
+	EmailVerified bool    `json:"email_verified"`
+	Verified      bool    `json:"verified"`
 }
 
 type Bid struct {
