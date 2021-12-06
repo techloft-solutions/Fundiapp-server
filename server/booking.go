@@ -169,21 +169,12 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 	err = s.ReqSvc.CreateRequest(r.Context(), &request)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "something went wrong", http.StatusInternalServerError)
+		if err = handleMysqlErrors(w, err); err != nil {
+			handleError(w, "something went wrong", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	/*
-		res := app.RequestDetail{
-			ID:      request.ID,
-			Title:   request.Title,
-			Status:  request.Status,
-			Created: request.CreatedAt.String(),
-			Start:   request.StartDate,
-			Note:    request.Note,
-			Photos:  request.Photos,
-		}
-	*/
 	handleSuccessMsgWithRes(w, "Request created successfully", request)
 }
 
@@ -213,6 +204,34 @@ func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccess(w, requests)
+}
+
+func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
+	results := make([]app.SearchResult, 0)
+	var err error
+
+	if r.URL.Query().Get("q") != "" {
+		search := model.Search{
+			Query:     r.URL.Query().Get("q"),
+			Latitude:  r.URL.Query().Get("latitude"),
+			Longitude: r.URL.Query().Get("longitude"),
+		}
+
+		// validate
+		err = search.Validate()
+		if err != nil {
+			handleError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		results, err = s.SrchSvc.SearchByQuery(r.Context(), search)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			handleError(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	handleSuccess(w, results)
 }
 
 func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
