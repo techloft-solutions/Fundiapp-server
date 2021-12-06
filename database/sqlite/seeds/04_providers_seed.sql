@@ -23,7 +23,7 @@ INSERT INTO `providers` (
     10,
     '150',
     '1000',
-    'Ksh',
+    'KES',
     1,
     1
 ), (
@@ -37,7 +37,7 @@ INSERT INTO `providers` (
     0,
     NULL,
     NULL,
-    'Ksh',
+    'KES',
     NULL,
     NULL
 );

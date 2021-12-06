@@ -5,15 +5,15 @@ INSERT INTO `services` (
     `currency`,
     `price_unit`
 ) VALUES (
-    'BEfKrgwHuFWH5zA9H9vDEhBPc0o2',
+    '8d39e671-62f0-4164-94aa-0c68086a6bec',
     'Haircut',
     '100',
-    'KSH',
+    'KES',
     'per job'
 ), (
-    'BEfKrgwHuFWH5zA9H9vDEhBPc0o2',
+    '8d39e671-62f0-4164-94aa-0c68086a6bec',
     'Makeup',
     '250',
-    'KSH',
+    'KES',
     'per hour'
 );

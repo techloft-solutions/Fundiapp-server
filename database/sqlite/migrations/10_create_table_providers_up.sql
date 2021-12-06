@@ -9,7 +9,7 @@ CREATE TABLE providers(
     portfolio_count INT(11) DEFAULT 0,
     rate_per_hour VARCHAR(255),
     rate_per_unit VARCHAR(255),
-    currency VARCHAR(255) DEFAULT 'KSh',
+    currency VARCHAR(255) DEFAULT 'KES',
     category_id INT(20),
     industry_id INT(20),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
