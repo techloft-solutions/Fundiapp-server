@@ -35,6 +35,18 @@ func (s *Server) handleCategoriesList(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, categories)
 }
 
+func (s *Server) handleCategoriesRoot(w http.ResponseWriter, r *http.Request) {
+	// Fetch categories from database.
+	categories, err := s.CatSvc.ListRootCategories(r.Context())
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, categories)
+}
+
 func (s *Server) handleCategoryCreate(w http.ResponseWriter, r *http.Request) {
 	var category model.Category
 

@@ -87,6 +87,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	// Categories
 	r.HandleFunc("/categories", s.handleCategoriesList).Methods("GET")
 	r.HandleFunc("/categories", s.handleCategoryCreate).Methods("POST")
+	r.HandleFunc("/categories/root", s.handleCategoriesRoot).Methods("GET")
 	// Industries
 	r.HandleFunc("/industries", s.handleIndustriesList).Methods("GET")
 	r.HandleFunc("/industries", s.handleIndustryCreate).Methods("POST")

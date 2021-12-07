@@ -16,29 +16,29 @@ func NewCategoryService(db *DB) *CategoryService {
 	return &CategoryService{db}
 }
 
-func (s *CategoryService) ListCategories(ctx context.Context) ([]*app.Category, error) {
+func (s *CategoryService) ListRootCategories(ctx context.Context) ([]*app.Category, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	locations, err := retrieveCategories(ctx, tx)
+	locations, err := retrieveRootCategories(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
 	return locations, tx.Commit()
 }
 
-func retrieveCategories(ctx context.Context, tx *Tx) ([]*app.Category, error) {
+func retrieveRootCategories(ctx context.Context, tx *Tx) ([]*app.Category, error) {
 
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 
 		    id,
 			name,
-			parent_id,
 			icon_url
 		FROM categories
+		WHERE level = 0
 		`,
 	)
 	if err != nil {
@@ -52,7 +52,6 @@ func retrieveCategories(ctx context.Context, tx *Tx) ([]*app.Category, error) {
 		if err := rows.Scan(
 			&category.ID,
 			&category.Name,
-			&category.ParentID,
 			&category.IconURL,
 		); err != nil {
 			return nil, err
@@ -64,6 +63,20 @@ func retrieveCategories(ctx context.Context, tx *Tx) ([]*app.Category, error) {
 	}
 
 	return categories, nil
+}
+
+func (s *CategoryService) ListCategories(ctx context.Context) ([]*app.Category, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	locations, err := retrieveCategoriesByCriteria(ctx, tx, "1", "1")
+	if err != nil {
+		return nil, err
+	}
+	return locations, tx.Commit()
 }
 
 func (s *CategoryService) ListCategoriesByParentID(ctx context.Context, parentID string) ([]*app.Category, error) {
@@ -104,6 +117,7 @@ func retrieveCategoriesByCriteria(ctx context.Context, tx *Tx, haystack string, 
 			icon_url
 		FROM categories
 		WHERE `+haystack+` = ?
+		AND level > 0
 		`,
 		needle,
 	)
