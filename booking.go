@@ -28,6 +28,11 @@ type Category struct {
 	IconURL  string  `json:"icon_url"`
 }
 
+type RootCategory struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 type Industry struct {
 	ID      int    `json:"id"`
 	Name    string `json:"name"`
