@@ -5,7 +5,7 @@ CREATE TABLE services(
     name VARCHAR(255) NOT NULL,
     price INTEGER,
     description TEXT,
-    currency VARCHAR(255),
+    currency CHAR(3) DEFAULT 'KES',
     price_unit VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,

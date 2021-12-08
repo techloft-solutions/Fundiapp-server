@@ -240,6 +240,8 @@ func (s *Server) handleServiceCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	service.Currency = "KES"
+
 	err = s.UsrSvc.CreateService(r.Context(), &service)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
