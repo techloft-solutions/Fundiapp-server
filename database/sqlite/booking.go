@@ -921,7 +921,7 @@ func filterRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ 
 			bookings.start_at,
 			bookings.created_at,
 			bookings.provider_id,
-			CONCAT_WS(' ', users.first_name, users.last_name) AS provider_name,
+			CONCAT(users.first_name, ' ', users.last_name) AS provider_name,
 			users.photo_url as provider_photo,
 			(SELECT COUNT(*) FROM bids WHERE bids.booking_id = bookings.booking_id) AS bids_count
 		FROM bookings
@@ -936,20 +936,30 @@ func filterRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ 
 	defer rows.Close()
 	for rows.Next() {
 		request := app.Request{}
+		provider := app.RequestProvider{}
+		//var Null sql.NullString
+
 		if err := rows.Scan(
 			&request.ID,
 			&request.Title,
 			&request.Status,
 			&request.StartAt,
 			&request.CreatedAt,
-			&request.Provider.ID,
-			&request.Provider.Name,
-			&request.Provider.Photo,
+			&provider.ID,
+			&provider.Name,
+			&provider.Photo,
 			&request.Bids,
 		); err != nil {
 			return nil, err
 		}
+		if provider == (app.RequestProvider{}) {
+			request.Provider = getNil()
+		}
 		requests = append(requests, request)
 	}
 	return requests, nil
+}
+
+func getNil() *app.RequestProvider {
+	return nil
 }

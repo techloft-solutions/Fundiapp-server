@@ -2,9 +2,12 @@ package app
 
 import (
 	"context"
+	"log"
 
+	firebase "firebase.google.com/go"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/google/uuid"
+	"google.golang.org/api/option"
 )
 
 var UserIDNil UserID
@@ -29,6 +32,7 @@ type App struct {
 	// HTTP server for handling HTTP communication.
 	// SQLite services are attached to it before running.
 	//HTTPServer *http.Server
+	Fbase *firebase.App
 }
 
 func NewApp() *App {
@@ -38,7 +42,18 @@ func NewApp() *App {
 
 		//DB:         sqlite.NewDB(""),
 		//HTTPServer: http.NewServer(),
+		Fbase: newFirebaseApp(context.Background()),
 	}
+}
+
+func newFirebaseApp(ctx context.Context) *firebase.App {
+	opt := option.WithCredentialsFile("keys/hudumaapp-firebase-adminsdk-jtet8-7370576c3f.json")
+	app, err := firebase.NewApp(ctx, nil, opt)
+	if err != nil {
+		log.Printf("error creating firebase app: %s\n", err)
+		return nil
+	}
+	return app
 }
 
 /*

@@ -103,20 +103,20 @@ type Review struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type provider struct {
-	ID    uuid.UUID `json:"id"`
-	Name  string    `json:"name"`
-	Photo *string   `json:"photo_url"`
+type RequestProvider struct {
+	ID    *uuid.UUID `json:"id"`
+	Name  *string    `json:"name"`
+	Photo *string    `json:"photo_url"`
 }
 
 type Request struct {
-	ID        uuid.UUID `json:"request_id"`
-	Title     string    `json:"title"`
-	Status    string    `json:"status"`
-	CreatedAt string    `json:"created"`
-	StartAt   string    `json:"start"`
-	Bids      int       `json:"bids"`
-	Provider  provider  `json:"provider"`
+	ID        uuid.UUID        `json:"request_id"`
+	Title     string           `json:"title"`
+	Status    string           `json:"status"`
+	CreatedAt string           `json:"created"`
+	StartAt   string           `json:"start"`
+	Bids      int              `json:"bids"`
+	Provider  *RequestProvider `json:"provider"`
 }
 
 type location struct {

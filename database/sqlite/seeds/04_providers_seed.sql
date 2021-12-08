@@ -40,6 +40,20 @@ INSERT INTO `providers` (
     'KES',
     NULL,
     NULL
+), (
+    '2e856ad3-7934-4996-ad9a-a90624624d90',
+    'P74RAdTTYPdA2Tcm75NjO9UuYcO2',
+    '',
+    0,
+    0,
+    0,
+    0,
+    0,
+    NULL,
+    NULL,
+    'KES',
+    NULL,
+    NULL
 );
 
     

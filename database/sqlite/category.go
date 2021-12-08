@@ -411,9 +411,8 @@ func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 		provider_id,
 		name,
 		price,
-		currency,
 		price_unit
-	) VALUES (?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?)
 	`
 
 	// Insert row into database.
@@ -421,7 +420,6 @@ func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 		service.ProviderID,
 		service.Name,
 		service.Rate.Amount,
-		service.Currency,
 		service.Rate.Unit,
 	)
 	if err != nil {
