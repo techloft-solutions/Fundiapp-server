@@ -51,6 +51,7 @@ type Service struct {
 	ProviderID uuid.UUID
 	Name       string `valid:"required" json:"name"`
 	Rate
+	CategoryID *string `json:"category_id"`
 }
 
 type Rate struct {

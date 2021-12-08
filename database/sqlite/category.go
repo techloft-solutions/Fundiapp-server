@@ -411,8 +411,9 @@ func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 		provider_id,
 		name,
 		price,
-		price_unit
-	) VALUES (?, ?, ?, ?)
+		price_unit,
+		category_id
+	) VALUES (?, ?, ?, ?, ?)
 	`
 
 	// Insert row into database.
@@ -421,6 +422,7 @@ func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 		service.Name,
 		service.Rate.Amount,
 		service.Rate.Unit,
+		service.CategoryID,
 	)
 	if err != nil {
 		return err
@@ -460,12 +462,14 @@ func (s *UserService) ListServicesByProviderID(ctx context.Context, providerId s
 func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]*app.Service, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
-			id,
-			name,
-			price,
-			currency,
-			price_unit
+			services.id,
+			services.name,
+			services.price,
+			services.currency,
+			services.price_unit,
+			categories.name
 		FROM services
+		LEFT JOIN categories ON services.category_id = categories.id
 		WHERE provider_id = ?
 	`, providerId)
 	if err != nil {
@@ -480,6 +484,7 @@ func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]
 			&service.Rate.Price,
 			&service.Rate.Currency,
 			&service.Rate.Unit,
+			&service.Category,
 		); err != nil {
 			log.Println("rows scan error:", err)
 			return nil, err
@@ -495,12 +500,14 @@ func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]
 func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Service, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
-			id,
-			name,
-			price,
-			currency,
-			price_unit
+			services.id,
+			services.name,
+			services.price,
+			services.currency,
+			services.price_unit,
+			categories.name
 		FROM services
+		LEFT JOIN categories ON services.category_id = categories.id
 		WHERE provider_id IN (
 			SELECT provider_id FROM users WHERE user_id = ?
 		)
@@ -518,6 +525,7 @@ func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Ser
 			&service.Rate.Price,
 			&service.Rate.Currency,
 			&service.Rate.Unit,
+			&service.Category,
 		); err != nil {
 			log.Println("rows scan error:", err)
 			return nil, err

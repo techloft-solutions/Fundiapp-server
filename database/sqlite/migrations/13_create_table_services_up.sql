@@ -7,8 +7,10 @@ CREATE TABLE services(
     description TEXT,
     currency CHAR(3) DEFAULT 'KES',
     price_unit VARCHAR(255),
+    category_id INT(20),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     deleted_at DATETIME DEFAULT NULL,
-    FOREIGN KEY (provider_id) REFERENCES providers(provider_id)
+    FOREIGN KEY (provider_id) REFERENCES providers(provider_id),
+    FOREIGN KEY (category_id) REFERENCES categories(id)
 );

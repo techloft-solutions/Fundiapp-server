@@ -88,9 +88,10 @@ type Location struct {
 }
 
 type Service struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	Rate `json:"rate"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Rate     `json:"rate"`
+	Category *string `json:"category"`
 }
 
 type Review struct {
