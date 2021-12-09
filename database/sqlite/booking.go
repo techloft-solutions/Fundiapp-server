@@ -882,6 +882,20 @@ func acceptBid(ctx context.Context, tx *Tx, bidID int) error {
 		return sql.ErrNoRows
 	}
 
+	// update booking status
+	if _, err := tx.ExecContext(ctx, `
+	UPDATE bookings
+	SET
+		provider_id = (SELECT provider_id FROM bids WHERE id = ?),
+		status = 'pending'
+	WHERE booking_id = (SELECT booking_id FROM bids WHERE id = ?)
+`,
+		bidID,
+		bidID,
+	); err != nil {
+		return err
+	}
+
 	return nil
 }
 

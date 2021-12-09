@@ -200,6 +200,11 @@ type User struct {
 	IsProvider bool    `json:"-"`
 }
 
+type ProfileLocation struct {
+	ID      *string `json:"location_id"`
+	Address *string `json:"location_address"`
+}
+
 type Profile struct {
 	User
 	// UserID    string  `json:"user_id"`
@@ -208,11 +213,10 @@ type Profile struct {
 	// Username  *string `json:"display_name"`
 	// Email     *string `json:"email"`
 	// Phone     *string `json:"phone"`
-	LocationID    *string `json:"location_id"`
-	Address       *string `json:"location_address"`
-	PhotoUrl      *string `json:"photo_url"`
-	EmailVerified bool    `json:"email_verified"`
-	Verified      bool    `json:"verified"`
+	Location      *ProfileLocation `json:"location"`
+	PhotoUrl      *string          `json:"photo_url"`
+	EmailVerified bool             `json:"email_verified"`
+	Verified      bool             `json:"verified"`
 }
 
 type Bid struct {

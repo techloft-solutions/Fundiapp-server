@@ -163,6 +163,7 @@ func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (
 
 func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle string) (*app.Provider, error) {
 	provider := &app.Provider{}
+	location := app.ProfileLocation{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
 			providers.provider_id,
@@ -201,11 +202,15 @@ func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle 
 		&provider.Stats.Reviews,
 		&provider.Stats.Services,
 		&provider.Stats.Portfolios,
-		&provider.LocationID,
-		&provider.Address,
+		&location.ID,
+		&location.Address,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if location != (app.ProfileLocation{}) {
+		provider.Location = &location
 	}
 	return provider, nil
 }
@@ -365,6 +370,7 @@ func (s *UserService) FindProfileByUserID(ctx context.Context, userId string) (*
 func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profile, error) {
 	profile := &app.Profile{}
 	profile.UserID = userId
+	location := app.ProfileLocation{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
 			p.username,
@@ -384,12 +390,15 @@ func getProfileByUserID(ctx context.Context, tx *Tx, userId string) (*app.Profil
 		&profile.LastName,
 		&profile.Email,
 		&profile.PhotoUrl,
-		&profile.LocationID,
-		&profile.Address,
+		&location.ID,
+		&location.Address,
 		&profile.Verified,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if location != (app.ProfileLocation{}) {
+		profile.Location = &location
 	}
 	return profile, nil
 }

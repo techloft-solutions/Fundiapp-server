@@ -17,7 +17,7 @@ INSERT INTO `bookings` (
     'I have a brass tap with a huge problem, and there is a terrible slope of water. I hope i will get right guy to fix this issue. I am located in Kawangware near A.I.C  church',
     '2021-12-13 15:05:21',
     '0caea1b4-3bd6-49e4-a3e7-204dc20e19c0',
-    'pending',
+    'biddin',
     0,
     1
 ), (
@@ -28,7 +28,7 @@ INSERT INTO `bookings` (
     'I just bought some new faucets and need to have them installed.',
     '2021-12-21 10:12:44',
     '0caea1b4-3bd6-49e4-a3e7-204dc20e19c0',
-    'pending',
+    'bidding',
     0,
     1
 );
