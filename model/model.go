@@ -88,7 +88,7 @@ type Booking struct {
 	Status     string
 	ProviderID string `valid:"required" json:"provider_id"`
 	ClientID   string `valid:"required" json:"client_id"`
-	ServiceID  string `valid:"required,uuid" json:"service_id"`
+	ServiceID  string `valid:"required" json:"service_id"`
 }
 
 type Request struct {
