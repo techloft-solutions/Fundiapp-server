@@ -9,7 +9,11 @@ require (
 	gorm.io/gorm v1.21.16
 )
 
-require github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
+require (
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
+	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
+	github.com/relvacode/iso8601 v1.1.0 // indirect
+)
 
 require (
 	cloud.google.com/go v0.75.0 // indirect

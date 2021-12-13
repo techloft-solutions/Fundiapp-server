@@ -111,13 +111,12 @@ type RequestProvider struct {
 }
 
 type Request struct {
-	ID        uuid.UUID        `json:"request_id"`
-	Title     string           `json:"title"`
-	Status    string           `json:"status"`
-	CreatedAt string           `json:"created"`
-	StartAt   string           `json:"start"`
-	Bids      int              `json:"bids"`
-	Provider  *RequestProvider `json:"provider"`
+	ID        uuid.UUID `json:"request_id"`
+	Title     string    `json:"title"`
+	Status    string    `json:"status"`
+	CreatedAt string    `json:"created"`
+	StartAt   string    `json:"start"`
+	Bids      int       `json:"bids"`
 }
 
 type location struct {
@@ -130,11 +129,11 @@ type location struct {
 type RequestDetail struct {
 	ID       uuid.UUID `json:"request_id"`
 	Title    string    `json:"title"`
-	Category string    `json:"category"`
+	Category *string   `json:"category"`
 	Note     string    `json:"note"`
 	Status   string    `json:"status"`
-	Created  string    `json:"created"`
-	Start    string    `json:"start"`
+	Created  string    `json:"posted"`
+	Start    string    `json:"start_at"`
 	Bids     int       `json:"bids"`
 	Photos   []string  `json:"photos"`
 	Location location  `json:"location"`

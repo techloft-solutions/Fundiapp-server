@@ -123,9 +123,6 @@ func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]app
 			&request.Status,
 			&request.StartAt,
 			&request.CreatedAt,
-			&request.Provider.ID,
-			&request.Provider.Name,
-			&request.Provider.Photo,
 		); err != nil {
 			return nil, err
 		}
@@ -160,6 +157,7 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 			bookings.start_at,
 			bookings.created_at,
 			categories.name,
+			locations.location_id,
 			locations.address,
 			locations.latitude, 
 			locations.longitude
@@ -176,6 +174,7 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 		&request.Start,
 		&request.Created,
 		&request.Category,
+		&request.Location.ID,
 		&request.Location.Address,
 		&request.Location.Latitude,
 		&request.Location.Longitude,
@@ -966,14 +965,40 @@ func filterRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ 
 		); err != nil {
 			return nil, err
 		}
-		if provider == (app.RequestProvider{}) {
-			request.Provider = getNil()
-		}
 		requests = append(requests, request)
 	}
 	return requests, nil
 }
 
-func getNil() *app.RequestProvider {
+func (s *BookingService) InsertDate(ctx context.Context, date string) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = insertDate(ctx, tx, date)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func insertDate(ctx context.Context, tx *Tx, date string) error {
+	result, err := tx.ExecContext(ctx, `
+		INSERT INTO dates (date_id,start_at)
+		VALUES (?,?)
+		`,
+		uuid.New(),
+		date,
+	)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
 	return nil
 }

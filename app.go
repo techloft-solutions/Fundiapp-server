@@ -86,6 +86,7 @@ type BookingService interface {
 	FindBookingByID(context.Context, uuid.UUID) (*Booking, error)
 	CreateBooking(context.Context, *model.Booking) error
 	FindBookings(context.Context) ([]*BookingBrief, error)
+	InsertDate(context.Context, string) error
 }
 
 type CategoryService interface {

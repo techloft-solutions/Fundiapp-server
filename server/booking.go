@@ -11,6 +11,7 @@ import (
 	app "github.com/andrwkng/hudumaapp"
 	"github.com/andrwkng/hudumaapp/model"
 	"github.com/andrwkng/hudumaapp/server/middlewares"
+	"github.com/araddon/dateparse"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -157,11 +158,20 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 			request.Urgent = true
 			request.StartDate = time.Now().Add(time.Hour * 24).Format("2006-01-02T15:04:05")
 		}
+	} else {
+		// validate start date
+		time, err := dateparse.ParseStrict(request.StartDate)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			handleError(w, "start_date: invalid date format", http.StatusBadRequest)
+			return
+		}
+
+		request.StartDate = time.String()
 	}
 
 	err = request.Validate()
 	if err != nil {
-		//handleError(w, err, http.StatusBadRequest)
 		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -352,5 +362,20 @@ func (s *Server) handleAcceptBid(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
-	handleSuccess(w, "test")
+	startTime := r.PostFormValue("start_time")
+	time, err := dateparse.ParseStrict(startTime)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "start_date: invalid date format", http.StatusBadRequest)
+		return
+	}
+	startTime = time.String()
+	err = s.BkSvc.InsertDate(r.Context(), startTime)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, time.Format("2021-12-11 14:12:03"))
 }

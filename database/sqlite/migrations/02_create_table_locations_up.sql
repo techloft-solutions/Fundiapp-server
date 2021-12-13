@@ -1,4 +1,4 @@
-CREATE TABLE locations(
+CREATE TABLE IF NOT EXISTS locations(
     location_id VARCHAR(255) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL,
     address VARCHAR(255),

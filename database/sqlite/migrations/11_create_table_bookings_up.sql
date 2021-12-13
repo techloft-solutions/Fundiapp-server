@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS bookings (
+CREATE TABLE bookings (
     booking_id VARCHAR(255) PRIMARY KEY,
     title VARCHAR(255),
     description TEXT(255),
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     is_request BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME DEFAULT NULL,
+    deleted_at DATETIME DEFAULT NULL,   
     FOREIGN KEY (provider_id) REFERENCES providers(provider_id),
     FOREIGN KEY (location_id) REFERENCES locations(location_id),
     FOREIGN KEY (client_id) REFERENCES users(user_id),

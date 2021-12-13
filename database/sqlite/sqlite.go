@@ -133,8 +133,8 @@ func (db *DB) drop() error {
 	sort.Strings(names)
 
 	// disable foreign key checks
-	if _, err := db.db.Exec(`SET foreign_key_checks = 0;`); err != nil {
-		log.Println("disable foreign key checks:", err)
+	if _, err := db.db.Exec(`SET foreign_key_checks = 0;`); err == nil {
+		log.Println("disable foreign key checks:")
 	}
 
 	// Loop over all migration files and execute them in order.
@@ -145,8 +145,8 @@ func (db *DB) drop() error {
 	}
 
 	// enable foreign key checks
-	if _, err := db.db.Exec(`SET foreign_key_checks = 1;`); err != nil {
-		log.Println("enable foreign key checks:", err)
+	if _, err := db.db.Exec(`SET foreign_key_checks = 1;`); err == nil {
+		log.Println("enable foreign key checks:")
 	}
 	log.Println("tables dropped!")
 
@@ -169,6 +169,27 @@ func (db *DB) dropFile(name string) error {
 	return tx.Commit()
 }
 
+func (db *DB) dropQuery() error {
+	query := `
+	SELECT CONCAT('DROP TABLE IF EXISTS ', table_name, ';')
+	FROM information_schema.tables
+	WHERE table_schema = 'hudumaapp'
+	ORDER BY table_name;
+	`
+
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Read and execute drop file.
+	if _, err := tx.Exec(query); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 // migrate sets up migration tracking and executes pending migration files.
 //
 // Migration files are embedded in the sqlite/migration folder and are executed
@@ -185,6 +206,8 @@ func (db *DB) migrate() error {
 			log.Println(err)
 		}
 	}
+
+	time.Sleep(15 * time.Second)
 
 	// Ensure the 'migrations' table exists so we don't duplicate migrations.
 	if _, err := db.db.Exec(`CREATE TABLE IF NOT EXISTS migrations (name varchar(255) PRIMARY KEY);`); err != nil {

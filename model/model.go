@@ -94,7 +94,7 @@ type Booking struct {
 type Request struct {
 	ID         uuid.UUID `json:"request_id"`
 	Title      string    `valid:"required" json:"title"`
-	StartDate  string    `valid:"required, rfc3339WithoutZone" json:"start_date"`
+	StartDate  string    `valid:"required" json:"start_date"`
 	Note       string    `valid:"required" json:"note"`
 	LocationID string    `valid:"required,uuid" json:"location_id"`
 	ClientID   string    `valid:"required" json:"client_id"`
