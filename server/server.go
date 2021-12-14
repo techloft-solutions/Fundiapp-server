@@ -103,6 +103,13 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/requests/{id}", s.handleRequest).Methods("GET")
 	//r.HandleFunc("/requests/{id}/cancel", s.handleRequestCancel).Methods("PUT")
 	r.HandleFunc("/requests/{id}/bids", s.handleRequestBids).Methods("GET")
+	// All requests
+	r.HandleFunc("/all-requests", s.handleAllRequests).Methods("GET")
+	r.HandleFunc("/all-requests/recommended", s.handleRecommendedRequests).Methods("GET")
+	r.HandleFunc("/all-requests/categories", s.handleRequestCategories).Methods("GET")
+	r.HandleFunc("/all-requests/instant-search", s.handleRequestInstantSearch).Methods("GET")
+	r.HandleFunc("/all-requests/search", s.handleRequestSearch).Methods("GET")
+	//r.HandleFunc("/all-requests/search", s.handleRequestSearch).Methods("GET")
 	// Bookings
 	r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")

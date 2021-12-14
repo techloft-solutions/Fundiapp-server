@@ -152,6 +152,8 @@ type RequestService interface {
 	FindRequestByID(context.Context, uuid.UUID) (*RequestDetail, error)
 	CreateRequest(context.Context, *model.Request) error
 	FilterRequests(context.Context, model.RequestFilter) ([]Request, error)
+	AllRequests(context.Context, model.RequestFilter) ([]AllRequest, error)
+	ListRequestsCategories(context.Context) ([]Category, error)
 }
 
 type BidService interface {
@@ -171,4 +173,5 @@ type LocationService interface {
 
 type SearchService interface {
 	SearchByQuery(context.Context, model.Search) ([]SearchResult, error)
+	InstantSearchRequests(context.Context, model.Search) ([]RequestSearchResult, error)
 }

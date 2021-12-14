@@ -93,8 +93,102 @@ func searchByQuery(ctx context.Context, tx *Tx, search model.Search) ([]app.Sear
 			}
 			if latitude != nil && longitude != nil {
 				distance = calculateDistance(searchLat, searchLong, *latitude, *longitude)
-				distanceStr := fmt.Sprintf("%.1f %s", distance, "Km")
+				distanceStr := fmt.Sprintf("%.1f", distance)
 				result.Distance = &distanceStr
+			}
+		}
+
+		searchDistance, _ := strconv.ParseFloat(search.Distance, 64)
+		// if search distance is less than result distance dont include result in results
+		if searchDistance != 0 {
+			if distance > searchDistance {
+				continue
+			}
+		}
+
+		results = append(results, result)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func (s *SearchService) InstantSearchRequests(ctx context.Context, search model.Search) ([]app.RequestSearchResult, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	results, err := instantSearchRequests(ctx, tx, search)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func instantSearchRequests(ctx context.Context, tx *Tx, search model.Search) ([]app.RequestSearchResult, error) {
+	query := "%" + search.Query + "%"
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			categories.id,
+			categories.name,
+			COUNT(*) AS COUNT,
+			locations.latitude,
+			locations.longitude
+		FROM
+			categories
+		INNER JOIN bookings ON bookings.category_id = categories.id
+		LEFT JOIN locations ON locations.location_id = bookings.location_id
+		WHERE
+			CONCAT_WS(
+				'',
+				bookings.title,
+				categories.name
+			) LIKE(?) AND bookings.is_request = 1
+		GROUP BY
+			categories.name
+		AND bookings.is_request = 1
+		`,
+		query,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var latitude *float64
+	var longitude *float64
+
+	defer rows.Close()
+
+	results := make([]app.RequestSearchResult, 0)
+	for rows.Next() {
+		var result app.RequestSearchResult
+		if err := rows.Scan(
+			&result.CategoryID,
+			&result.CategoryName,
+			&result.Count,
+			&latitude,
+			&longitude,
+		); err != nil {
+			return nil, err
+		}
+		// get distance info
+		var distance float64
+		if search.Latitude != "" && search.Longitude != "" {
+			searchLat, err := strconv.ParseFloat(search.Latitude, 64)
+			if err != nil {
+				return nil, err
+			}
+			searchLong, err := strconv.ParseFloat(search.Longitude, 64)
+			if err != nil {
+				return nil, err
+			}
+			if latitude != nil && longitude != nil {
+				distance = calculateDistance(searchLat, searchLong, *latitude, *longitude)
 			}
 		}
 

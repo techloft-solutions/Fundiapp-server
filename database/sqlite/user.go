@@ -164,6 +164,7 @@ func (s *UserService) FindProviderByUserID(ctx context.Context, userId string) (
 func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle string) (*app.Provider, error) {
 	provider := &app.Provider{}
 	location := app.ProfileLocation{}
+	price := app.Price{}
 	err := tx.QueryRowContext(ctx, `
 		SELECT
 			providers.provider_id,
@@ -180,6 +181,8 @@ func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle 
 			providers.reviews_count,
 			providers.services_count,
 			providers.portfolio_count,
+			providers.price,
+			providers.currency,
 			locations.location_id,
 			locations.name
 		FROM providers
@@ -202,6 +205,8 @@ func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle 
 		&provider.Stats.Reviews,
 		&provider.Stats.Services,
 		&provider.Stats.Portfolios,
+		&price.Amount,
+		&price.Currency,
 		&location.ID,
 		&location.Address,
 	)
@@ -212,6 +217,11 @@ func getProviderByCriteria(ctx context.Context, tx *Tx, haystack string, needle 
 	if location != (app.ProfileLocation{}) {
 		provider.Location = &location
 	}
+
+	if price.Amount != nil {
+		provider.Price = &price
+	}
+
 	return provider, nil
 }
 
@@ -314,7 +324,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 			providers.ratings_average,
 			providers.reviews_count,
 			providers.jobs_count,
-			providers.rate_per_hour,
+			providers.price,
 			providers.currency,
 			users.photo_url
 		FROM providers
@@ -330,6 +340,7 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 	providers := make([]*app.ProviderBrief, 0)
 	for rows.Next() {
 		var provider app.ProviderBrief
+		price := app.Price{}
 		if err := rows.Scan(
 			&provider.ID,
 			&provider.Name,
@@ -337,11 +348,14 @@ func findProviders(ctx context.Context, tx *Tx) ([]*app.ProviderBrief, error) {
 			&provider.Rating,
 			&provider.Reviews,
 			&provider.Jobs,
-			&provider.Rate.Price,
-			&provider.Currency,
+			&price.Amount,
+			&price.Currency,
 			&provider.Photo,
 		); err != nil {
 			return nil, err
+		}
+		if price != (app.Price{}) {
+			provider.Price = &price
 		}
 		providers = append(providers, &provider)
 	}
@@ -675,7 +689,7 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 			providers.ratings_average,
 			providers.reviews_count,
 			providers.jobs_count,
-			providers.rate_per_hour,
+			providers.price,
 			providers.currency,
 			users.photo_url
 		FROM providers
@@ -695,6 +709,7 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 	providers := make([]*app.ProviderBrief, 0)
 	for rows.Next() {
 		var provider app.ProviderBrief
+		//var price app.Price
 		if err := rows.Scan(
 			&provider.ID,
 			&provider.Name,
@@ -702,8 +717,8 @@ func filterProviders(ctx context.Context, tx *Tx, filter model.ProviderFilter) (
 			&provider.Rating,
 			&provider.Reviews,
 			&provider.Jobs,
-			&provider.Rate.Price,
-			&provider.Currency,
+			&provider.Price.Amount,
+			&provider.Price.Currency,
 			&provider.Photo,
 		); err != nil {
 			return nil, err

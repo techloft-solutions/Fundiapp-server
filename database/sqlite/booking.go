@@ -3,7 +3,9 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	app "github.com/andrwkng/hudumaapp"
@@ -110,6 +112,7 @@ func listRequestsByUserId(ctx context.Context, tx *Tx, userId app.UserID) ([]app
 			created_at
 		FROM bookings
 		WHERE client_id = ?
+		AND is_request = 1
 	`, userId)
 	if err != nil {
 		return nil, err
@@ -165,6 +168,7 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 		LEFT JOIN categories ON bookings.category_id = categories.id
 		LEFT JOIN locations ON bookings.location_id = locations.location_id
 		WHERE booking_id = ?
+		AND bookings.is_request = 1
 	`, id).Scan(
 		&request.ID,
 		&request.Title,
@@ -174,7 +178,6 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 		&request.Start,
 		&request.Created,
 		&request.Category,
-		&request.Location.ID,
 		&request.Location.Address,
 		&request.Location.Latitude,
 		&request.Location.Longitude,
@@ -556,22 +559,18 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 			bookings.status,
 			bookings.created_at,
 			bookings.start_at,
-			users.first_name,
-			users.last_name,
-			locations.name
+			services.name,
+			categories.name
 		FROM bookings
-		LEFT JOIN providers ON bookings.provider_id = providers.provider_id
-		LEFT JOIN users ON providers.user_id = users.user_id
-		LEFT JOIN locations ON bookings.location_id = locations.location_id
+		LEFT JOIN services ON bookings.service_id = services.id
+		LEFT JOIN categories ON services.category_id = categories.id
+		WHERE is_request = 0
 		`,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	var firstname sql.NullString
-	var lastname sql.NullString
 
 	bookings := make([]*app.BookingBrief, 0)
 	for rows.Next() {
@@ -581,13 +580,10 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 			&booking.Status,
 			&booking.BookedAt,
 			&booking.StartAt,
-			&firstname,
-			&lastname,
-			&booking.Location,
+			&booking.Title,
 		); err != nil {
 			return nil, err
 		}
-		booking.Provider = strings.TrimSpace(firstname.String + " " + lastname.String)
 		bookings = append(bookings, &booking)
 	}
 	if err := rows.Err(); err != nil {
@@ -942,6 +938,7 @@ func filterRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ 
 		LEFT JOIN users ON users.user_id = providers.user_id
 		LEFT JOIN bids ON bids.booking_id = bookings.booking_id
 		WHERE `+strings.Join(where, " AND ")+`
+		AND bookings.is_request = 1
 	`, args...)
 	if err != nil {
 		return nil, err
@@ -968,6 +965,147 @@ func filterRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ 
 		requests = append(requests, request)
 	}
 	return requests, nil
+}
+
+func (s *RequestService) AllRequests(ctx context.Context, filter model.RequestFilter) ([]app.AllRequest, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	requests, err := allRequests(ctx, tx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
+func allRequests(ctx context.Context, tx *Tx, filter model.RequestFilter) (_ []app.AllRequest, err error) {
+	var userLatitude *float64
+	var userLongitude *float64
+	err = tx.QueryRowContext(ctx, `
+		SELECT
+			locations.latitude,
+			locations.longitude		
+		FROM users
+		LEFT JOIN locations ON locations.location_id = users.location_id
+		WHERE users.user_id = ?
+	`, filter.UserID).Scan(
+		&userLatitude,
+		&userLongitude,
+	)
+	if err != nil {
+		return nil, err
+	}
+	// Build WHERE clause. Each part of the WHERE clause is AND-ed together.
+	// Values are appended to an arg list to avoid SQL injection.
+	where, args := []string{"1 = 1"}, []interface{}{}
+	if v := filter.Category; v != "" {
+		where, args = append(where, "bookings.category_id = ?"), append(args, v)
+	}
+
+	var latitude *float64
+	var longitude *float64
+	requests := []app.AllRequest{}
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			bookings.booking_id,
+			bookings.title,
+			categories.name AS category,
+			bookings.is_urgent,
+			bookings.start_at,
+			bookings.created_at,
+			locations.latitude,
+			locations.longitude,
+			locations.address
+		FROM bookings
+		LEFT JOIN categories ON categories.id = bookings.category_id
+		LEFT JOIN locations ON locations.location_id = bookings.location_id
+		WHERE `+strings.Join(where, " AND ")+`
+		AND bookings.is_request = 1
+	`, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		request := app.AllRequest{}
+
+		if err := rows.Scan(
+			&request.ID,
+			&request.Title,
+			&request.Category,
+			&request.Urgent,
+			&request.StartAt,
+			&request.CreatedAt,
+			&latitude,
+			&longitude,
+			&request.Address,
+		); err != nil {
+			return nil, err
+		}
+		var distance float64
+		if userLatitude != nil && latitude != nil {
+			distance = calculateDistance(*userLatitude, *userLongitude, *latitude, *longitude)
+			request.Distance = fmt.Sprintf("%.1f", distance)
+		}
+
+		searchDistance, _ := strconv.ParseFloat(filter.Distance, 64)
+		// if search distance is less than result distance dont include result in results
+		if searchDistance != 0 {
+			if distance > searchDistance {
+				continue
+			}
+		}
+
+		requests = append(requests, request)
+	}
+	return requests, nil
+}
+
+func (s *RequestService) ListRequestsCategories(ctx context.Context) ([]app.Category, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	categories, err := getRequestsCategories(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
+func getRequestsCategories(ctx context.Context, tx *Tx) (_ []app.Category, err error) {
+	categories := []app.Category{}
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			categories.id AS category_id,
+			categories.name AS category_name
+		FROM bookings
+		INNER JOIN categories ON categories.id = bookings.category_id
+		WHERE bookings.is_request = 1
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		category := app.Category{}
+		if err := rows.Scan(
+			&category.ID,
+			&category.Name,
+		); err != nil {
+			return nil, err
+		}
+		categories = append(categories, category)
+	}
+	return categories, nil
 }
 
 func (s *BookingService) InsertDate(ctx context.Context, date string) error {

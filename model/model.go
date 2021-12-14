@@ -56,7 +56,6 @@ type Service struct {
 
 type Rate struct {
 	Amount   string `json:"rate_amount"`
-	Unit     string `json:"rate_unit"`
 	Currency string `json:"rate_currency"`
 }
 
@@ -85,10 +84,10 @@ type Booking struct {
 	ID         uuid.UUID `json:"booking_id"`
 	StartDate  string    `valid:"required,rfc3339" json:"start_date"`
 	LocationID string    `valid:"required,uuid" json:"location_id"`
-	Status     string
-	ProviderID string `valid:"required" json:"provider_id"`
-	ClientID   string `valid:"required" json:"client_id"`
-	ServiceID  string `valid:"required" json:"service_id"`
+	Status     string    `json:"status"`
+	ProviderID string    `valid:"required" json:"provider_id"`
+	ClientID   string    `valid:"required" json:"client_id"`
+	ServiceID  string    `valid:"required" json:"service_id"`
 }
 
 type Request struct {
@@ -218,4 +217,7 @@ type ProviderFilter struct {
 type RequestFilter struct {
 	Status   string
 	ClientID string
+	Category string
+	UserID   string
+	Distance string
 }

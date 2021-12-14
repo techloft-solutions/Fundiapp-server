@@ -202,9 +202,7 @@ func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
 		ClientID: userId.String(),
 	}
 
-	if r.URL.Query().Get("filter") == "true" {
-		filter.Status = r.URL.Query().Get("status")
-	}
+	filter.Status = r.URL.Query().Get("status")
 
 	requests, err = s.ReqSvc.FilterRequests(r.Context(), filter)
 	if err != nil {
@@ -214,6 +212,117 @@ func (s *Server) handleRequestList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccess(w, requests)
+}
+
+func (s *Server) handleAllRequests(w http.ResponseWriter, r *http.Request) {
+
+	filter := model.RequestFilter{
+		Category: r.URL.Query().Get("category"),
+		Distance: r.URL.Query().Get("distance"),
+	}
+
+	userId, err := middlewares.UserIDFromContext(r.Context())
+	if err == nil {
+		filter.UserID = userId.String()
+	}
+
+	requests, err := s.ReqSvc.AllRequests(r.Context(), filter)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, requests)
+}
+
+func (s *Server) handleRecommendedRequests(w http.ResponseWriter, r *http.Request) {
+
+	filter := model.RequestFilter{}
+
+	userId, err := middlewares.UserIDFromContext(r.Context())
+	if err == nil {
+		filter.UserID = userId.String()
+	}
+
+	requests, err := s.ReqSvc.AllRequests(r.Context(), filter)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, requests)
+}
+
+func (s *Server) handleRequestCategories(w http.ResponseWriter, r *http.Request) {
+
+	requests, err := s.ReqSvc.ListRequestsCategories(r.Context())
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, requests)
+}
+
+func (s *Server) handleRequestInstantSearch(w http.ResponseWriter, r *http.Request) {
+	results := make([]app.RequestSearchResult, 0)
+	var err error
+
+	if r.URL.Query().Get("q") != "" {
+		search := model.Search{
+			Query:     r.URL.Query().Get("q"),
+			Latitude:  r.URL.Query().Get("latitude"),
+			Longitude: r.URL.Query().Get("longitude"),
+			Distance:  r.URL.Query().Get("distance"),
+		}
+
+		// validate
+		err = search.Validate()
+		if err != nil {
+			handleError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		results, err = s.SrchSvc.InstantSearchRequests(r.Context(), search)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			handleError(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	handleSuccess(w, results)
+}
+
+func (s *Server) handleRequestSearch(w http.ResponseWriter, r *http.Request) {
+	results := make([]app.RequestSearchResult, 0)
+	var err error
+
+	if r.URL.Query().Get("q") != "" {
+		search := model.Search{
+			Query:     r.URL.Query().Get("q"),
+			Latitude:  r.URL.Query().Get("latitude"),
+			Longitude: r.URL.Query().Get("longitude"),
+			Distance:  r.URL.Query().Get("distance"),
+		}
+
+		// validate
+		err = search.Validate()
+		if err != nil {
+			handleError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		results, err = s.SrchSvc.InstantSearchRequests(r.Context(), search)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			handleError(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	handleSuccess(w, results)
 }
 
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
