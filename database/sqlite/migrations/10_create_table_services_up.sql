@@ -6,7 +6,6 @@ CREATE TABLE services(
     price INTEGER,
     description TEXT,
     currency CHAR(3) DEFAULT 'KES',
-    price_unit VARCHAR(255),
     category_id INT(20),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,

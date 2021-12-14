@@ -7,9 +7,7 @@ INSERT INTO `providers` (
     `services_count`,
     `jobs_count`,
     `portfolio_count`,
-    `rate_per_hour`,
-    `rate_per_unit`,
-    `currency`,
+    `price`,
     `category_id`,
     `industry_id`
 ) VALUES (
@@ -21,9 +19,7 @@ INSERT INTO `providers` (
     3,
     1,
     10,
-    '150',
     '1000',
-    'KES',
     1,
     1
 ), (
@@ -37,8 +33,6 @@ INSERT INTO `providers` (
     0,
     NULL,
     NULL,
-    'KES',
-    NULL,
     NULL
 ), (
     '2e856ad3-7934-4996-ad9a-a90624624d90',
@@ -50,8 +44,6 @@ INSERT INTO `providers` (
     0,
     0,
     NULL,
-    NULL,
-    'KES',
     NULL,
     NULL
 );

@@ -6,19 +6,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type Appointment struct {
-	StartTime time.Time `json:"start_time"`
-}
-
-type price struct {
-	Amount   int
-	Currency string
-}
-
-type Rate struct {
-	Price    *string `json:"price"`
+type Price struct {
+	Amount   *int    `json:"amount"`
 	Currency *string `json:"currency"`
-	Unit     *string `json:"unit"`
 }
 
 type Category struct {
@@ -45,9 +35,9 @@ type Provider struct {
 	Bio        *string `json:"bio"`
 	Profession *string `json:"profession"`
 	//Professions []string `json:"professons"`
-	AvgRating float32 `json:"rating"`
-	Stats     Stats   `json:"stats"`
-	Rate      `json:"rate"`
+	AvgRating float32    `json:"rating"`
+	Stats     Stats      `json:"stats"`
+	Price     *Price     `json:"price"`
 	Services  []*Service `json:"services"`
 }
 
@@ -55,11 +45,11 @@ type ProviderBrief struct {
 	ID         uuid.UUID `json:"provder_id"`
 	Name       string    `json:"name"`
 	Profession *string   `json:"profession"`
-	Rate       `json:"rate"`
-	Jobs       int     `json:"num_jobs"`
-	Rating     float32 `json:"avg_rating"`
-	Reviews    int     `json:"num_reviews"`
-	Photo      *string `json:"photo_url"`
+	Price      *Price    `json:"price"`
+	Jobs       int       `json:"num_jobs"`
+	Rating     float32   `json:"avg_rating"`
+	Reviews    int       `json:"num_reviews"`
+	Photo      *string   `json:"photo_url"`
 }
 
 type SearchResult struct {
@@ -69,6 +59,12 @@ type SearchResult struct {
 	//Reviews  int       `json:"num_reviews"`
 	Photo    *string `json:"photo_url"`
 	Distance *string `json:"distance"`
+}
+
+type RequestSearchResult struct {
+	CategoryID   string `json:"category_id"`
+	CategoryName string `json:"name"`
+	Count        int    `json:"count"`
 }
 
 type Stats struct {
@@ -90,7 +86,7 @@ type Location struct {
 type Service struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
-	Rate     `json:"rate"`
+	Price    `json:"price"`
 	Category *string `json:"category"`
 }
 
@@ -119,6 +115,17 @@ type Request struct {
 	Bids      int       `json:"bids"`
 }
 
+type AllRequest struct {
+	ID        uuid.UUID `json:"request_id"`
+	Title     string    `json:"title"`
+	Category  *string   `json:"category"`
+	Urgent    bool      `json:"urgent"`
+	Distance  string    `json:"distance_km"`
+	CreatedAt string    `json:"created_at"`
+	StartAt   string    `json:"start_at"`
+	Address   string    `json:"location"`
+}
+
 type location struct {
 	ID        string `json:"location_id"`
 	Latitude  string `json:"latitude"`
@@ -145,15 +152,15 @@ type Client struct {
 }
 
 type Booking struct {
-	ID     uuid.UUID `json:"booking_id"`
-	Title  string    `json:"title"`
-	Status string    `json:"status"`
+	ID       uuid.UUID `json:"booking_id"`
+	Category string    `json:"category"`
+	Title    string    `json:"title"`
+	Status   string    `json:"status"`
 	//Description *string  `json:"description"`
 	//Type     *string  `json:"type"`
 	BookedAt string `json:"booked_at"`
 	//Photos   []string `json:"photos"`
-	StartAt  string `json:"start_time"`
-	Category string `json:"category"`
+	StartAt  string `json:"start_at"`
 	Service  `json:"service"`
 	Provider ProviderBrief `json:"provider"`
 	Client   `json:"client"`
@@ -162,16 +169,15 @@ type Booking struct {
 
 type BookingBrief struct {
 	ID     uuid.UUID `json:"booking_id"`
+	Title  string    `json:"title"`
 	Status string    `json:"status"`
 	//Description string    `json:"descripton"`
 	//Type     string `json:"type"`
 	BookedAt string `json:"booked_at"`
 	//Photos      []string  `json:"photos"`
-	StartAt string `json:"start_time"`
+	StartAt string `json:"start_at"`
 	//Category string `json:"category"`
 	//Service  string `json:"service"`
-	Provider string `json:"provider"`
-	Location string `json:"location"`
 }
 
 type Portfolio struct {

@@ -411,7 +411,6 @@ func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 		provider_id,
 		name,
 		price,
-		price_unit,
 		category_id
 	) VALUES (?, ?, ?, ?, ?)
 	`
@@ -421,7 +420,6 @@ func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 		service.ProviderID,
 		service.Name,
 		service.Rate.Amount,
-		service.Rate.Unit,
 		service.CategoryID,
 	)
 	if err != nil {
@@ -466,7 +464,6 @@ func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]
 			services.name,
 			services.price,
 			services.currency,
-			services.price_unit,
 			categories.name
 		FROM services
 		LEFT JOIN categories ON services.category_id = categories.id
@@ -481,9 +478,8 @@ func getServicesByProviderID(ctx context.Context, tx *Tx, providerId string) ([]
 		if err := rows.Scan(
 			&service.ID,
 			&service.Name,
-			&service.Rate.Price,
-			&service.Rate.Currency,
-			&service.Rate.Unit,
+			&service.Amount,
+			&service.Currency,
 			&service.Category,
 		); err != nil {
 			log.Println("rows scan error:", err)
@@ -504,7 +500,6 @@ func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Ser
 			services.name,
 			services.price,
 			services.currency,
-			services.price_unit,
 			categories.name
 		FROM services
 		LEFT JOIN categories ON services.category_id = categories.id
@@ -522,9 +517,8 @@ func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Ser
 		if err := rows.Scan(
 			&service.ID,
 			&service.Name,
-			&service.Rate.Price,
-			&service.Rate.Currency,
-			&service.Rate.Unit,
+			&service.Price,
+			&service.Currency,
 			&service.Category,
 		); err != nil {
 			log.Println("rows scan error:", err)
