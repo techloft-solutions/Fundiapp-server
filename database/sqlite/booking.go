@@ -175,9 +175,10 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 		&request.Note,
 		&request.Client,
 		&request.Status,
-		&request.Start,
-		&request.Created,
+		&request.StartAt,
+		&request.CreatedAt,
 		&request.Category,
+		&request.Location.ID,
 		&request.Location.Address,
 		&request.Location.Latitude,
 		&request.Location.Longitude,
@@ -506,15 +507,24 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 	if err := tx.QueryRowContext(ctx, `
 		SELECT
 			bookings.booking_id,
+			bookings.title,
 			bookings.status,
 			bookings.start_at,
-			bookings.client_id,
-			bookings.provider_id,
 			bookings.created_at,
+			bookings.description,
+			bookings.client_id,
+			c.first_name AS client_name,
+			c.last_name AS client_last_name,
+			bookings.provider_id,
+			p.first_name AS provider_name,
+			p.last_name AS provider_last_name,
 			services.name
 		FROM
 			bookings
+		LEFT JOIN categories 
 		LEFT JOIN services ON services.id = bookings.service_id
+		LEFT JOIN users c  ON c.user_id = bookings.client_id
+		LEFT JOIN users p ON p.user_id = bookings.provider_id
 		WHERE
 			bookings.booking_id = ?
 		ORDER BY
@@ -526,14 +536,14 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 		&booking.Status,
 		&booking.StartAt,
 		&booking.Client.UserID,
-		&booking.Provider.ID,
+		//&booking.Provider.ID,
 		&booking.BookedAt,
-		&booking.Service.Name,
+		//&booking.Service.Name,
 	); err != nil {
 		return nil, err
 	}
 
-	booking.Title = booking.Service.Name
+	//booking.Title = booking.Service.Name
 
 	return booking, nil
 }
@@ -559,8 +569,7 @@ func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 			bookings.status,
 			bookings.created_at,
 			bookings.start_at,
-			services.name,
-			categories.name
+			services.name
 		FROM bookings
 		LEFT JOIN services ON bookings.service_id = services.id
 		LEFT JOIN categories ON services.category_id = categories.id
@@ -793,21 +802,21 @@ func (s *BidService) FindBidsByRequestID(ctx context.Context, userID string, req
 func listBidsByCriteria(ctx context.Context, tx *Tx, userID string, haystack string, needle string) ([]*app.Bid, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 
-		bids.id,
-		bids.booking_id,
-		bids.amount,
-		bids.updated_at,
-		bids.provider_id,
-		users.first_name,
-		users.last_name,
-		users.photo_url,
-		providers.ratings_average,
-		providers.reviews_count
-	FROM bids
-	LEFT JOIN providers ON bids.provider_id = providers.provider_id
-	LEFT JOIN users ON providers.user_id = users.user_id
-	WHERE bids.provider_id = (SELECT provider_id FROM providers WHERE user_id = ?)
-	AND `+haystack+` = ?
+			bids.id,
+			bids.booking_id,
+			bids.amount,
+			bids.updated_at,
+			bids.provider_id,
+			users.first_name,
+			users.last_name,
+			users.photo_url,
+			providers.ratings_average,
+			providers.reviews_count
+		FROM bids
+		LEFT JOIN providers ON bids.provider_id = providers.provider_id
+		LEFT JOIN users ON providers.user_id = users.user_id
+		WHERE bids.provider_id = (SELECT provider_id FROM providers WHERE user_id = ?)
+		AND `+haystack+` = ?
 	`,
 		userID, needle,
 	)
