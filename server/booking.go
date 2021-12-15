@@ -82,6 +82,15 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	time, err := dateparse.ParseStrict(booking.StartDate)
+	if err != nil {
+		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+		handleError(w, "start_date: invalid date format", http.StatusBadRequest)
+		return
+	}
+
+	booking.StartDate = time.Format("2006-01-02T15:04:05")
+
 	err = s.BkSvc.CreateBooking(r.Context(), &booking)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)

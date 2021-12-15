@@ -511,15 +511,14 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 			bookings.created_at,
 			bookings.description,
 			bookings.client_id,
-			c.first_name AS client_name,
-			c.last_name AS client_last_name,
+			c.first_name AS client_fname,
+			c.last_name AS client_lname,
 			bookings.provider_id,
-			p.first_name AS provider_name,
-			p.last_name AS provider_last_name,
-			services.name
+			p.first_name AS provider_fname,
+			p.last_name AS provider_lname,
+			services.name AS service_name
 		FROM
 			bookings
-		LEFT JOIN categories 
 		LEFT JOIN services ON services.id = bookings.service_id
 		LEFT JOIN users c  ON c.user_id = bookings.client_id
 		LEFT JOIN users p ON p.user_id = bookings.provider_id
@@ -531,17 +530,25 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 		id,
 	).Scan(
 		&booking.ID,
+		&booking.Title,
 		&booking.Status,
 		&booking.StartAt,
-		&booking.Client.UserID,
-		//&booking.Provider.ID,
 		&booking.BookedAt,
-		//&booking.Service.Name,
+		&booking.Description,
+		&booking.Client.UserID,
+		&booking.Client.FirstName,
+		&booking.Client.LastName,
+		&booking.Provider.ProviderID,
+		&booking.Provider.FirstName,
+		&booking.Provider.LastName,
+		&booking.ServiceName,
 	); err != nil {
 		return nil, err
 	}
 
-	//booking.Title = booking.Service.Name
+	if booking.Title == nil && booking.ServiceName != nil {
+		booking.Title = booking.ServiceName
+	}
 
 	return booking, nil
 }

@@ -177,17 +177,17 @@ type bookingProvider struct {
 
 type Booking struct {
 	ID          uuid.UUID `json:"booking_id"`
-	Category    string    `json:"category"`
-	Title       string    `json:"title"`
+	Category    *string   `json:"category"`
+	Title       *string   `json:"title"`
 	Status      string    `json:"status"`
 	Description *string   `json:"description"`
 	//Type     *string  `json:"type"`
-	BookedAt string `json:"booked_at"`
-	//Photos   []string `json:"photos"`
-	StartAt string `json:"start_at"`
-	//Service  `json:"service"`
-	Provider bookingProvider `json:"provider"`
-	Client   bookingUser     `json:"client"`
+	BookedAt    string          `json:"booked_at"`
+	Photos      []string        `json:"photos"`
+	StartAt     string          `json:"start_at"`
+	ServiceName *string         `json:"service"`
+	Provider    bookingProvider `json:"provider"`
+	Client      bookingUser     `json:"client"`
 	//Location bookingLocation `json:"location"`
 }
 

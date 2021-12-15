@@ -82,7 +82,7 @@ type Review struct {
 
 type Booking struct {
 	ID         uuid.UUID `json:"booking_id"`
-	StartDate  string    `valid:"required,rfc3339" json:"start_date"`
+	StartDate  string    `valid:"required" json:"start_date"`
 	LocationID string    `valid:"required,uuid" json:"location_id"`
 	Status     string    `json:"status"`
 	ProviderID string    `valid:"required" json:"provider_id"`
