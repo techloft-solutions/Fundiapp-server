@@ -167,7 +167,7 @@ func (s *Server) handleRequestCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		request.StartDate = time.String()
+		request.StartDate = time.Format("2006-01-02T15:04:05")
 	}
 
 	err = request.Validate()

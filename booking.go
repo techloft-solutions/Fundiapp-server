@@ -39,6 +39,7 @@ type Provider struct {
 	Stats     Stats      `json:"stats"`
 	Price     *Price     `json:"price"`
 	Services  []*Service `json:"services"`
+	Phone     string     `json:"phone"`
 }
 
 type ProviderBrief struct {
@@ -134,37 +135,60 @@ type location struct {
 }
 
 type RequestDetail struct {
-	ID       uuid.UUID `json:"request_id"`
-	Title    string    `json:"title"`
-	Category *string   `json:"category"`
-	Note     string    `json:"note"`
-	Status   string    `json:"status"`
-	Created  string    `json:"posted"`
-	Start    string    `json:"start_at"`
-	Bids     int       `json:"bids"`
-	Photos   []string  `json:"photos"`
-	Location location  `json:"location"`
-	Client   string    `json:"client"`
+	ID        uuid.UUID `json:"request_id"`
+	Title     string    `json:"title"`
+	Category  *string   `json:"category"`
+	Note      string    `json:"note"`
+	Status    string    `json:"status"`
+	CreatedAt string    `json:"posted"`
+	StartAt   string    `json:"start_at"`
+	Bids      int       `json:"bids"`
+	Photos    []string  `json:"photos"`
+	Location  location  `json:"location"`
 }
 
 type Client struct {
 	Profile
 }
 
+type bookingLocation struct {
+	ID        string `json:"location_id"`
+	Latitude  string `json:"latitude"`
+	Longitude string `json:"longitude"`
+	Address   string `json:"address"`
+}
+
+type bookingService struct {
+}
+
+type bookingUser struct {
+	UserID    string  `json:"user_id"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Username  *string `json:"display_name"`
+	Phone     *string `json:"phone"`
+	PhotoUrl  *string `json:"photo_url"`
+}
+
+type bookingProvider struct {
+	ProviderID string `json:"provider_id"`
+	bookingUser
+}
+
 type Booking struct {
-	ID       uuid.UUID `json:"booking_id"`
-	Category string    `json:"category"`
-	Title    string    `json:"title"`
-	Status   string    `json:"status"`
-	//Description *string  `json:"description"`
+	ID          uuid.UUID `json:"booking_id"`
+	Category    string    `json:"category"`
+	Title       string    `json:"title"`
+	Status      string    `json:"status"`
+	Description *string   `json:"description"`
 	//Type     *string  `json:"type"`
 	BookedAt string `json:"booked_at"`
 	//Photos   []string `json:"photos"`
-	StartAt  string `json:"start_at"`
-	Service  `json:"service"`
-	Provider ProviderBrief `json:"provider"`
-	Client   `json:"client"`
-	Location `json:"location"`
+	StartAt string `json:"start_at"`
+	//Service  `json:"service"`
+	Provider bookingProvider `json:"provider"`
+	Client   bookingUser     `json:"client"`
+	//Location bookingLocation `json:"location"`
 }
 
 type BookingBrief struct {
