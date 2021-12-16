@@ -84,8 +84,10 @@ type AuthUser struct {
 
 type BookingService interface {
 	FindBookingByID(context.Context, uuid.UUID) (*Booking, error)
+	FindProviderBookingByID(context.Context, uuid.UUID, string) (*ProviderBooking, error)
 	CreateBooking(context.Context, *model.Booking) error
-	FindBookings(context.Context) ([]*BookingBrief, error)
+	FindMyBookings(context.Context) ([]*BookingBrief, error)
+	FindBookings(context.Context, string) ([]*BookingBrief, error)
 	InsertDate(context.Context, string) error
 }
 

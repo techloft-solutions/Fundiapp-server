@@ -484,7 +484,7 @@ func findLocationsByUserID(ctx context.Context, tx *Tx, userId uuid.UUID) ([]*ap
 	return locations, nil
 }
 
-func (s *BookingService) FindBookingByID(ctx context.Context, id uuid.UUID) (_ *app.Booking, err error) {
+func (s *BookingService) FindProviderBookingByID(ctx context.Context, id uuid.UUID, userID string) (_ *app.ProviderBooking, err error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -492,15 +492,15 @@ func (s *BookingService) FindBookingByID(ctx context.Context, id uuid.UUID) (_ *
 	defer tx.Rollback()
 
 	// Create dial and attach associated owner user.
-	booking, err := findBookingByID(ctx, tx, id)
+	booking, err := findProviderBookingByID(ctx, tx, id, userID)
 	if err != nil {
 		return nil, err
 	}
 	return booking, tx.Commit()
 }
 
-func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking, err error) {
-	booking := &app.Booking{}
+func findProviderBookingByID(ctx context.Context, tx *Tx, id uuid.UUID, userID string) (_ *app.ProviderBooking, err error) {
+	booking := &app.ProviderBooking{}
 	// Execue query with limiting WHERE clause and LIMIT/OFFSET injected.
 	if err := tx.QueryRowContext(ctx, `
 		SELECT
@@ -511,11 +511,80 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 			bookings.created_at,
 			bookings.description,
 			bookings.client_id,
-			c.first_name AS client_fname,
-			c.last_name AS client_lname,
+			CONCAT_WS(' ', c.first_name, c.last_name) AS client_name,
+			c.phone AS client_phone,
+			c.photo_url AS client_photo,
+			services.name AS service_name,
+			locations.location_id,
+			locations.address,
+			locations.latitude,
+			locations.longitude
+		FROM bookings
+		LEFT JOIN services ON services.id = bookings.service_id
+		LEFT JOIN users c  ON c.user_id = bookings.client_id
+		LEFT JOIN locations ON locations.location_id = bookings.location_id
+		WHERE bookings.booking_id = ?
+		AND bookings.provider_id = (SELECT provider_id FROM providers WHERE user_id = ?)
+		ORDER BY bookings.start_at ASC
+		`,
+		id, userID,
+	).Scan(
+		&booking.ID,
+		&booking.Title,
+		&booking.Status,
+		&booking.StartAt,
+		&booking.BookedAt,
+		&booking.Description,
+		&booking.Client.UserID,
+		&booking.Client.Name,
+		&booking.Client.Phone,
+		&booking.Client.PhotoUrl,
+		&booking.ServiceName,
+		&booking.Location.ID,
+		&booking.Location.Address,
+		&booking.Location.Latitude,
+		&booking.Location.Longitude,
+	); err != nil {
+		return nil, err
+	}
+
+	if booking.Title == nil && booking.ServiceName != nil {
+		booking.Title = booking.ServiceName
+	}
+
+	return booking, nil
+}
+
+func (s *BookingService) FindBookingByID(ctx context.Context, id uuid.UUID) (_ *app.Booking, err error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	// Create dial and attach associated owner user.
+	booking, err := findClientBookingByID(ctx, tx, id)
+	if err != nil {
+		return nil, err
+	}
+	return booking, tx.Commit()
+}
+
+func findClientBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking, err error) {
+	booking := &app.Booking{}
+	// Execue query with limiting WHERE clause and LIMIT/OFFSET injected.
+	if err := tx.QueryRowContext(ctx, `
+		SELECT
+			bookings.booking_id,
+			bookings.title,
+			bookings.status,
+			bookings.start_at,
+			bookings.created_at,
+			bookings.description,
 			bookings.provider_id,
-			p.first_name AS provider_fname,
-			p.last_name AS provider_lname,
+			CONCAT_WS(' ', p.first_name, p.last_name) AS provider_name,
+			p.phone AS provider_phone,
+			p.photo AS provider_photo,
 			services.name AS service_name
 		FROM
 			bookings
@@ -535,12 +604,10 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 		&booking.StartAt,
 		&booking.BookedAt,
 		&booking.Description,
-		&booking.Client.UserID,
-		&booking.Client.FirstName,
-		&booking.Client.LastName,
 		&booking.Provider.ProviderID,
-		&booking.Provider.FirstName,
-		&booking.Provider.LastName,
+		&booking.Provider.Name,
+		&booking.Provider.Phone,
+		&booking.Provider.PhotoUrl,
 		&booking.ServiceName,
 	); err != nil {
 		return nil, err
@@ -553,20 +620,139 @@ func findBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Booking,
 	return booking, nil
 }
 
-func (s *BookingService) FindBookings(ctx context.Context) ([]*app.BookingBrief, error) {
+func (s *BookingService) FindAppointments(ctx context.Context) ([]*app.BookingBrief, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
-	bookings, err := findBookings(ctx, tx)
+	bookings, err := findAppointments(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
 	return bookings, tx.Commit()
 }
 
-func findBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
+func findAppointments(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT 
+		    bookings.booking_id,
+			bookings.status,
+			bookings.created_at,
+			bookings.start_at,
+			services.name
+		FROM bookings
+		LEFT JOIN services ON bookings.service_id = services.id
+		LEFT JOIN categories ON services.category_id = categories.id
+		WHERE is_request = 0
+		AND bookings.provider_id = ?
+		`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	bookings := make([]*app.BookingBrief, 0)
+	for rows.Next() {
+		var booking app.BookingBrief
+		if err := rows.Scan(
+			&booking.ID,
+			&booking.Status,
+			&booking.BookedAt,
+			&booking.StartAt,
+			&booking.Title,
+		); err != nil {
+			return nil, err
+		}
+		bookings = append(bookings, &booking)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bookings, nil
+}
+
+func (s *BookingService) FindBookings(ctx context.Context, providerID string) ([]*app.BookingBrief, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	bookings, err := findBookings(ctx, tx, providerID)
+	if err != nil {
+		return nil, err
+	}
+	return bookings, tx.Commit()
+}
+
+func findBookings(ctx context.Context, tx *Tx, providerID string) ([]*app.BookingBrief, error) {
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT 
+		    bookings.booking_id,
+			bookings.title,
+			bookings.status,
+			bookings.created_at,
+			bookings.start_at,
+			services.name AS service_name,
+			categories.name as category_name
+		FROM bookings
+		LEFT JOIN services ON bookings.service_id = services.id
+		LEFT JOIN categories ON services.category_id = categories.id
+		WHERE is_request = 0
+		AND bookings.provider_id = ?
+		`,
+		providerID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	bookings := make([]*app.BookingBrief, 0)
+	for rows.Next() {
+		var booking app.BookingBrief
+		var service sql.NullString
+		if err := rows.Scan(
+			&booking.ID,
+			&booking.Title,
+			&booking.Status,
+			&booking.BookedAt,
+			&booking.StartAt,
+			&service,
+			&booking.Category,
+		); err != nil {
+			return nil, err
+		}
+		if booking.Title == nil && service.Valid {
+			booking.Title = &service.String
+		}
+		bookings = append(bookings, &booking)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bookings, nil
+}
+
+func (s *BookingService) FindMyBookings(ctx context.Context) ([]*app.BookingBrief, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	bookings, err := findMyBookings(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+	return bookings, tx.Commit()
+}
+
+func findMyBookings(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) {
 
 	rows, err := tx.QueryContext(ctx, `
 		SELECT 

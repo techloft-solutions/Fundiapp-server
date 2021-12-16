@@ -39,7 +39,7 @@ func (s *Server) handleBookingByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleBookingList(w http.ResponseWriter, r *http.Request) {
-	booking, err := s.BkSvc.FindBookings(r.Context())
+	booking, err := s.BkSvc.FindMyBookings(r.Context())
 	if err != nil {
 		log.Println(err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
@@ -47,6 +47,46 @@ func (s *Server) handleBookingList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccess(w, booking)
+}
+
+func (s *Server) handleProviderBookings(w http.ResponseWriter, r *http.Request) {
+	providerID := mux.Vars(r)["id"]
+	booking, err := s.BkSvc.FindBookings(r.Context(), providerID)
+	if err != nil {
+		log.Println(err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, booking)
+}
+
+func (s *Server) handleProviderBooking(w http.ResponseWriter, r *http.Request) {
+	// Parse ID from path.
+	id, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		handleError(w, "Id is not a valid UUID", http.StatusBadRequest)
+		return
+	}
+
+	userId, err := middlewares.UserIDFromContext(r.Context())
+	if err != nil {
+		handleUnathorised(w)
+		return
+	}
+
+	resp, err := s.BkSvc.FindProviderBookingByID(r.Context(), id, userId.String())
+	if err != nil {
+		log.Println(err)
+		if err == sql.ErrNoRows {
+			handleError(w, "Booking not found", http.StatusNotFound)
+			return
+		}
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, resp)
 }
 
 func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
