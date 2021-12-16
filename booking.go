@@ -151,23 +151,11 @@ type Client struct {
 	Profile
 }
 
-type bookingLocation struct {
-	ID        string `json:"location_id"`
-	Latitude  string `json:"latitude"`
-	Longitude string `json:"longitude"`
-	Address   string `json:"address"`
-}
-
-type bookingService struct {
-}
-
 type bookingUser struct {
-	UserID    string  `json:"user_id"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Username  *string `json:"display_name"`
-	Phone     *string `json:"phone"`
-	PhotoUrl  *string `json:"photo_url"`
+	UserID   string  `json:"user_id"`
+	Name     *string `json:"name"`
+	Phone    *string `json:"phone"`
+	PhotoUrl *string `json:"photo_url"`
 }
 
 type bookingProvider struct {
@@ -187,20 +175,34 @@ type Booking struct {
 	StartAt     string          `json:"start_at"`
 	ServiceName *string         `json:"service"`
 	Provider    bookingProvider `json:"provider"`
-	Client      bookingUser     `json:"client"`
 	//Location bookingLocation `json:"location"`
+}
+
+type ProviderBooking struct {
+	ID          uuid.UUID `json:"booking_id"`
+	Category    *string   `json:"category"`
+	Title       *string   `json:"title"`
+	Status      string    `json:"status"`
+	Description *string   `json:"description"`
+	//Type     *string  `json:"type"`
+	BookedAt    string      `json:"booked_at"`
+	Photos      []string    `json:"photos"`
+	StartAt     string      `json:"start_at"`
+	ServiceName *string     `json:"service"`
+	Client      bookingUser `json:"client"`
+	Location    location    `json:"location"`
 }
 
 type BookingBrief struct {
 	ID     uuid.UUID `json:"booking_id"`
-	Title  string    `json:"title"`
+	Title  *string   `json:"title"`
 	Status string    `json:"status"`
 	//Description string    `json:"descripton"`
 	//Type     string `json:"type"`
 	BookedAt string `json:"booked_at"`
 	//Photos      []string  `json:"photos"`
-	StartAt string `json:"start_at"`
-	//Category string `json:"category"`
+	StartAt  string  `json:"start_at"`
+	Category *string `json:"category"`
 	//Service  string `json:"service"`
 }
 
