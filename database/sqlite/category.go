@@ -412,7 +412,7 @@ func createService(ctx context.Context, tx *Tx, service *model.Service) error {
 		name,
 		price,
 		category_id
-	) VALUES (?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?)
 	`
 
 	// Insert row into database.
@@ -517,7 +517,7 @@ func getServicesByUserID(ctx context.Context, tx *Tx, userId string) ([]*app.Ser
 		if err := rows.Scan(
 			&service.ID,
 			&service.Name,
-			&service.Price,
+			&service.Amount,
 			&service.Currency,
 			&service.Category,
 		); err != nil {
