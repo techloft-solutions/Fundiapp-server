@@ -314,6 +314,8 @@ func (s *Server) handleUserValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("[LOG] phone: ", usr.Phone, " password: ", usr.Password)
+
 	err = s.UsrSvc.ValidateUser(r.Context(), usr.Phone, usr.Password, usr.IsProvider)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
