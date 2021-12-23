@@ -89,6 +89,8 @@ type BookingService interface {
 	FindMyBookings(context.Context) ([]*BookingBrief, error)
 	FindBookings(context.Context, string) ([]*BookingBrief, error)
 	InsertDate(context.Context, string) error
+	CompleteBooking(context.Context, uuid.UUID) error
+	CancelBooking(context.Context, uuid.UUID) error
 }
 
 type CategoryService interface {

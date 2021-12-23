@@ -88,6 +88,7 @@ type Booking struct {
 	ProviderID string    `valid:"required" json:"provider_id"`
 	ClientID   string    `valid:"required" json:"client_id"`
 	ServiceID  string    `valid:"required" json:"service_id"`
+	Photos     []string  `json:"-"`
 }
 
 type Request struct {
@@ -215,9 +216,10 @@ type ProviderFilter struct {
 }
 
 type RequestFilter struct {
-	Status   string
-	ClientID string
-	Category string
-	UserID   string
-	Distance string
+	Status     string
+	ClientID   string
+	Category   string
+	UserID     string
+	Distance   string
+	IsProvider bool
 }

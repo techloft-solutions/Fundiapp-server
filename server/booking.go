@@ -114,6 +114,17 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var photos []string
+	photoData := r.PostFormValue("photos")
+	if photoData != "" {
+		err = json.Unmarshal([]byte(photoData), &photos)
+		if err != nil {
+			handleError(w, "photos: invalid json array value", http.StatusBadRequest)
+			return
+		}
+		booking.Photos = photos
+	}
+
 	booking.ClientID = userID.String()
 	// validate
 	err = booking.Validate()
@@ -141,6 +152,38 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleSuccessMsgWithRes(w, "Booking created successfully", booking)
+}
+
+func (s *Server) handleBookingComplete(w http.ResponseWriter, r *http.Request) {
+	bookingId, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		handleError(w, "Id is not a valid UUID", http.StatusBadRequest)
+		return
+	}
+	err = s.BkSvc.CompleteBooking(r.Context(), bookingId)
+	if err != nil {
+		log.Println(err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, "Booking marked completed successfully")
+}
+
+func (s *Server) handleBookingCancel(w http.ResponseWriter, r *http.Request) {
+	bookingId, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		handleError(w, "Id is not a valid UUID", http.StatusBadRequest)
+		return
+	}
+	err = s.BkSvc.CancelBooking(r.Context(), bookingId)
+	if err != nil {
+		log.Println(err)
+		handleError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	handleSuccess(w, "Booking marked cancelled successfully")
 }
 
 /*

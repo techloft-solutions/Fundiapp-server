@@ -75,6 +75,7 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	// Providers
 	r.HandleFunc("/provider", s.handleProviderGet).Methods("GET")
 	r.HandleFunc("/providers", s.handleProviderList).Methods("GET")
+	r.HandleFunc("/top-providers", s.handleProviderList).Methods("GET")
 	r.HandleFunc("/providers/{id}", s.handleProviderByID).Methods("GET")
 	r.HandleFunc("/providers", s.handleProviderUpdate).Methods("PUT")
 	//r.HandleFunc("/providers/{id}/reviews", s.handleProviderReviews).Methods("GET")
@@ -111,13 +112,14 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/all-requests/categories", s.handleRequestCategories).Methods("GET")
 	r.HandleFunc("/all-requests/instant-search", s.handleRequestInstantSearch).Methods("GET")
 	r.HandleFunc("/all-requests/search", s.handleRequestSearch).Methods("GET")
-	//r.HandleFunc("/all-requests/search", s.handleRequestSearch).Methods("GET")
 	// Bookings
 	r.HandleFunc("/bookings/{id}", s.handleBookingByID).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingList).Methods("GET")
 	r.HandleFunc("/bookings", s.handleBookingCreate).Methods("POST")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingUpdate).Methods("PUT")
 	//r.HandleFunc("/bookings/{id}", s.handleBookingDelete).Methods("DELETE")
+	r.HandleFunc("/bookings/{id}/complete", s.handleBookingComplete).Methods("PUT")
+	r.HandleFunc("/bookings/{id}/cancel", s.handleBookingCancel).Methods("PUT")
 	// Bids
 	r.HandleFunc("/bids", s.handleBidCreate).Methods("POST")
 	r.HandleFunc("/bids", s.handleMyBids).Methods("GET")

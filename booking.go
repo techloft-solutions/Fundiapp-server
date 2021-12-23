@@ -128,10 +128,9 @@ type AllRequest struct {
 }
 
 type location struct {
-	ID        string `json:"location_id"`
-	Latitude  string `json:"latitude"`
-	Longitude string `json:"longitude"`
-	Address   string `json:"address"`
+	Latitude  *float64 `json:"latitude"`
+	Longitude *float64 `json:"longitude"`
+	Address   string   `json:"address"`
 }
 
 type RequestDetail struct {
@@ -145,13 +144,14 @@ type RequestDetail struct {
 	Bids      int       `json:"bids"`
 	Photos    []string  `json:"photos"`
 	Location  location  `json:"location"`
+	Client    user      `json:"client"`
 }
 
 type Client struct {
 	Profile
 }
 
-type bookingUser struct {
+type user struct {
 	UserID   string  `json:"user_id"`
 	Name     *string `json:"name"`
 	Phone    *string `json:"phone"`
@@ -160,7 +160,7 @@ type bookingUser struct {
 
 type bookingProvider struct {
 	ProviderID string `json:"provider_id"`
-	bookingUser
+	user
 }
 
 type Booking struct {
@@ -185,12 +185,13 @@ type ProviderBooking struct {
 	Status      string    `json:"status"`
 	Description *string   `json:"description"`
 	//Type     *string  `json:"type"`
-	BookedAt    string      `json:"booked_at"`
-	Photos      []string    `json:"photos"`
-	StartAt     string      `json:"start_at"`
-	ServiceName *string     `json:"service"`
-	Client      bookingUser `json:"client"`
-	Location    location    `json:"location"`
+	BookedAt    string   `json:"booked_at"`
+	Photos      []string `json:"photos"`
+	StartAt     string   `json:"start_at"`
+	ServiceName *string  `json:"service"`
+	Client      user     `json:"client"`
+	Location    location `json:"location"`
+	Distance    string   `json:"distance_km"`
 }
 
 type BookingBrief struct {
@@ -244,10 +245,10 @@ type Profile struct {
 	// Username  *string `json:"display_name"`
 	// Email     *string `json:"email"`
 	// Phone     *string `json:"phone"`
-	Location      *ProfileLocation `json:"location"`
-	PhotoUrl      *string          `json:"photo_url"`
-	EmailVerified bool             `json:"email_verified"`
-	Verified      bool             `json:"verified"`
+	Location *ProfileLocation `json:"location"`
+	//PhotoUrl      *string          `json:"photo_url"`
+	EmailVerified bool `json:"email_verified"`
+	Verified      bool `json:"verified"`
 }
 
 type Bid struct {

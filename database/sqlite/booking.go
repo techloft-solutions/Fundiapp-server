@@ -159,13 +159,17 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 			bookings.start_at,
 			bookings.created_at,
 			categories.name,
-			locations.location_id,
 			locations.address,
 			locations.latitude, 
-			locations.longitude
+			locations.longitude,
+			c.user_id AS client_user_id,
+			CONCAT_WS(' ', c.first_name, c.last_name) AS client_name,
+			c.phone AS client_phone,
+			c.photo_url as client_photo_url
 		FROM bookings
 		LEFT JOIN categories ON bookings.category_id = categories.id
 		LEFT JOIN locations ON bookings.location_id = locations.location_id
+		LEFT JOIN users c  ON c.user_id = bookings.client_id
 		WHERE booking_id = ?
 		AND bookings.is_request = 1
 	`, id).Scan(
@@ -176,10 +180,13 @@ func findRequestByID(ctx context.Context, tx *Tx, id uuid.UUID) (*app.RequestDet
 		&request.StartAt,
 		&request.CreatedAt,
 		&request.Category,
-		&request.Location.ID,
 		&request.Location.Address,
 		&request.Location.Latitude,
 		&request.Location.Longitude,
+		&request.Client.UserID,
+		&request.Client.Name,
+		&request.Client.Phone,
+		&request.Client.PhotoUrl,
 	)
 	if err != nil {
 		return nil, err
@@ -515,7 +522,6 @@ func findProviderBookingByID(ctx context.Context, tx *Tx, id uuid.UUID, userID s
 			c.phone AS client_phone,
 			c.photo_url AS client_photo,
 			services.name AS service_name,
-			locations.location_id,
 			locations.address,
 			locations.latitude,
 			locations.longitude
@@ -540,7 +546,6 @@ func findProviderBookingByID(ctx context.Context, tx *Tx, id uuid.UUID, userID s
 		&booking.Client.Phone,
 		&booking.Client.PhotoUrl,
 		&booking.ServiceName,
-		&booking.Location.ID,
 		&booking.Location.Address,
 		&booking.Location.Latitude,
 		&booking.Location.Longitude,
@@ -550,6 +555,32 @@ func findProviderBookingByID(ctx context.Context, tx *Tx, id uuid.UUID, userID s
 
 	if booking.Title == nil && booking.ServiceName != nil {
 		booking.Title = booking.ServiceName
+	}
+
+	// TODO: use dynamic values for lat1 and lon1
+	if booking.Location.Latitude != nil && booking.Location.Longitude != nil {
+		booking.Distance = fmt.Sprintf("%.1f", calculateDistance(1.3562, 36.6688, *booking.Location.Latitude, *booking.Location.Longitude))
+	}
+
+	// Get photos
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			photo_url
+		FROM photos
+		WHERE booking_id = ?
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var photo string
+		if err := rows.Scan(
+			&photo,
+		); err != nil {
+			return nil, err
+		}
+		booking.Photos = append(booking.Photos, photo)
 	}
 
 	return booking, nil
@@ -584,7 +615,7 @@ func findClientBookingByID(ctx context.Context, tx *Tx, id uuid.UUID) (_ *app.Bo
 			bookings.provider_id,
 			CONCAT_WS(' ', p.first_name, p.last_name) AS provider_name,
 			p.phone AS provider_phone,
-			p.photo AS provider_photo,
+			p.photo_url AS provider_photo,
 			services.name AS service_name
 		FROM
 			bookings
@@ -673,6 +704,42 @@ func findAppointments(ctx context.Context, tx *Tx) ([]*app.BookingBrief, error) 
 	}
 
 	return bookings, nil
+}
+
+func (s *BookingService) CompleteBooking(ctx context.Context, bookingId uuid.UUID) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE bookings
+		SET status = 'completed'
+		WHERE booking_id = ?
+	`, bookingId); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (s *BookingService) CancelBooking(ctx context.Context, bookingId uuid.UUID) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE bookings
+		SET status = 'cancelled'
+		WHERE booking_id = ?
+	`, bookingId); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (s *BookingService) FindBookings(ctx context.Context, providerID string) ([]*app.BookingBrief, error) {
@@ -835,6 +902,21 @@ func createBooking(ctx context.Context, tx *Tx, booking *model.Booking) error {
 	if err != nil {
 		return err
 	}
+
+	if booking.Photos != nil {
+		for _, photoUrl := range booking.Photos {
+			photo := model.Photo{
+				OwnerID:   booking.ClientID,
+				Url:       photoUrl,
+				BookingID: booking.ID.String(),
+			}
+			err := createPhoto(ctx, tx, photo)
+			if err != nil {
+				log.Println("failed creating photo:", err)
+			}
+		}
+	}
+
 	return nil
 }
 
