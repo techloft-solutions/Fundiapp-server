@@ -39,14 +39,14 @@ func (s *Server) handleBookingByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleBookingList(w http.ResponseWriter, r *http.Request) {
-	booking, err := s.BkSvc.FindMyBookings(r.Context())
+	bookings, err := s.BkSvc.FindMyBookings(r.Context())
 	if err != nil {
 		log.Println(err)
 		handleError(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
-	handleSuccess(w, booking)
+	handleSuccess(w, bookings)
 }
 
 func (s *Server) handleProviderBookings(w http.ResponseWriter, r *http.Request) {

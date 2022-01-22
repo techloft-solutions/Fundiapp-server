@@ -223,3 +223,37 @@ type RequestFilter struct {
 	Distance   string
 	IsProvider bool
 }
+
+type Plan struct {
+	Code          string
+	Name          string
+	Description   string
+	Amount        string
+	Currency      string
+	Period        string
+	Interval      string
+	BillingCycles string
+}
+
+type Subscription struct {
+	Status      string
+	created     string
+	activated   string
+	PlanID      string
+	StartAt     string
+	expireBy    string
+	nextBilling string
+	payment     Payment
+}
+
+type Payment struct {
+	amount            string
+	currency          string
+	status            string
+	payment_method_id string
+	subscription_id   string
+}
+
+type PaymentMethod struct {
+	Method string
+}

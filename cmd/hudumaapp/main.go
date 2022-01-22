@@ -25,24 +25,26 @@ func main() {
 	}*/
 	var db *sqlite.DB
 	server := server.New()
+	cfg := mysql.Config{
+		User:   "xdshcqjkkzdjs55v",
+		Passwd: "whsydeehry48wxsz",
+		Net:    "tcp",
+		Addr:   "dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306",
+		DBName: "wtej3mys487jlnyv",
+		Params: nil,
+	}
 
 	switch os.Getenv("APP_ENV") {
 	case "testing":
-		cfg := mysql.Config{
-			User:   "xdshcqjkkzdjs55v",
-			Passwd: "whsydeehry48wxsz",
-			Net:    "tcp",
-			Addr:   "dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306",
-			DBName: "wtej3mys487jlnyv",
-			Params: nil,
-		}
 		fmt.Println(cfg.FormatDSN())
 		db = sqlite.NewDB(cfg.FormatDSN())
 		db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
 		port := os.Getenv("PORT")
 		server.Addr = ":" + port
 	default:
-		db = sqlite.NewDB("root@tcp(127.0.0.1:3306)/hudumaapp")
+		// db = sqlite.NewDB("root@tcp(127.0.0.1:3306)/hudumaapp")
+		db = sqlite.NewDB(cfg.FormatDSN())
+		db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
 		server.Addr = ":8080"
 	}
 

@@ -24,6 +24,8 @@ type Server struct {
 	RevSvc  app.ReviewService
 	IndSvc  app.IndustryService
 	SrchSvc app.SearchService
+	PlanSvc app.PlanService
+	SubSvc  app.SubscriptionService
 }
 
 func New() *Server {
@@ -36,6 +38,9 @@ func New() *Server {
 	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
 	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
 	s.router.HandleFunc("/user/validate", s.handleUserValidate).Methods("POST")
+	// Temp
+	s.router.HandleFunc("/subscriptions", s.handleSubscribe).Methods("POST")
+	s.router.HandleFunc("/transactions/confirm", s.handleTransactionConfirm).Methods("GET")
 
 	// Tesing
 	s.testingRoutes(s.router)
@@ -131,11 +136,17 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/portfolios/{id}", s.handlePortfolio).Methods("GET")
 	// Search
 	r.HandleFunc("/search", s.handleSearch).Methods("GET")
-	// Payments
-	//r.HandleFunc("/payments", s.handlePaymentCreate).Methods("POST")
-	//r.HandleFunc("/payments", s.handlePaymentList).Methods("GET")
+	// Transactions
+	// Payment options
+	//r.HandleFunc("/payment_methods", s.handlePaymentMethods).Methods("GET")
 	// Preferences
 	//r.HandleFunc("/preferences", s.handlePreferenceList).Methods("GET")
 	//r.HandleFunc("/preferences", s.handlePreferenceCreate).Methods("POST")
 	r.HandleFunc("/test", s.handleTest).Methods("GET")
+	// Subscriptions
+
+	r.HandleFunc("/subscriptions/{id}", s.handleSubscription).Methods("GET")
+	r.HandleFunc("/subscriptions/{id}/cancel", s.handleSubscriptionCancel).Methods("POST")
+	// Plans
+	r.HandleFunc("/plans", s.handlePlans).Methods("GET")
 }

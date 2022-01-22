@@ -179,3 +179,12 @@ type SearchService interface {
 	SearchByQuery(context.Context, model.Search) ([]SearchResult, error)
 	InstantSearchRequests(context.Context, model.Search) ([]RequestSearchResult, error)
 }
+
+type PlanService interface {
+	CreatePlan(context.Context, *model.Plan) error
+	GetAllPlans(context.Context) ([]PlanService, error)
+}
+
+type SubscriptionService interface {
+	CreateSubscription(context.Context, *model.Subscription) error
+}
