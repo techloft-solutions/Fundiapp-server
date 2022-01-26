@@ -38,9 +38,17 @@ func New() *Server {
 	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
 	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
 	s.router.HandleFunc("/user/validate", s.handleUserValidate).Methods("POST")
-	// Temp
+	// TEMP
+	s.router.HandleFunc("/subscription", s.handleMyActiveSubscription).Methods("GET")
 	s.router.HandleFunc("/subscriptions", s.handleSubscribe).Methods("POST")
+	s.router.HandleFunc("/subscriptions", s.handleMySubscriptions).Methods("GET")
+	s.router.HandleFunc("/subscriptions/{id}", s.handleCancelSubscription).Methods("DELETE")
+
 	s.router.HandleFunc("/transactions/confirm", s.handleTransactionConfirm).Methods("GET")
+	s.router.HandleFunc("/transactions/validate", s.handleTransactionConfirm).Methods("GET")
+	s.router.HandleFunc("/plans", s.handlePlans).Methods("GET")
+	s.router.HandleFunc("/payment-methods", s.handlePaymentMethods).Methods("GET")
+	s.router.HandleFunc("/payment-methods/mpesa", s.handlePaymentMethods).Methods("POST")
 
 	// Tesing
 	s.testingRoutes(s.router)
@@ -138,7 +146,6 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/search", s.handleSearch).Methods("GET")
 	// Transactions
 	// Payment options
-	//r.HandleFunc("/payment_methods", s.handlePaymentMethods).Methods("GET")
 	// Preferences
 	//r.HandleFunc("/preferences", s.handlePreferenceList).Methods("GET")
 	//r.HandleFunc("/preferences", s.handlePreferenceCreate).Methods("POST")

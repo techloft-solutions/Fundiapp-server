@@ -275,3 +275,57 @@ type Transaction struct {
 	Status    string
 	CreatedAt time.Time
 }
+
+type Subscription struct {
+	SubscriptionID string `json:"subscription_id"`
+	//Payment        `json:"payment"`
+	Plan          string `json:"plan"`
+	PlanName      string `json:"plan_name"`
+	Price         string `json:"plan_price"`
+	PaymentMethod string `json:"payment_method"`
+	AutoRenew     bool   `json:"auto_renew"`
+	Status        string `json:"status"`
+	//BillingCycles int    `json:"billing_cycles"`
+	NextBillingDate string `json:"renewal_date"`
+	//ActivatedAt   string `json:"activated_at"`
+	//CancelledAt   string `json:"canceled_at"`
+	//StartsAt string `json:"starts_at"`
+	//ExpireBy      string `json:"expires_by"`
+	//EndsAt        string `json:"ends_at"`
+	// Payment_method string `json:"payment_method"`
+}
+
+type SubscriptionPage struct {
+	Plans          []Plan          `json:"plans"`
+	PaymentMethods []PaymentMethod `json:"payment_options"`
+}
+
+type Plan struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`          // Weekly
+	Description  string `json:"description"`   // 24km distance...
+	Price        int    `json:"price"`         // 199
+	Currency     string `json:"currency"`      // Ksh
+	Interval     int    `json:"interval"`      // 1
+	IntervalUnit string `json:"interval_unit"` // week
+	// Features      []string
+}
+
+/*
+// e.g Debit card, mobile payment
+type PaymentOption struct {
+	Name string
+	Type string // eg. Debit, Credit, Mobile, Bank
+	//Method PaymentMethod // eg. Mpesa
+	Logo string
+}
+*/
+type PaymentMethod struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Method string `json:"payment_method"` // eg. visa, mastercard, mpesa
+	Number string `json:"number"`
+	//Status string // Valid, Expiring, Expired, Invalid, PendingVerification
+	Logo string `json:"logo_url"`
+	Type string `json:"type"` // enum eg. Debit, Credit, Mobile, Bank
+}

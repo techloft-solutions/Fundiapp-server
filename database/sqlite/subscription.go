@@ -30,18 +30,35 @@ func (s *SubscriptionService) CreateSubscription(ctx context.Context, subscripti
 
 func createSubscription(ctx context.Context, tx *Tx, subscription *model.Subscription) error {
 	if _, err := tx.ExecContext(ctx, `
-		INSERT INTO subscription (
+		INSERT INTO subscriptions (
+			subscription_id,
+			client_id,
+			payment_id,
 			plan_id,
+			auto_renew,
 			status,
-			billing_cycle,
-			start_at,
-			expire_by,
-		) VALUES (?,?,?,?)
+			billing_cycles,
+			next_billing_at,
+			activated_at,
+			cancelled_at,
+			starts_at,
+			expires_at,
+			ends_at
+		) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
 		`,
+		subscription.SubscriptionID,
+		subscription.ClientID,
+		subscription.PaymentMethodID,
 		subscription.PlanID,
+		subscription.AutoRenew,
 		subscription.Status,
-		subscription.StartAt,
-		true,
+		subscription.BillingCycles,
+		subscription.NextBilling,
+		subscription.ActivatedAt,
+		subscription.CancelledAt,
+		subscription.StartsAt,
+		subscription.ExpireBy,
+		subscription.EndsAt,
 	); err != nil {
 		log.Println("failed inserting subscription into db:", err)
 		return err
