@@ -48,7 +48,7 @@ func createPlan(ctx context.Context, tx *Tx, plan *model.Plan) error {
 		plan.Period,
 		plan.Interval,
 		plan.BillingCycles,
-		plan.Amount,
+		plan.Price,
 		plan.Currency,
 	); err != nil {
 		log.Println("Failed inserting plan into db:", err)
