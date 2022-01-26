@@ -228,22 +228,30 @@ type Plan struct {
 	Code          string
 	Name          string
 	Description   string
-	Amount        string
 	Currency      string
 	Period        string
+	Price         string
 	Interval      string
+	IntervalUnit  string
 	BillingCycles string
+	// Features      []string
 }
 
 type Subscription struct {
-	Status      string
-	created     string
-	activated   string
-	PlanID      string
-	StartAt     string
-	expireBy    string
-	nextBilling string
-	payment     Payment
+	SubscriptionID  string  `json:"subscription_id"`
+	ClientID        string  `json:"client_id"`
+	PaymentMethodID string  `json:"payment_method_id"`
+	PaymentID       string  `json:"payment_id"`
+	PlanID          string  `json:"plan_id"`
+	AutoRenew       bool    `json:"autorenew"`
+	Status          string  `json:"status"`
+	BillingCycles   int     `json:"billing_cycles"`
+	NextBilling     string  `json:"next_billing"`
+	ActivatedAt     string  `json:"activated_at"`
+	CancelledAt     *string `json:"canceled_at"`
+	StartsAt        string  `json:"starts_at"`
+	ExpireBy        *string `json:"expires_by"`
+	EndsAt          *string `json:"ends_at"`
 }
 
 type Payment struct {
