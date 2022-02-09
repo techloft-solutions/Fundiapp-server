@@ -18,7 +18,7 @@ func (id UserID) String() string {
 	return string(id)
 }
 
-type Config struct {
+type XConfig struct {
 	DB struct {
 		DSN string `toml:"dsn"`
 	}

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
-	"os"
 	"sort"
 	"time"
 
@@ -86,16 +85,16 @@ func (db *DB) Open() (err error) {
 	//if _, err := db.db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
 	//	return fmt.Errorf("foreign keys pragma: %w", err)
 	//}
+	/*
+		if err := db.migrate(); err != nil {
+			return fmt.Errorf("migrate: %w", err)
+		}
+		time.Sleep(1 * time.Second)
 
-	if err := db.migrate(); err != nil {
-		return fmt.Errorf("migrate: %w", err)
-	}
-	time.Sleep(1 * time.Second)
-
-	if err := db.seed(); err != nil {
-		log.Println("seeding error:", err)
-	}
-
+		if err := db.seed(); err != nil {
+			log.Println("seeding error:", err)
+		}
+	*/
 	return nil
 }
 
@@ -198,17 +197,17 @@ func (db *DB) dropQuery() error {
 // Once a migration is run, its name is stored in the 'migrations' table so it
 // is not re-executed. Migrations run in a transaction to prevent partial
 // migrations.
-func (db *DB) migrate() error {
+func (db *DB) Migrate() error {
 	log.Println("migrating database...")
-
-	if os.Getenv("APP_ENV") != "production" || os.Getenv("DB_RESET") == "true" {
-		if err := db.drop(); err != nil {
-			log.Println(err)
+	/*
+		if os.Getenv("APP_ENV") != "production" || os.Getenv("DB_RESET") == "true" {
+			if err := db.drop(); err != nil {
+				log.Println(err)
+			}
 		}
-	}
 
-	time.Sleep(15 * time.Second)
-
+		time.Sleep(15 * time.Second)
+	*/
 	// Ensure the 'migrations' table exists so we don't duplicate migrations.
 	if _, err := db.db.Exec(`CREATE TABLE IF NOT EXISTS migrations (name varchar(255) PRIMARY KEY);`); err != nil {
 		return fmt.Errorf("cannot create migrations table: %w", err)
@@ -264,7 +263,7 @@ func (db *DB) migrateFile(name string) error {
 	return tx.Commit()
 }
 
-func (db *DB) seed() error {
+func (db *DB) Seed() error {
 	log.Println("seeding database...")
 
 	names, err := fs.Glob(seedFS, "seeds/*_seed.sql")

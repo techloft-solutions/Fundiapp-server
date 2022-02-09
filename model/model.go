@@ -263,5 +263,9 @@ type Payment struct {
 }
 
 type PaymentMethod struct {
-	Method string
+	ID          string `json:"id"`
+	Method      string `json:"payment_method"` // eg. visa, mastercard, mpesa
+	CardNumber  string `json:"card_number,omitempty"`
+	PhoneNumber string `json:"phone_number,omitempty"`
+	Type        string `json:"type"` // enum eg. Debit, Credit, Mobile, Bank
 }
