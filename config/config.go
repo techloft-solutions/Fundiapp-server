@@ -40,12 +40,12 @@ func LoadConfig() (config Config, err error) {
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")
 
-	viper.AutomaticEnv()
-
 	err = viper.ReadInConfig()
 	if err != nil {
-		log.Println(fmt.Errorf("Fatal error config file: %w \n", err))
+		log.Println(fmt.Errorf("error reading config file: %w \n", err))
 	}
+
+	viper.AutomaticEnv()
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
