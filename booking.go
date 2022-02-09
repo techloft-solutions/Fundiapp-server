@@ -281,8 +281,8 @@ type Subscription struct {
 	//Payment        `json:"payment"`
 	Plan          string `json:"plan"`
 	PlanName      string `json:"plan_name"`
-	Price         string `json:"plan_price"`
-	PaymentMethod string `json:"payment_method"`
+	Price         string `json:"plan"`
+	PaymentMethod string `json:"plan"`
 	AutoRenew     bool   `json:"auto_renew"`
 	Status        string `json:"status"`
 	//BillingCycles int    `json:"billing_cycles"`

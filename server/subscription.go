@@ -42,6 +42,10 @@ var paymentMethods = []app.PaymentMethod{
 	},
 }
 
+func (s *Server) handleDeletePaymentMethods(w http.ResponseWriter, r *http.Request) {
+	handleSuccessMsg(w, "Payment method deleted successfuly")
+}
+
 func (s *Server) handlePaymentMethods(w http.ResponseWriter, r *http.Request) {
 	var plans []app.PaymentMethod = paymentMethods
 	/*
@@ -69,6 +73,16 @@ func (s *Server) handlePaymentMethods(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		return
 	}
+}
+
+func (s *Server) handleAddMpesaPayment(w http.ResponseWriter, r *http.Request) {
+	var paymentMethod = model.PaymentMethod{
+		ID:          "4984c20d-3a8c-4679-a613-9c470243d0a7",
+		Method:      "mpesa",
+		PhoneNumber: "0712345678",
+		Type:        "mobile",
+	}
+	handleSuccessMsgWithRes(w, "Payment method added successfuly", paymentMethod)
 }
 
 func (s *Server) handleCancelSubscription(w http.ResponseWriter, r *http.Request) {

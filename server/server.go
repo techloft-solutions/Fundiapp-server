@@ -48,7 +48,8 @@ func New() *Server {
 	s.router.HandleFunc("/transactions/validate", s.handleTransactionConfirm).Methods("GET")
 	s.router.HandleFunc("/plans", s.handlePlans).Methods("GET")
 	s.router.HandleFunc("/payment-methods", s.handlePaymentMethods).Methods("GET")
-	s.router.HandleFunc("/payment-methods/mpesa", s.handlePaymentMethods).Methods("POST")
+	s.router.HandleFunc("/payment-methods/{id}", s.handleDeletePaymentMethods).Methods("DELETE")
+	s.router.HandleFunc("/payment-methods/mpesa", s.handleAddMpesaPayment).Methods("POST")
 
 	// Tesing
 	s.testingRoutes(s.router)
