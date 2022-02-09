@@ -1,1 +1,1 @@
-web: serviceapp
+web: bin/serviceapp
