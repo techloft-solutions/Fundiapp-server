@@ -61,7 +61,7 @@ func main() {
 	case config.StageEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
 		//db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
-		server.Addr = ":80"
+		server.Addr = ":8080"
 	default:
 		db = sqlite.NewDB("root@tcp(127.0.0.1:3306)/hudumaapp")
 		server.Addr = ":8080"
