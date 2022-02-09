@@ -1,1 +1,1 @@
-web: hudumaapp
+web: bin/serviceapp
