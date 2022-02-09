@@ -1,1 +1,1 @@
-web: bin/serviceapp
+web: bin/hudumaapp
