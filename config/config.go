@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/spf13/viper"
@@ -40,16 +38,13 @@ func LoadConfig() (config Config, err error) {
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")
 
-	err = viper.ReadInConfig()
-	if err != nil {
-		log.Println(fmt.Errorf("error reading config file: %w \n", err))
-	}
-
 	viper.AutomaticEnv()
 
-	err = viper.Unmarshal(&config)
+	err = viper.ReadInConfig()
 	if err != nil {
-		log.Fatalf("unable to decode into struct, %v", err)
+		return
 	}
+
+	err = viper.Unmarshal(&config)
 	return
 }
