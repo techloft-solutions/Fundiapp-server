@@ -1,1 +1,2 @@
 web: serviceapp
+serviceappcli: serviceappcli
