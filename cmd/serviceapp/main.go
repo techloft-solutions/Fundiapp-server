@@ -34,6 +34,7 @@ func main() {
 	}*/
 	var db *sqlite.DB
 	server := server.New()
+	server.Addr = ":" + cfg.Port
 
 	dbCfg := mysql.Config{
 		User:   cfg.DBUser,
@@ -47,15 +48,11 @@ func main() {
 	switch cfg.Env {
 	case config.ProdEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
-		server.Addr = ":8080"
 	case config.StageEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
 		//db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
-		//port := os.Getenv("PORT")
-		server.Addr = ":" + cfg.Port
 	default:
 		db = sqlite.NewDB("root@tcp(127.0.0.1:3306)/hudumaapp")
-		server.Addr = ":8080"
 	}
 
 	err = db.Open()
