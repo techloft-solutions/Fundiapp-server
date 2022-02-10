@@ -10,6 +10,7 @@ import (
 	"os/signal"
 
 	app "github.com/andrwkng/hudumaapp"
+	"github.com/andrwkng/hudumaapp/config"
 	"github.com/andrwkng/hudumaapp/database/sqlite"
 	"github.com/andrwkng/hudumaapp/pkg/cmd"
 	"github.com/go-sql-driver/mysql"
@@ -45,19 +46,25 @@ func main() {
 
 // Run executes the main program.
 func Run(ctx context.Context, args []string) error {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("Failed to load config", err)
+	}
+
+	log.Println("Config:", cfg)
+
 	dbCfg := mysql.Config{
-		User:   "xdshcqjkkzdjs55v",
-		Passwd: "whsydeehry48wxsz",
+		User:   cfg.DBUser,
 		Net:    "tcp",
-		Addr:   "dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306",
-		DBName: "wtej3mys487jlnyv",
-		//Params: nil,
+		Addr:   cfg.DBAddr,
+		DBName: cfg.DBName,
+		Passwd: cfg.DBPass,
+		Params: nil,
 	}
 
 	db := sqlite.NewDB(dbCfg.FormatDSN())
-	db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
 
-	err := db.Open()
+	err = db.Open()
 	if err != nil {
 		log.Fatal(err)
 	}
