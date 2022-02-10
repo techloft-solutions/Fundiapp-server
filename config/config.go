@@ -29,6 +29,9 @@ type Config struct {
 		Pass string `mapstructure:"DB_PASSWORD"`
 		Addr string `mapstructure:"DB_ADDR"`
 	}
+	Server struct {
+		Port string `mapstructure:"PORT"`
+	}
 }
 
 // LoadConfig reads configuration from file or environment variables.
@@ -39,6 +42,7 @@ func LoadConfig() (config Config, err error) {
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()
+	viper.BindEnv("PORT")
 
 	err = viper.ReadInConfig()
 	if err != nil {
