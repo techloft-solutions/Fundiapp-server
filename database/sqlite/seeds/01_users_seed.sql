@@ -66,7 +66,7 @@ INSERT INTO `users`(
 ),(
     'andrw',
     '+254719825151',
-    '123456',
+    'WYpF2vhVYCKlxILYZaleA==',
     1,
     'P74RAdTTYPdA2Tcm75NjO9UuYcO2',
     NULL,
