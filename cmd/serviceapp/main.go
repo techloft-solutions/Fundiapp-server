@@ -56,12 +56,13 @@ func main() {
 	switch cfg.AppEnv {
 	case config.ProdEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
-		port := os.Getenv("PORT")
-		server.Addr = ":" + port
+
 	case config.StageEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
 		//db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
 		server.Addr = ":8080"
+		port := os.Getenv("PORT")
+		server.Addr = ":" + port
 	default:
 		db = sqlite.NewDB("root@tcp(127.0.0.1:3306)/hudumaapp")
 		server.Addr = ":8080"
