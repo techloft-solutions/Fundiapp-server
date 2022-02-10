@@ -37,12 +37,12 @@ func main() {
 	server.Addr = ":" + cfg.Port
 
 	dbCfg := mysql.Config{
-		User:   cfg.DBUser,
-		Net:    "tcp",
-		Addr:   cfg.DBAddr,
-		DBName: cfg.DBName,
-		Passwd: cfg.DBPass,
-		Params: nil,
+		User:                 cfg.DBUser,
+		Net:                  "tcp",
+		Addr:                 cfg.DBAddr,
+		DBName:               cfg.DBName,
+		Passwd:               cfg.DBPass,
+		AllowNativePasswords: true,
 	}
 
 	switch cfg.Env {

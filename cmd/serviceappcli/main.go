@@ -54,12 +54,12 @@ func Run(ctx context.Context, args []string) error {
 	fmt.Printf("%+v\n", cfg)
 
 	dbCfg := mysql.Config{
-		User:   cfg.DBUser,
-		Net:    "tcp",
-		Addr:   cfg.DBAddr,
-		DBName: cfg.DBName,
-		Passwd: cfg.DBPass,
-		Params: nil,
+		User:                 cfg.DBUser,
+		Net:                  "tcp",
+		Addr:                 cfg.DBAddr,
+		DBName:               cfg.DBName,
+		Passwd:               cfg.DBPass,
+		AllowNativePasswords: true,
 	}
 
 	db := sqlite.NewDB(dbCfg.FormatDSN())
