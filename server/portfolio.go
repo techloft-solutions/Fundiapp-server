@@ -315,18 +315,18 @@ func (s *Server) handleUserValidate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("[LOG] phone: ", usr.Phone, " password: ", usr.Password)
-
-	err = s.UsrSvc.ValidateUser(r.Context(), usr.Phone, usr.Password, usr.IsProvider)
-	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		if err == sql.ErrNoRows {
-			handleError(w, "Incorrect phone number or password", http.StatusUnauthorized)
+	/*
+		err = s.UsrSvc.ValidateUser(r.Context(), usr.Phone, usr.Password, usr.IsProvider)
+		if err != nil {
+			log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
+			if err == sql.ErrNoRows {
+				handleError(w, "Incorrect phone number or password", http.StatusUnauthorized)
+				return
+			}
+			handleError(w, "Something went wrong", http.StatusInternalServerError)
 			return
 		}
-		handleError(w, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
-
+	*/
 	handleSuccessMsg(w, "User is valid")
 
 }
