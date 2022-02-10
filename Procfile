@@ -1,2 +1,2 @@
-web: serviceapp
+web: bin/serviceapp
 serviceappcli: bin/serviceappcli
