@@ -51,7 +51,7 @@ func Run(ctx context.Context, args []string) error {
 		log.Fatal("Failed to load config", err)
 	}
 
-	log.Println("Config:", cfg)
+	fmt.Printf("%+v\n", cfg)
 
 	dbCfg := mysql.Config{
 		User:   cfg.DBUser,
