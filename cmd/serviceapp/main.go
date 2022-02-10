@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("Failed to load config", err)
 	}
 
-	log.Println("Config:", cfg)
+	log.Println("Config:", cfg.Server.Port)
 
 	//port := os.Getenv("PORT")
 	//if port == "" {
