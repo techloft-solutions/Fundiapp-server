@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/andrwkng/hudumaapp/config"
 	"github.com/andrwkng/hudumaapp/database/sqlite"
@@ -48,12 +47,12 @@ func main() {
 	switch cfg.Env {
 	case config.ProdEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
+		server.Addr = ":8080"
 	case config.StageEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
 		//db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
-		server.Addr = ":8080"
-		port := os.Getenv("PORT")
-		server.Addr = ":" + port
+		//port := os.Getenv("PORT")
+		server.Addr = ":" + cfg.Port
 	default:
 		db = sqlite.NewDB("root@tcp(127.0.0.1:3306)/hudumaapp")
 		server.Addr = ":8080"
