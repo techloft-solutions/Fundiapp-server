@@ -22,16 +22,12 @@ type XConfig struct {
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 }
 type Config struct {
-	AppEnv string `mapstructure:"APP_ENV"`
-	DB     struct {
-		Name string `mapstructure:"DB_NAME"`
-		User string `mapstructure:"DB_USERNAME"`
-		Pass string `mapstructure:"DB_PASSWORD"`
-		Addr string `mapstructure:"DB_ADDR"`
-	}
-	Server struct {
-		Port string `mapstructure:"PORT"`
-	}
+	Env    string `mapstructure:"APP_ENV"`
+	DBName string `mapstructure:"DB_NAME"`
+	DBUser string `mapstructure:"DB_USERNAME"`
+	DBPass string `mapstructure:"DB_PASSWORD"`
+	DBAddr string `mapstructure:"DB_ADDR"`
+	Port   string `mapstructure:"PORT"`
 }
 
 // LoadConfig reads configuration from file or environment variables.
@@ -42,7 +38,6 @@ func LoadConfig() (config Config, err error) {
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()
-	viper.BindEnv("PORT")
 
 	err = viper.ReadInConfig()
 	if err != nil {

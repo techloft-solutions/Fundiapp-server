@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("Failed to load config", err)
 	}
 
-	log.Println("Config:", cfg.Server.Port)
+	log.Println("Config:", cfg)
 
 	//port := os.Getenv("PORT")
 	//if port == "" {
@@ -35,28 +35,19 @@ func main() {
 	}*/
 	var db *sqlite.DB
 	server := server.New()
-	/*
-		dbCfg := mysql.Config{
-			User:   "xdshcqjkkzdjs55v",
-			Passwd: "whsydeehry48wxsz",
-			Net:    "tcp",
-			Addr:   "dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306",
-			DBName: "wtej3mys487jlnyv",
-			//Params: nil,
-		}*/
+
 	dbCfg := mysql.Config{
-		User:   cfg.DB.User,
+		User:   cfg.DBUser,
 		Net:    "tcp",
-		Addr:   cfg.DB.Addr,
-		DBName: cfg.DB.Name,
-		Passwd: cfg.DB.Pass,
+		Addr:   cfg.DBAddr,
+		DBName: cfg.DBName,
+		Passwd: cfg.DBPass,
 		Params: nil,
 	}
 
-	switch cfg.AppEnv {
+	switch cfg.Env {
 	case config.ProdEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
-
 	case config.StageEnv:
 		db = sqlite.NewDB(dbCfg.FormatDSN())
 		//db = sqlite.NewDB("xdshcqjkkzdjs55v:whsydeehry48wxsz@tcp(dcrhg4kh56j13bnu.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/wtej3mys487jlnyv")
