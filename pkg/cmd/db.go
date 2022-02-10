@@ -30,6 +30,8 @@ func (d *DBCommand) Run(ctx context.Context, args []string) error {
 		return d.migrate()
 	case "seed":
 		return d.seed()
+	case "drop":
+		return d.drop()
 	default:
 		return fmt.Errorf("ServiceApp cli %s: unknown command", cmd)
 	}
@@ -43,4 +45,9 @@ func (d *DBCommand) migrate() error {
 func (d *DBCommand) seed() error {
 	log.Println("seed")
 	return d.DB.Seed()
+}
+
+func (d *DBCommand) drop() error {
+	log.Println("drop")
+	return d.DB.Drop()
 }

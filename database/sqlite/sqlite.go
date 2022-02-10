@@ -122,7 +122,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 // drop drops the database tables and resets the migrations table. This is used to drop the database and start over.
 //
 // This is a destructive operation and should only be used for testing.
-func (db *DB) drop() error {
+func (db *DB) Drop() error {
 	log.Println("dropping database tables")
 	// Read drop files from our embedded file system.
 	names, err := fs.Glob(migrationFS, "migrations/*_down.sql")
