@@ -13,9 +13,6 @@ type XConfig struct {
 		Port string `mapstructure:"SERVER_PORT"`
 		Host string `mapstructure:"SERVER_HOST"`
 	}
-	Database struct {
-		DBPassword string `mapstructure:"DB_PASSWORD"`
-	}
 	ServerAddress        string        `mapstructure:"SERVER_ADDRESS"`
 	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
