@@ -561,22 +561,3 @@ func (s *Server) handleAcceptBid(w http.ResponseWriter, r *http.Request) {
 
 	handleSuccessMsg(w, "Bid accepted successfully")
 }
-
-func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
-	startTime := r.PostFormValue("start_time")
-	time, err := dateparse.ParseStrict(startTime)
-	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "start_date: invalid date format", http.StatusBadRequest)
-		return
-	}
-	startTime = time.String()
-	err = s.BkSvc.InsertDate(r.Context(), startTime)
-	if err != nil {
-		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
-		handleError(w, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
-
-	handleSuccess(w, time.Format("2021-12-11 14:12:03"))
-}

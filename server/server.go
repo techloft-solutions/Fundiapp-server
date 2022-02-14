@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	app "github.com/andrwkng/hudumaapp"
@@ -37,7 +38,7 @@ func New() *Server {
 	// Users
 	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
 	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
-	s.router.HandleFunc("/user/validate", s.handleUserValidate).Methods("POST")
+	s.router.HandleFunc("/user/validate", s.handleTest).Methods("POST")
 	// TEMP
 	s.router.HandleFunc("/subscription", s.handleMyActiveSubscription).Methods("GET")
 	s.router.HandleFunc("/subscriptions", s.handleSubscribe).Methods("POST")
@@ -52,6 +53,7 @@ func New() *Server {
 	s.router.HandleFunc("/payment-methods/mpesa", s.handleAddMpesaPayment).Methods("POST")
 
 	// Tesing
+	s.router.HandleFunc("/test", s.handleTest).Methods("GET", "POST")
 	s.testingRoutes(s.router)
 
 	r := s.router.PathPrefix("/").Subrouter()
@@ -150,11 +152,20 @@ func (s *Server) registerRoutes(r *mux.Router) {
 	// Preferences
 	//r.HandleFunc("/preferences", s.handlePreferenceList).Methods("GET")
 	//r.HandleFunc("/preferences", s.handlePreferenceCreate).Methods("POST")
-	r.HandleFunc("/test", s.handleTest).Methods("GET")
 	// Subscriptions
 
 	r.HandleFunc("/subscriptions/{id}", s.handleSubscription).Methods("GET")
 	r.HandleFunc("/subscriptions/{id}/cancel", s.handleSubscriptionCancel).Methods("POST")
 	// Plans
 	r.HandleFunc("/plans", s.handlePlans).Methods("GET")
+}
+
+func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	r.ParseMultipartForm(100)
+	fmt.Fprintf(w, "Form:\n %+v \n", r.Form)
+	log.Printf("Form:\n %+v \n", r.Form)
+	fmt.Fprintf(w, "MultipartForm:\n %+v \n", r.MultipartForm)
+	log.Printf("MultipartForm:\n %+v \n", r.Form)
+
 }
