@@ -38,7 +38,7 @@ func New() *Server {
 	// Users
 	s.router.HandleFunc("/user", s.handleUserCreate).Methods("POST")
 	s.router.HandleFunc("/user", s.handleUserGet).Methods("GET")
-	s.router.HandleFunc("/user/validate", s.handleTest).Methods("POST")
+	s.router.HandleFunc("/user/validate", s.handleUserValidate).Methods("POST")
 	// TEMP
 	s.router.HandleFunc("/subscription", s.handleMyActiveSubscription).Methods("GET")
 	s.router.HandleFunc("/subscriptions", s.handleSubscribe).Methods("POST")
