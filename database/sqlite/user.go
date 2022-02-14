@@ -643,7 +643,7 @@ func validateUser(ctx context.Context, tx *Tx, phone string, password string) er
 		SELECT
 			username
 		FROM users
-		WHERE phone = ? AND password = ? AND is_provider = false
+		WHERE phone = ? AND password = ? 
 	`, phone, password).Scan(
 		&phone,
 	)
