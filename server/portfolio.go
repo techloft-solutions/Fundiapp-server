@@ -391,6 +391,8 @@ func (s *Server) handlePasswordChange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("[LOG] OldPassword: [" + pw.OldPassword + "] NewPassword: [" + pw.NewPassword + "]")
+
 	err = s.UsrSvc.ChangeUserPassword(r.Context(), &pw)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
