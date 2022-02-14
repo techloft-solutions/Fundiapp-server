@@ -314,6 +314,9 @@ func (s *Server) handleUserValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	usr.Phone = govalidator.Trim(usr.Phone, "")
+	usr.Password = govalidator.Trim(usr.Password, "")
+
 	log.Println("[LOG] phone: [" + usr.Phone + "] password: [" + usr.Password + "]")
 
 	err = s.UsrSvc.ValidateUser(r.Context(), usr.Phone, usr.Password, usr.IsProvider)
