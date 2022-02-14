@@ -345,7 +345,7 @@ func (s *Server) handlePasswordNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("[http]", r.Method, r.URL.Path, "userID:", userID, "new_password:", newPassWord)
+	log.Println("[http]", r.Method, r.URL.Path, "userID:", userID, "new_password:["+newPassWord+"]")
 
 	err = s.UsrSvc.ResetUserPassword(r.Context(), newPassWord, userID.String())
 	if err != nil {
