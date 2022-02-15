@@ -164,7 +164,7 @@ func (s *Server) handleProviderUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleSuccessMsgWithRes(w, "Provider updated successfuly", provider)
+	handleSuccessMsgWithRes(w, "Profile updated successfuly", provider)
 }
 
 // Provider
