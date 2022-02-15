@@ -206,7 +206,7 @@ func (s *Server) handleLocationDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleUserCreate(w http.ResponseWriter, r *http.Request) {
-	var user model.User
+	var usr model.User
 	jsonStr, err := json.Marshal(allFormValues(r))
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
@@ -214,21 +214,24 @@ func (s *Server) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.Unmarshal(jsonStr, &user); err != nil {
+	if err := json.Unmarshal(jsonStr, &usr); err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		handleError(w, "error parsing json string", http.StatusInternalServerError)
 		return
 	}
 
-	user.IsProvider, _ = strconv.ParseBool(r.URL.Query().Get("provider"))
+	usr.IsProvider, _ = strconv.ParseBool(r.URL.Query().Get("provider"))
 
-	err = user.Validate()
+	err = usr.Validate()
 	if err != nil {
 		handleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = s.UsrSvc.CreateUser(r.Context(), &user)
+	usr.Phone = govalidator.Trim(usr.Phone, "")
+	usr.Password = govalidator.Trim(usr.Password, "")
+
+	err = s.UsrSvc.CreateUser(r.Context(), &usr)
 	if err != nil {
 		log.Printf("[http] error: %s %s: %s", r.Method, r.URL.Path, err)
 		if err = handleMysqlErrors(w, err); err != nil {
@@ -240,9 +243,9 @@ func (s *Server) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 	//retrieveFirebaseUserData(r.Context(), user.ID.String())
 
 	// obfuscate the password
-	user.Password = strings.Repeat("*", len(user.Password))
+	usr.Password = strings.Repeat("*", len(usr.Password))
 
-	handleSuccessMsgWithRes(w, "User created successfuly", user)
+	handleSuccessMsgWithRes(w, "User created successfuly", usr)
 }
 
 //func linkFirebaseUserToUser(userID string, firebaseUserID string) error {
@@ -314,8 +317,8 @@ func (s *Server) handleUserValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr.Phone = govalidator.Trim(usr.Phone, "")
-	usr.Password = govalidator.Trim(usr.Password, "")
+	//usr.Phone = govalidator.Trim(usr.Phone, "")
+	//usr.Password = govalidator.Trim(usr.Password, "")
 
 	log.Println("[LOG] phone: [" + usr.Phone + "] password: [" + usr.Password + "]")
 
