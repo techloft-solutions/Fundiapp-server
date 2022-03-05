@@ -26,8 +26,8 @@ INSERT INTO `users`(
     1
 ),(
     'marya',
-    '+254712345678',
-    'pass2021',
+    '+254111222333',
+    'WYpF2vhVYCKlxILYZaleA==',
     1,
     'BEfKrgwHuFWH5zA9H9vDEhBPc0o2',
     'mary',
