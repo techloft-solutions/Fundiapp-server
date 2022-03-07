@@ -17,6 +17,15 @@ func allFormValues(r *http.Request) map[string]string {
 	return m
 }
 
+func allMpFormValues(r *http.Request) map[string]string {
+	r.ParseMultipartForm(32 << 20)
+	m := make(map[string]string)
+	for k, v := range r.PostForm {
+		m[k] = v[0]
+	}
+	return m
+}
+
 func handleSuccess(w http.ResponseWriter, resource interface{}) {
 	jsonResp, err := json.Marshal(resource)
 	if err != nil {
@@ -55,6 +64,18 @@ func handleSuccessMsgWithRes(w http.ResponseWriter, msg string, res interface{})
 func handleError(w http.ResponseWriter, errorMsg string, code int) {
 	resp := make(map[string]string)
 	resp["error"] = errorMsg
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(code)
+	w.Write(jsonResp)
+}
+
+func handleWarning(w http.ResponseWriter, errorMsg string, code int) {
+	resp := make(map[string]string)
+	resp["warning"] = errorMsg
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
