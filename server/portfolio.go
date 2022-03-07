@@ -354,7 +354,7 @@ func (s *Server) handlePasswordChange(w http.ResponseWriter, r *http.Request) {
 	log.Println("[LOG] OldPassword: [" + pw.OldPassword + "] NewPassword: [" + pw.NewPassword + "]")
 
 	if pw.NewPassword == pw.OldPassword {
-		handleError(w, "Cannot reuse old password", http.StatusNotFound)
+		handleError(w, "Cannot reuse old password", http.StatusBadRequest)
 		return
 	}
 
